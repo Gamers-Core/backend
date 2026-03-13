@@ -7,6 +7,7 @@ import { User } from 'src/entity';
 import {
   AuthUserDTO,
   CreateUserDTO,
+  ForgotPasswordDTO,
   IsLoggedInDTO,
   LoginUserDTO,
   ResendOTPDTO,
@@ -54,7 +55,7 @@ export class AuthController {
   }
 
   @Post('forgot-password')
-  async forgotPassword(@Body() body: LoginUserDTO) {
+  async forgotPassword(@Body() body: ForgotPasswordDTO) {
     const sessionId = await this.authService.forgotPassword(body);
 
     return { sessionId };

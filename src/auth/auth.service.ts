@@ -45,6 +45,9 @@ export class AuthService {
   async forgotPassword(creds: ForgotPasswordDTO) {
     const password = await getEncryptedPassword(creds.password);
 
+    const [user] = await this.usersService.find(creds.email);
+    if (!user) return null;
+
     const sessionId = await this.otpSessionService.createSession({
       purpose: 'reset_password',
       email: creds.email,
