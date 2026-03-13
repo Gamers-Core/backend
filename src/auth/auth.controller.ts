@@ -1,0 +1,53 @@
+import { Body, Controller, Get, Post, Session } from '@nestjs/common';
+
+import { Serialize } from 'interceptors';
+import { CurrentUser } from 'src/users';
+import { User } from 'src/entity';
+
+import {
+  AuthUserDTO,
+  CreateUserDTO,
+  IsLoggedInDTO,
+  LoginUserDTO,
+} from './dtos';
+import { AuthService } from './auth.service';
+import { Public } from './decorators';
+
+@Controller('auth')
+@Public()
+export class AuthController {
+  constructor(private authService: AuthService) {}
+
+  @Get()
+  @Serialize(IsLoggedInDTO)
+  isLoggedIn(@CurrentUser() user: User) {
+    return { isLoggedIn: !!user };
+  }
+
+  @Post('signout')
+  @Serialize(IsLoggedInDTO)
+  signout(@Session() session: any) {
+    session.userId = null;
+
+    return { isLoggedIn: false };
+  }
+
+  @Serialize(AuthUserDTO)
+  @Post('signup')
+  async signup(@Body() body: CreateUserDTO, @Session() session: any) {
+    const user = await this.authService.signup(body);
+
+    session.userId = user.id;
+    return user;
+  }
+
+  @Serialize(AuthUserDTO)
+  @Post('login')
+  async login(@Body() body: LoginUserDTO, @Session() session: any) {
+    const user = await this.authService.login(body);
+
+    session.userId = user.id;
+
+    return user;
+  }
+}
