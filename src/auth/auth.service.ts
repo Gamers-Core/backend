@@ -2,12 +2,21 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 
 import { UsersService } from 'src/users';
 
-import { CreateUserDTO, LoginUserDTO } from './dtos';
+import {
+  CreateUserDTO,
+  ForgotPasswordDTO,
+  LoginUserDTO,
+  VerifyOTPDTO,
+} from './dtos';
 import { getEncryptedPassword, getHashedPassword } from './helpers';
+import { OtpSessionService } from './otp-session';
 
 @Injectable()
 export class AuthService {
-  constructor(private usersService: UsersService) {}
+  constructor(
+    private usersService: UsersService,
+    private otpSessionService: OtpSessionService,
+  ) {}
 
   async signup(userDTO: CreateUserDTO) {
     const user = await this.usersService.find(userDTO.email);
@@ -31,5 +40,40 @@ export class AuthService {
       throw new BadRequestException('Invalid email or password');
 
     return user;
+  }
+
+  async forgotPassword(creds: ForgotPasswordDTO) {
+    const password = await getEncryptedPassword(creds.password);
+
+    const [user] = await this.usersService.find(creds.email);
+    if (!user) return null;
+
+    const sessionId = await this.otpSessionService.createSession({
+      purpose: 'reset_password',
+      email: creds.email,
+      data: { password },
+    });
+
+    return sessionId;
+  }
+
+  async verifyOTP({ sessionId, otp }: VerifyOTPDTO) {
+    await this.otpSessionService
+      .verifySession({
+        purpose: 'reset_password',
+        sessionId,
+        otp,
+      })
+      .then(
+        async ([email, { password }]) =>
+          await this.usersService.updateByEmail(email, { password }),
+      );
+  }
+
+  async resendOTP(sessionId: string) {
+    return this.otpSessionService.resendSession({
+      purpose: 'reset_password',
+      sessionId,
+    });
   }
 }
