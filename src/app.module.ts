@@ -11,11 +11,13 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { AuthGuard } from './guards';
+import { RedisModule } from './redis';
 
 @Module({
   imports: [
     UsersModule,
     AuthModule,
+    RedisModule,
     TypeOrmModule.forRoot(getDataSourceOptions()),
     ConfigModule.forRoot({
       isGlobal: true,
