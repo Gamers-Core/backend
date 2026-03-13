@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Session } from '@nestjs/common';
 
-import { Serialize } from 'interceptors';
+import { Serialize } from 'src/interceptors';
 import { CurrentUser } from 'src/users';
 import { User } from 'src/entity';
 
