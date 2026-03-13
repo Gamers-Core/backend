@@ -9,6 +9,8 @@ import {
   CreateUserDTO,
   IsLoggedInDTO,
   LoginUserDTO,
+  ResendOTPDTO,
+  VerifyOTPDTO,
 } from './dtos';
 import { AuthService } from './auth.service';
 import { Public } from './decorators';
@@ -49,5 +51,22 @@ export class AuthController {
     session.userId = user.id;
 
     return user;
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() body: LoginUserDTO) {
+    const authId = await this.authService.forgotPassword(body);
+
+    return { authId };
+  }
+
+  @Post('verify-otp')
+  async verifyOTP(@Body() body: VerifyOTPDTO) {
+    return await this.authService.verifyOTP(body);
+  }
+
+  @Post('resend-otp')
+  resendOtp(@Body() body: ResendOTPDTO) {
+    return this.authService.resendOTP(body.authId);
   }
 }
