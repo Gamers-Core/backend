@@ -1,3 +1,5 @@
+import { AuthPurpose } from 'src/auth';
+
 import { mails } from './const';
 
 export interface MailCreds {
@@ -14,9 +16,9 @@ export interface SendMailOptions {
   text: string;
 }
 
-export interface MailOptions {
-  'reset-password': { code: string };
-}
+export type MailOptions = {
+  //TODO: Add Other mail types and their options here
+} & { [K in AuthPurpose]: { otp: string } };
 interface MailOptionsMap extends Omit<SendMailOptions, 'to'> {
   type: MailType;
 }

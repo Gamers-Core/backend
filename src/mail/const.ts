@@ -9,11 +9,11 @@ type MailOptionsMap = {
 };
 
 export const mailsOptions = {
-  'reset-password': ({ code }) =>
+  reset_password: ({ otp }) =>
     ({
       type: 'no-reply',
       title: 'Gamers Core Support',
       subject: 'Password Reset Code',
-      text: `Your password reset code is: ${code}`,
+      text: `Your password reset code is: ${otp}`,
     }) as const,
 } satisfies MailOptionsMap;
