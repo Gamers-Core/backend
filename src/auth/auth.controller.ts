@@ -24,9 +24,9 @@ export class AuthController {
     return { isLoggedIn: !!user };
   }
 
-  @Post('signout')
+  @Post('logout')
   @Serialize(IsLoggedInDTO)
-  signout(@Session() session: any) {
+  logout(@Session() session: any) {
     session.userId = null;
 
     return { isLoggedIn: false };
