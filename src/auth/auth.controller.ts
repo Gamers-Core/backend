@@ -7,8 +7,11 @@ import { User } from 'src/entity';
 import {
   AuthUserDTO,
   CreateUserDTO,
+  ForgotPasswordDTO,
   IsLoggedInDTO,
   LoginUserDTO,
+  ResendOTPDTO,
+  VerifyOTPDTO,
 } from './dtos';
 import { AuthService } from './auth.service';
 import { Public } from './decorators';
@@ -24,9 +27,9 @@ export class AuthController {
     return { isLoggedIn: !!user };
   }
 
-  @Post('signout')
+  @Post('logout')
   @Serialize(IsLoggedInDTO)
-  signout(@Session() session: any) {
+  logout(@Session() session: any) {
     session.userId = null;
 
     return { isLoggedIn: false };
@@ -49,5 +52,22 @@ export class AuthController {
     session.userId = user.id;
 
     return user;
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() body: ForgotPasswordDTO) {
+    const sessionId = await this.authService.forgotPassword(body);
+
+    return { sessionId };
+  }
+
+  @Post('verify-otp')
+  async verifyOTP(@Body() body: VerifyOTPDTO) {
+    return await this.authService.verifyOTP(body);
+  }
+
+  @Post('resend-otp')
+  resendOtp(@Body() body: ResendOTPDTO) {
+    return this.authService.resendOTP(body.sessionId);
   }
 }
