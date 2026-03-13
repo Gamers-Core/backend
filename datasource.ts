@@ -25,6 +25,7 @@ export const getDataSourceOptions = (): DataSourceOptions => {
         synchronize: true,
       });
       break;
+    // TODO: add staging and production configs
     case 'staging':
       break;
     case 'production':

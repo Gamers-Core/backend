@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { User } from 'src/entity';
-import { CreateUserDTO } from 'src/auth';
+import { CreateUserDTO, UpdateUserDTO } from 'src/auth';
 
 @Injectable()
 export class UsersService {
@@ -23,7 +23,7 @@ export class UsersService {
     return this.repo.findOne({ where: { id } });
   }
 
-  async update(id: number, updatedUser: Partial<User>) {
+  async update(id: number, updatedUser: Partial<UpdateUserDTO>) {
     const user = await this.findOne(id);
 
     if (!user) throw new NotFoundException('User not found');
