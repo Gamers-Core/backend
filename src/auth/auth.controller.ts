@@ -58,6 +58,7 @@ export class AuthController {
     return await this.authService.forgotPassword(body);
   }
 
+  @Serialize(AuthUserDTO)
   @Post('verify-otp')
   async verifyOTP(@Body() body: VerifyOTPDTO, @Session() session: any) {
     const result = await this.authService.verifyOTP(body);
