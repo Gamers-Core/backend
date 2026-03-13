@@ -1,1 +1,1 @@
-export const authPurposes = ['reset_password'] as const;
+export const authPurposes = ['reset_password', 'signup'] as const;

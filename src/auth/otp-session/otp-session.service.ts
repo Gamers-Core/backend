@@ -93,7 +93,7 @@ export class OtpSessionService {
 
     await this.mailService.sendTypedMail(email, purpose, { otp });
 
-    return sessionId;
+    return { purpose, sessionId };
   }
 
   async verifySession<P extends AuthPurpose>({
