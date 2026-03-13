@@ -3,7 +3,7 @@ import { Transform } from 'class-transformer';
 
 export class VerifyOTPDTO {
   @IsString()
-  authId: string;
+  sessionId: string;
 
   @Transform(({ value }) => `${value}`)
   @IsNumberString({ no_symbols: true })

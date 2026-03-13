@@ -55,9 +55,9 @@ export class AuthController {
 
   @Post('forgot-password')
   async forgotPassword(@Body() body: LoginUserDTO) {
-    const authId = await this.authService.forgotPassword(body);
+    const sessionId = await this.authService.forgotPassword(body);
 
-    return { authId };
+    return { sessionId };
   }
 
   @Post('verify-otp')
@@ -67,6 +67,6 @@ export class AuthController {
 
   @Post('resend-otp')
   resendOtp(@Body() body: ResendOTPDTO) {
-    return this.authService.resendOTP(body.authId);
+    return this.authService.resendOTP(body.sessionId);
   }
 }
