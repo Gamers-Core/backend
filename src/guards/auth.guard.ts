@@ -40,7 +40,6 @@ export class AuthGuard implements CanActivate {
     if (!user) throw new UnauthorizedException('User not found');
 
     req.currentUser = user;
-    req.session.user = user;
 
     return true;
   }

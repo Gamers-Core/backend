@@ -26,10 +26,12 @@ export class AuthController {
     return { isLoggedIn };
   }
 
-  @Serialize(AuthUserDTO)
   @Post('signout')
+  @Serialize(IsLoggedInDTO)
   signout(@Session() session: any) {
     session.userId = null;
+
+    return { isLoggedIn: false };
   }
 
   @Serialize(AuthUserDTO)
@@ -41,13 +43,12 @@ export class AuthController {
     return user;
   }
 
+  @Serialize(AuthUserDTO)
   @Post('login')
   async login(@Body() body: LoginUserDTO, @Session() session: any) {
     const user = await this.authService.login(body);
 
     session.userId = user.id;
-
-    console.log(session);
 
     return user;
   }
