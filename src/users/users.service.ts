@@ -25,7 +25,7 @@ export class UsersService {
 
   async updateByEmail(email: string, updatedUser: Partial<CreateUserDTO>) {
     const [user] = await this.find(email);
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) return null;
 
     return this.updateUser(user, updatedUser);
   }

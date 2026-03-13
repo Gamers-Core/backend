@@ -1,12 +1,13 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 
 import { UsersService } from 'src/users';
 
-import { CreateUserDTO, LoginUserDTO, VerifyOTPDTO } from './dtos';
+import {
+  CreateUserDTO,
+  ForgotPasswordDTO,
+  LoginUserDTO,
+  VerifyOTPDTO,
+} from './dtos';
 import { getEncryptedPassword, getHashedPassword } from './helpers';
 import { OtpSessionService } from './otp-session';
 
@@ -41,11 +42,7 @@ export class AuthService {
     return user;
   }
 
-  async forgotPassword(creds: LoginUserDTO) {
-    const [user] = await this.usersService.find(creds.email);
-
-    if (!user) throw new NotFoundException('User not found');
-
+  async forgotPassword(creds: ForgotPasswordDTO) {
     const password = await getEncryptedPassword(creds.password);
 
     const sessionId = await this.otpSessionService.createSession({
@@ -58,7 +55,7 @@ export class AuthService {
   }
 
   async verifyOTP({ sessionId, otp }: VerifyOTPDTO) {
-    return this.otpSessionService
+    await this.otpSessionService
       .verifySession({
         purpose: 'reset_password',
         sessionId,

@@ -77,17 +77,19 @@ export class OtpSessionService {
     const hashedOtp = await generateHashedOtp(otp);
     const now = Date.now();
 
-    await this.redis.hset(key, {
-      purpose,
-      email,
-      data: JSON.stringify(data),
-      otp: hashedOtp,
-      otp_attempts: '0',
-      otp_resend_count: '0',
-      otp_last_sent_at: `${now}`,
-    });
-
-    await this.redis.expire(key, ttlSeconds);
+    await this.redis
+      .multi()
+      .hset(key, {
+        purpose,
+        email,
+        data: JSON.stringify(data),
+        otp: hashedOtp,
+        otp_attempts: '0',
+        otp_resend_count: '0',
+        otp_last_sent_at: `${now}`,
+      })
+      .expire(key, ttlSeconds)
+      .exec();
 
     await this.mailService.sendTypedMail(email, purpose, { otp });
 
