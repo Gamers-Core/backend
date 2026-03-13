@@ -20,10 +20,8 @@ export class AuthController {
 
   @Get()
   @Serialize(IsLoggedInDTO)
-  async isLoggedIn(@CurrentUser() user: User) {
-    const isLoggedIn = !!(await this.authService.isLoggedIn(user));
-
-    return { isLoggedIn };
+  isLoggedIn(@CurrentUser() user: User) {
+    return { isLoggedIn: !!user };
   }
 
   @Post('signout')

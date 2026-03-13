@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
+
 import { UsersService } from 'src/users';
-import { User } from 'src/entity';
 
 import { CreateUserDTO, LoginUserDTO } from './dtos';
 import { getEncryptedPassword, getHashedPassword } from './helpers';
@@ -9,12 +8,6 @@ import { getEncryptedPassword, getHashedPassword } from './helpers';
 @Injectable()
 export class AuthService {
   constructor(private usersService: UsersService) {}
-
-  async isLoggedIn(user: User | null) {
-    if (!user) return false;
-
-    return this.usersService.findOne(user.id);
-  }
 
   async signup(userDTO: CreateUserDTO) {
     const user = await this.usersService.find(userDTO.email);
@@ -28,14 +21,14 @@ export class AuthService {
   async login(loginUserDTO: LoginUserDTO) {
     const [user] = await this.usersService.find(loginUserDTO.email);
 
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new BadRequestException('Invalid email or password');
 
     const [salt, hash] = user.password.split('.');
 
     const userHash = await getHashedPassword(loginUserDTO.password, salt);
 
     if (hash !== userHash.toString('hex'))
-      throw new BadRequestException('Password is incorrect');
+      throw new BadRequestException('Invalid email or password');
 
     return user;
   }
