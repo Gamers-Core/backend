@@ -2,47 +2,54 @@
 
 ## Big picture
 
-- NestJS 11 backend with TypeORM; feature modules are centered in `src/auth` and `src/users`, with entities in `src/entity`.
-- Auth model is server-session (cookie-session), not JWT. Treat this as the primary identity flow.
-- Imports use aliases: `src/*` and top-level `interceptors` (from `interceptors/`). Keep this style consistent.
+- NestJS 11 backend with session auth, TypeORM persistence, Redis-backed OTP sessions, and SMTP mail delivery.
+- Core feature boundaries are `src/auth` (identity/session/OTP), `src/users` (user persistence + profile endpoints), `src/mail`, and `src/redis`.
+- Entity layer is simple (`src/entity/user.entity.ts`), and service logic is concentrated in `AuthService` + `UsersService`.
+- Use path aliases consistently (`src/*`, `datasource`), matching existing imports.
 
 ## Request/auth lifecycle (critical)
 
-- Global `cookie-session` middleware is configured in `AppModule.configure()` (`src/app.module.ts`) and requires `COOKIE_KEY`.
-- Global `AuthGuard` is registered via `APP_GUARD` (`src/app.module.ts`), so every request passes through it unless route metadata marks it public.
-- Guard behavior (`src/guards/auth.guard.ts`):
-  - reads `req.session.userId`
-  - loads user via `UsersService.findOne(...)`
-  - sets `req.currentUser`
-- `@CurrentUser()` only returns `req.currentUser` (`src/users/decorators/current-user.decorator.ts`). It does not query DB.
-- `@Public()` (`src/auth/decorators/public.decorator.ts`) skips auth rejection but still allows optional user hydration when session exists.
+- `cookie-session` is global in `AppModule.configure()` (`src/app.module.ts`) and hard-fails if `COOKIE_KEY` is missing.
+- `AuthGuard` is global via `APP_GUARD`; every route passes through it unless `@Public()` metadata is set.
+- Guard contract (`src/guards/auth.guard.ts`): reads `req.session.userId`, loads user, sets `req.currentUser`.
+- `@CurrentUser()` only returns `req.currentUser` (`src/users/decorators/current-user.decorator.ts`), never queries DB.
+- Public routes still hydrate `currentUser` when a valid session exists.
 
-## Response shaping pattern
+## Auth + OTP flow
 
-- Use `@Serialize(DTO)` from `interceptors/serialize.interceptor.ts` for controller responses.
-- DTOs are explicit via `class-transformer` (`@Expose`, `@Transform`).
-- Interceptor injects `currentUserId` into transform context from `request.currentUser.id`.
-- Example: `BasicUserDTO.isMe` in `src/users/dtos/basic-user.dto.ts` compares `obj.id` to `options.context.currentUserId`.
-- When changing response fields, update DTOs first; do not expose raw entity internals (especially password data).
+- Signup is a 2-step flow:
+  1. `POST /auth/signup` validates user input, hashes password, and creates OTP session (`purpose: 'signup'`) in Redis.
+  2. `POST /auth/verify-otp` verifies OTP and runs purpose-specific completion handler; for signup, it creates the user and sets `session.userId` in controller.
+- Password reset follows the same OTP session model with `purpose: 'reset_password'`.
+- Purpose/data/result typing lives in `src/auth/types.ts` (`AuthPurpose`, `OtpDataMap`, `OtpVerifyResultMap`) and should be updated together when adding a new OTP purpose.
+- OTP session mechanics (TTL, attempts, resend limits) are centralized in `src/auth/otp-session/otp-session.service.ts`.
 
-## Conventions and code patterns
+## Response/DTO conventions
 
-- Global validation is `ValidationPipe({ whitelist: true })`; request bodies should be DTO classes with validators (`src/auth/dtos/*`).
-- Session persistence happens in controllers with `@Session() session: any` and `session.userId = user.id` (see `src/auth/auth.controller.ts`).
-- Barrel exports are expected (`index.ts`) in `src/auth`, `src/users`, `src/entity`, and `src/guards`.
-- Keep edits focused and local; avoid broad refactors in this starter-style codebase.
+- Use `@Serialize(DTO)` for controller responses (`src/interceptors/serialize.interceptor.ts`); avoid returning raw entities.
+- DTOs rely on `class-transformer` (`@Expose`, `@Transform`), with transform context support for current user.
+- Example: `BasicUserDTO.isMe` in `src/users/dtos/basic-user.dto.ts` compares serialized user id against `currentUserId`.
+- Use DTO validators (`class-validator`) because global `ValidationPipe({ whitelist: true })` is enabled.
 
-## Data and env behavior
+## Data + integrations
 
-- `datasource.ts` loads env from `.env.${NODE_ENV ?? 'development'}`.
-- Development uses SQLite (`db.sqlite`) with `synchronize: true`; migrations are still configured and used by scripts.
-- Ensure `NODE_ENV` and `COOKIE_KEY` are present in runtime environments.
+- TypeORM options are built in `datasource.ts` from `.env.${NODE_ENV}`.
+- Development uses SQLite (`db.sqlite`, `synchronize: true`); production/staging are placeholders.
+- Redis client is global (`src/redis/redis.module.ts`) and supports `REDIS_URL` or host/port env vars.
+- Mail uses `nodemailer` + Brevo SMTP (`src/mail/mail.service.ts`); typed templates are mapped in `src/mail/const.ts` and keyed by auth purpose.
 
-## Commands and workflows
+## Workflows that matter
 
 - Install: `npm install`
-- Dev server: `npm run start:dev`
-- Build/prod: `npm run build` then `npm run start`
-- Migrations: `npm run migration:generate`, `npm run migration:run` (`:prod` variants available)
-- Important: `npm test` is quality gate (`tsc && eslint && prettier --check .`), not Jest unit tests.
-- Jest is separate: `npm run test:watch`, `npm run test:cov`, `npm run test:e2e`.
+- Dev server: `npm run start:dev` (sets `NODE_ENV=development`)
+- Debug watch: `npm run start:debug`
+- Production run: `npm run build` then `npm run start`
+- Migrations: `npm run migration:generate`, `npm run migration:run` (`:prod` variants exist)
+- Quality gate: `npm test` runs `tsc && eslint && prettier --check .` (not Jest)
+- Jest commands are separate: `npm run test:watch`, `npm run test:cov`, `npm run test:e2e`
+
+## Editing expectations
+
+- Keep changes local and pattern-matching this starter-style codebase; prefer extending existing DTO/service patterns over refactors.
+- Preserve barrel exports (`index.ts`) in feature folders when adding public symbols.
+- When adding auth response fields, update DTOs first and ensure sensitive fields (password hashes) remain excluded.
