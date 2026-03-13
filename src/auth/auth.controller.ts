@@ -10,6 +10,7 @@ import {
   ForgotPasswordDTO,
   IsLoggedInDTO,
   LoginUserDTO,
+  OtpDTO,
   ResendOTPDTO,
   VerifyOTPDTO,
 } from './dtos';
@@ -21,27 +22,24 @@ import { Public } from './decorators';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Get()
   @Serialize(IsLoggedInDTO)
+  @Get()
   isLoggedIn(@CurrentUser() user: User) {
     return { isLoggedIn: !!user };
   }
 
-  @Post('logout')
   @Serialize(IsLoggedInDTO)
+  @Post('logout')
   logout(@Session() session: any) {
     session.userId = null;
 
     return { isLoggedIn: false };
   }
 
-  @Serialize(AuthUserDTO)
+  @Serialize(OtpDTO)
   @Post('signup')
-  async signup(@Body() body: CreateUserDTO, @Session() session: any) {
-    const user = await this.authService.signup(body);
-
-    session.userId = user.id;
-    return user;
+  async signup(@Body() body: CreateUserDTO) {
+    return await this.authService.signup(body);
   }
 
   @Serialize(AuthUserDTO)
@@ -54,20 +52,23 @@ export class AuthController {
     return user;
   }
 
+  @Serialize(OtpDTO)
   @Post('forgot-password')
   async forgotPassword(@Body() body: ForgotPasswordDTO) {
-    const sessionId = await this.authService.forgotPassword(body);
-
-    return { sessionId };
+    return await this.authService.forgotPassword(body);
   }
 
   @Post('verify-otp')
-  async verifyOTP(@Body() body: VerifyOTPDTO) {
-    return await this.authService.verifyOTP(body);
+  async verifyOTP(@Body() body: VerifyOTPDTO, @Session() session: any) {
+    const result = await this.authService.verifyOTP(body);
+
+    if (result instanceof User) session.userId = result.id;
+
+    return result;
   }
 
   @Post('resend-otp')
   resendOtp(@Body() body: ResendOTPDTO) {
-    return this.authService.resendOTP(body.sessionId);
+    return this.authService.resendOTP(body);
   }
 }
