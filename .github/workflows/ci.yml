@@ -1,0 +1,36 @@
+name: CI
+on:
+  push:
+    branches: [master, staging, dev]
+  pull_request:
+    branches: [master, staging, dev]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup project
+        uses: ./.github/actions/node-setup
+        with:
+          node-version: '22.18.0'
+
+      - name: Run tests
+        run: npm run test
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup project
+        uses: ./.github/actions/node-setup
+        with:
+          node-version: '22.18.0'
+
+      - name: Run build
+        run: npm run build
