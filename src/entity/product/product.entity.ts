@@ -1,4 +1,3 @@
-import { productStatuses } from 'src/products';
 import {
   Column,
   CreateDateColumn,
@@ -6,6 +5,9 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
+import { productStatuses } from './const';
+import type { ProductOption, ProductStatus } from './types';
 
 @Entity()
 export class Product {
@@ -19,7 +21,10 @@ export class Product {
   description: string;
 
   @Column({ default: 'unlisted', enum: productStatuses, type: 'enum' })
-  status: 'active' | 'draft' | 'unlisted';
+  status: ProductStatus;
+
+  @Column({ nullable: true, type: 'simple-json' })
+  options: ProductOption[] | null;
 
   @CreateDateColumn()
   createdAt: Date;
