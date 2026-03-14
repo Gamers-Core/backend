@@ -2,7 +2,7 @@ import { DataSourceOptions, DataSource } from 'typeorm';
 import { join } from 'path';
 import { config } from 'dotenv';
 
-import { Product, User } from 'src/entity';
+import { Category, Collection, Product, User } from 'src/entity';
 
 export const getDataSourceOptions = (): DataSourceOptions => {
   config({
@@ -14,7 +14,7 @@ export const getDataSourceOptions = (): DataSourceOptions => {
   const dataSourceOptions: Partial<DataSourceOptions> = {
     synchronize: false,
     migrations,
-    entities: [User, Product],
+    entities: [User, Product, Category, Collection],
   };
 
   switch (process.env.NODE_ENV) {
