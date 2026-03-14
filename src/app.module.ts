@@ -2,21 +2,23 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MiddlewareConsumer, Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import cookieSession from 'cookie-session';
+import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 
 import { getDataSourceOptions } from 'datasource';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UsersModule } from './users/users.module';
-import { AuthModule } from './auth/auth.module';
-import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { AuthGuard } from './guards';
 import { RedisModule } from './redis';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { ProductsModule } from './products/products.module';
 
 @Module({
   imports: [
     UsersModule,
     AuthModule,
+    ProductsModule,
     RedisModule,
     TypeOrmModule.forRoot(getDataSourceOptions()),
     ConfigModule.forRoot({
