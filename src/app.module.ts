@@ -14,12 +14,14 @@ import { CloudinaryModule } from './cloudinary';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ProductsModule } from './products/products.module';
+import { MediaModule } from './media';
 
 @Module({
   imports: [
     UsersModule,
     AuthModule,
     ProductsModule,
+    MediaModule,
     RedisModule,
     CloudinaryModule,
     TypeOrmModule.forRoot(getDataSourceOptions()),
