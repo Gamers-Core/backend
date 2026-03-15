@@ -2,9 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+import { Collection } from '../collection.entity';
+import { Product } from '../product';
 import { mediaTypes } from './const';
 import type { MediaType } from './types';
 
@@ -33,6 +37,12 @@ export class Media {
 
   @Column()
   bytes: number;
+
+  @OneToOne(() => Collection, (collection) => collection.image)
+  collection: Collection | null;
+
+  @ManyToOne(() => Product, (product) => product.media)
+  product: Product | null;
 
   @CreateDateColumn()
   createdAt: Date;
