@@ -6,6 +6,7 @@ import {
   UploadApiResponse,
   UploadStream,
 } from 'cloudinary';
+
 import { MediaFolderType } from './types';
 
 @Injectable()
@@ -15,7 +16,10 @@ export class CloudinaryService {
     folder: MediaFolderType,
     options?: UploadApiOptions,
   ): Promise<UploadApiResponse> {
-    return cloudinary.uploader.upload(file, { ...options, folder });
+    return cloudinary.uploader.upload(file, {
+      ...options,
+      folder,
+    });
   }
 
   uploadBuffer(
@@ -23,7 +27,7 @@ export class CloudinaryService {
     folder: MediaFolderType,
     options?: UploadApiOptions,
   ): Promise<UploadApiResponse> {
-    return new Promise((resolve, reject) => {
+    return new Promise<UploadApiResponse>((resolve, reject) => {
       const stream: UploadStream = cloudinary.uploader.upload_stream(
         { ...options, folder },
         (error: UploadApiErrorResponse, result: UploadApiResponse) => {
