@@ -26,7 +26,7 @@ export class Product {
   @Column({ type: 'text' })
   description: string;
 
-  @Column({ default: 'unlisted', enum: productStatuses })
+  @Column({ default: 'unlisted', enum: productStatuses, type: 'simple-enum' })
   status: ProductStatus;
 
   @Column({ nullable: true, type: 'simple-json' })
@@ -49,9 +49,3 @@ export class Product {
   @UpdateDateColumn()
   updatedAt: Date;
 }
-
-/*
-  // TODO: Media should support multiple images and videos and 3d models in the future, but for now we can keep it simple and just store an array of image/video URLs.
-  @Column({ array: true, default: [] })
-  media: string[];
-*/
