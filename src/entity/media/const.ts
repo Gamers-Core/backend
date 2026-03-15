@@ -1,1 +1,1 @@
-export const mediaTypes = ['image', 'video'] as const;
+export const mediaTypes = ['auto', 'image', 'video', 'raw'] as const;
