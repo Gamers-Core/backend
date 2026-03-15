@@ -10,14 +10,12 @@ export interface ProductVariantPrice {
 
 export interface ProductOptionVariant {
   name: string;
+  imageId?: number;
   stock: number;
-  price: ProductVariantPrice | number;
+  price: ProductVariantPrice;
 }
-
-export type ProductOptionType = 'color' | 'size' | 'material' | 'other';
 
 export interface ProductOption {
   name: string;
-  type: ProductOptionType;
   variants: ProductOptionVariant[];
 }

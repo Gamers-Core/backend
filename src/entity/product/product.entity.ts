@@ -9,9 +9,9 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Category } from './category.entity';
-import { Collection } from './collection.entity';
-import { Media } from '../media/media.entity';
+import { Category } from '../category.entity';
+import { Collection } from '../collection.entity';
+import { Media } from '../media';
 import { productStatuses } from './const';
 import type { ProductOption, ProductStatus } from './types';
 
@@ -29,18 +29,20 @@ export class Product {
   @Column({ default: 'unlisted', enum: productStatuses, type: 'simple-enum' })
   status: ProductStatus;
 
+  // TODO: Move options/variants from JSON into dedicated entities when variant-level lifecycle/audit/history is needed.
   @Column({ nullable: true, type: 'simple-json' })
   options: ProductOption[] | null;
 
   @ManyToMany(() => Category, (category) => category.products)
-  @JoinTable({ name: 'products_categories' })
+  @JoinTable()
   categories: Category[];
 
   @ManyToMany(() => Collection, (collection) => collection.products)
-  @JoinTable({ name: 'products_collections' })
+  @JoinTable()
   collections: Collection[];
 
-  @OneToMany(() => Media, (media) => media.id, { cascade: true })
+  @OneToMany(() => Media, (media) => media.product)
+  @JoinTable()
   media: Media[];
 
   @CreateDateColumn()
