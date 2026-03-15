@@ -10,6 +10,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthGuard } from './guards';
 import { RedisModule } from './redis';
+import { CloudinaryModule } from './cloudinary';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ProductsModule } from './products/products.module';
@@ -20,6 +21,7 @@ import { ProductsModule } from './products/products.module';
     AuthModule,
     ProductsModule,
     RedisModule,
+    CloudinaryModule,
     TypeOrmModule.forRoot(getDataSourceOptions()),
     ConfigModule.forRoot({
       isGlobal: true,
