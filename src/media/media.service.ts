@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   Logger,
+  NotFoundException,
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
@@ -116,6 +117,29 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  async detachMediaFromProduct(
+    mediaIds: number[],
+    productId: number,
+    mediaRepository: Repository<Media> = this.mediaRepository,
+  ) {
+    if (!mediaIds.length) return;
+
+    const uniqueMediaIds = [...new Set(mediaIds)];
+
+    await mediaRepository.update(
+      {
+        id: In(uniqueMediaIds),
+        product: { id: productId },
+        status: 'attached',
+      },
+      {
+        status: 'draft',
+        product: null,
+        expiresAt: this.getDraftExpiryDate(),
+      },
+    );
+  }
+
   async cleanupExpiredDraftMedia() {
     try {
       const expiredDraftMedia = await this.mediaRepository.find({
@@ -156,7 +180,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private getDraftExpiryDate() {
+  getDraftExpiryDate() {
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24);
 
@@ -169,7 +193,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
       select: { publicId: true },
     });
 
-    if (!media) throw new BadRequestException('Media not found.');
+    if (!media) throw new NotFoundException('Media not found');
 
     try {
       await this.cloudinaryService.destroy(media.publicId);
