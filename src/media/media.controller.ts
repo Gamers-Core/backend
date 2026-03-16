@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Param,
+  ParseIntPipe,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -39,7 +40,7 @@ export class MediaController {
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: number) {
+  delete(@Param('id', ParseIntPipe) id: number) {
     return this.mediaService.delete(id);
   }
 }

@@ -38,7 +38,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     clearInterval(this.cleanupInterval);
   }
 
-  async create(result: UploadApiResponse): Promise<Media> {
+  async create(result: UploadApiResponse) {
     const media = this.mediaRepository.create({
       publicId: result.public_id,
       url: result.secure_url,
@@ -83,9 +83,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     if (media.length !== uniqueMediaIds.length)
       throw new BadRequestException('Some media items are invalid.');
 
-    const hasInvalidMedia = media.some(
-      (item) => item.status !== 'draft' || !!item.product,
-    );
+    const hasInvalidMedia = media.some(({ status }) => status !== 'draft');
 
     if (hasInvalidMedia)
       throw new BadRequestException('Some media items are unavailable.');
@@ -95,7 +93,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     mediaIds: number[],
     productId: number,
     mediaRepository: Repository<Media> = this.mediaRepository,
-  ): Promise<void> {
+  ) {
     if (!mediaIds.length) return;
 
     const uniqueMediaIds = [...new Set(mediaIds)];
@@ -165,7 +163,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     return expiresAt;
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number) {
     const media = await this.mediaRepository.findOne({
       where: { id },
       select: { publicId: true },
