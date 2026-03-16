@@ -71,13 +71,7 @@ export class AuthService {
     const password = await getEncryptedPassword(creds.password);
 
     const [user] = await this.usersService.find(creds.email);
-    if (!user) {
-      // Return a fake session to prevent user enumeration.
-      // The caller receives the same response shape regardless of whether
-      // the email is registered. The fake sessionId will fail gracefully
-      // (as "Session expired") if the client attempts OTP verification.
-      return { purpose: 'reset_password' as const, sessionId: randomBytes(16).toString('hex') };
-    }
+    if (!user)   return { purpose: 'reset_password' as const, sessionId: randomBytes(16).toString('hex') };
 
     return await this.otpSessionService.createSession({
       purpose: 'reset_password',
