@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsDefined,
   IsIn,
   IsInt,
   IsOptional,
@@ -77,6 +78,7 @@ export class CreateProductDTO {
 
   @IsOptional()
   @IsArray()
+  @IsDefined()
   @ValidateNested({ each: true })
   @Type(() => ProductOptionDTO)
   options?: ProductOption[];
