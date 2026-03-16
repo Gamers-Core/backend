@@ -16,6 +16,7 @@ import {
 } from './dtos';
 import { AuthService } from './auth.service';
 import { Public } from './decorators';
+import type { AuthSession } from './types';
 
 @Controller('auth')
 @Public()
@@ -30,7 +31,7 @@ export class AuthController {
 
   @Serialize(IsLoggedInDTO)
   @Post('logout')
-  logout(@Session() session: any) {
+  logout(@Session() session: AuthSession) {
     session.userId = null;
 
     return { isLoggedIn: false };
@@ -44,7 +45,7 @@ export class AuthController {
 
   @Serialize(AuthUserDTO)
   @Post('login')
-  async login(@Body() body: LoginUserDTO, @Session() session: any) {
+  async login(@Body() body: LoginUserDTO, @Session() session: AuthSession) {
     const user = await this.authService.login(body);
 
     session.userId = user.id;
@@ -60,7 +61,7 @@ export class AuthController {
 
   @Serialize(AuthUserDTO)
   @Post('verify-otp')
-  async verifyOTP(@Body() body: VerifyOTPDTO, @Session() session: any) {
+  async verifyOTP(@Body() body: VerifyOTPDTO, @Session() session: AuthSession) {
     const result = await this.authService.verifyOTP(body);
 
     if (result instanceof User) session.userId = result.id;

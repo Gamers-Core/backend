@@ -11,9 +11,9 @@ import { AppService } from './app.service';
 import { AuthGuard } from './guards';
 import { RedisModule } from './redis';
 import { CloudinaryModule } from './cloudinary';
-import { UsersModule } from './users/users.module';
-import { AuthModule } from './auth/auth.module';
-import { ProductsModule } from './products/products.module';
+import { UsersModule } from './users';
+import { AuthModule } from './auth';
+import { ProductsModule } from './products';
 import { MediaModule } from './media';
 
 @Module({
