@@ -3,6 +3,10 @@ import { authPurposes } from './const';
 
 export type AuthPurpose = (typeof authPurposes)[number];
 
+export interface AuthSession {
+  userId?: number | null;
+}
+
 export type OtpVerifyResultByPurpose<P extends AuthPurpose> =
   OtpVerifyResultMap[P];
 

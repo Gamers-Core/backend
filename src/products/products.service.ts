@@ -16,7 +16,7 @@ export class ProductsService {
   ) {}
 
   async create(createProductDTO: CreateProductDTO): Promise<Product> {
-    const mediaIds = this.getMediaIds(createProductDTO);
+    const mediaIds = [...new Set(createProductDTO.mediaIds ?? [])];
 
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepository = manager.getRepository(Product);
@@ -54,19 +54,5 @@ export class ProductsService {
       where: { id },
       relations: { media: true },
     });
-  }
-
-  private getMediaIds(createProductDTO: CreateProductDTO): number[] {
-    const productMediaIds = createProductDTO.mediaIds ?? [];
-    const variantImageIds =
-      createProductDTO.options?.flatMap((option) =>
-        option.variants.reduce<number[]>((ids, { imageId }) => {
-          if (imageId) ids.push(imageId);
-
-          return ids;
-        }, []),
-      ) ?? [];
-
-    return [...new Set([...productMediaIds, ...variantImageIds])];
   }
 }

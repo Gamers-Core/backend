@@ -10,7 +10,6 @@ export interface ProductVariantPrice {
 
 export interface ProductOptionVariant {
   name: string;
-  imageId?: number;
   stock: number;
   price: ProductVariantPrice;
 }
