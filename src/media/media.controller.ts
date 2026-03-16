@@ -31,10 +31,7 @@ export class MediaController {
   ) {
     if (!file) throw new BadRequestException('File is required');
 
-    const result = await this.cloudinaryService.uploadBuffer(
-      file.buffer,
-      body.folder,
-    );
+    const result = await this.cloudinaryService.uploadBuffer(file, body.folder);
 
     return this.mediaService.create(result);
   }
