@@ -1,1 +1,1 @@
-export const mediaFolders = ['product'] as const;
+export const mediaFolders = ['product', 'collection'] as const;
