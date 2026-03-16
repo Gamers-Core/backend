@@ -49,6 +49,13 @@ export class ProductsService {
     });
   }
 
+  async findOne(id: number): Promise<Product> {
+    return this.productsRepository.findOneOrFail({
+      where: { id },
+      relations: { media: true },
+    });
+  }
+
   private getMediaIds(createProductDTO: CreateProductDTO): number[] {
     const productMediaIds = createProductDTO.mediaIds ?? [];
     const variantImageIds =

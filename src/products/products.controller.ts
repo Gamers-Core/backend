@@ -1,4 +1,11 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
 
 import { Serialize } from 'src/interceptors';
 
@@ -13,5 +20,11 @@ export class ProductsController {
   @Post()
   create(@Body() createProductDTO: CreateProductDTO) {
     return this.productsService.create(createProductDTO);
+  }
+
+  @Serialize(ProductDTO)
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.findOne(id);
   }
 }
