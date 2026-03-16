@@ -8,8 +8,10 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "start": "cross-env NODE_ENV=production node dist/src/main.js",
     "start:dev": "cross-env NODE_ENV=development nest start --watch",
+    "start:dev:clean": "npm run clean && npm run start:dev",
     "start:debug": "nest start --debug --watch",
     "migration:generate": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d datasource.ts migration:generate",
     "migration:generate:prod": "cross-env NODE_ENV=production ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d datasource.ts migration:generate",
