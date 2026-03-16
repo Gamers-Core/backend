@@ -1,1 +1,1 @@
-export * from './create-media.dto';
+export * from './upload-media.dto';

@@ -31,7 +31,7 @@ export class Product {
 
   // TODO: Move options/variants from JSON into dedicated entities when variant-level lifecycle/audit/history is needed.
   @Column({ nullable: true, type: 'simple-json' })
-  options?: ProductOption[];
+  options: ProductOption[] | null;
 
   @ManyToMany(() => Category, (category) => category.products)
   @JoinTable()
