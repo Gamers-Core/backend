@@ -1,7 +1,16 @@
-import { IsIn, IsInt, IsString, IsUrl, Min } from 'class-validator';
+import {
+  IsDate,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Min,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
-import { mediaTypes } from 'src/entity';
-import type { MediaType } from 'src/entity';
+import { mediaStatuses, mediaTypes } from 'src/entity';
+import type { MediaStatus, MediaType } from 'src/entity';
 
 export class CreateMediaDTO {
   @IsUrl()
@@ -12,6 +21,10 @@ export class CreateMediaDTO {
 
   @IsIn(mediaTypes)
   type: MediaType;
+
+  @IsOptional()
+  @IsIn(mediaStatuses)
+  status?: MediaStatus;
 
   @IsInt()
   @Min(0)
@@ -27,4 +40,9 @@ export class CreateMediaDTO {
   @IsInt()
   @Min(0)
   bytes: number;
+
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  expiresAt?: Date;
 }

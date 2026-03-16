@@ -31,7 +31,7 @@ export class Product {
 
   // TODO: Move options/variants from JSON into dedicated entities when variant-level lifecycle/audit/history is needed.
   @Column({ nullable: true, type: 'simple-json' })
-  options: ProductOption[] | null;
+  options?: ProductOption[];
 
   @ManyToMany(() => Category, (category) => category.products)
   @JoinTable()
@@ -42,7 +42,6 @@ export class Product {
   collections: Collection[];
 
   @OneToMany(() => Media, (media) => media.product)
-  @JoinTable()
   media: Media[];
 
   @CreateDateColumn()
