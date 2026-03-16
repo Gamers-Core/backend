@@ -2,6 +2,8 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
+  Param,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -23,7 +25,7 @@ export class MediaController {
   ) {}
 
   @Serialize(MediaDTO)
-  @Post('upload')
+  @Post()
   @UseInterceptors(FileInterceptor('file'))
   async upload(
     @Body() body: UploadMediaDTO,
@@ -34,5 +36,10 @@ export class MediaController {
     const result = await this.cloudinaryService.uploadBuffer(file, body.folder);
 
     return this.mediaService.create(result);
+  }
+
+  @Delete(':id')
+  async delete(@Param('id') id: number) {
+    return this.mediaService.delete(id);
   }
 }
