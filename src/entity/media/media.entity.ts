@@ -54,6 +54,6 @@ export class Media {
   @CreateDateColumn()
   createdAt: Date;
 
-  @Column({ nullable: true })
+  @Column({ type: 'datetime', nullable: true })
   expiresAt: Date | null;
 }
