@@ -1,4 +1,14 @@
-import { Controller } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
+
+import { CreateProductDTO } from './dtos';
+import { ProductsService } from './products.service';
 
 @Controller('products')
-export class ProductsController {}
+export class ProductsController {
+  constructor(private readonly productsService: ProductsService) {}
+
+  @Post()
+  create(@Body() createProductDTO: CreateProductDTO) {
+    return this.productsService.create(createProductDTO);
+  }
+}
