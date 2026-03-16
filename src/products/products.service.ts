@@ -27,7 +27,10 @@ export class ProductsService {
         mediaRepository,
       );
 
-      const product = productRepository.create(createProductDTO);
+      const product = productRepository.create({
+        ...createProductDTO,
+        options: createProductDTO.options ?? null,
+      });
 
       const savedProduct = await productRepository.save(product);
 
