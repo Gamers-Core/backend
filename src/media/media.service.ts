@@ -119,36 +119,43 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
   }
 
   async cleanupExpiredDraftMedia() {
-    const expiredDraftMedia = await this.mediaRepository.find({
-      where: {
-        status: 'draft',
-        product: IsNull(),
-        expiresAt: LessThan(new Date()),
-      },
-      select: {
-        id: true,
-        publicId: true,
-      },
-    });
+    try {
+      const expiredDraftMedia = await this.mediaRepository.find({
+        where: {
+          status: 'draft',
+          product: IsNull(),
+          expiresAt: LessThan(new Date()),
+        },
+        select: {
+          id: true,
+          publicId: true,
+        },
+      });
 
-    if (!expiredDraftMedia.length) return;
+      if (!expiredDraftMedia.length) return;
 
-    const deletedMediaIds: number[] = [];
+      const deletedMediaIds: number[] = [];
 
-    for (const media of expiredDraftMedia) {
-      try {
-        await this.cloudinaryService.destroy(media.publicId);
-        deletedMediaIds.push(media.id);
-      } catch (error) {
-        this.logger.warn(
-          `Failed to delete media with publicId ${media.publicId} from Cloudinary: ${error instanceof Error ? error.message : String(error)}`,
-        );
+      for (const media of expiredDraftMedia) {
+        try {
+          await this.cloudinaryService.destroy(media.publicId);
+          deletedMediaIds.push(media.id);
+        } catch (error) {
+          this.logger.warn(
+            `Failed to delete media with publicId ${media.publicId} from Cloudinary: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
       }
+
+      if (!deletedMediaIds.length) return;
+
+      await this.mediaRepository.delete({ id: In(deletedMediaIds) });
+    } catch (error) {
+      this.logger.error(
+        'Failed to cleanup expired draft media',
+        error instanceof Error ? error.stack : String(error),
+      );
     }
-
-    if (!deletedMediaIds.length) return;
-
-    await this.mediaRepository.delete({ id: In(deletedMediaIds) });
   }
 
   private getDraftExpiryDate() {

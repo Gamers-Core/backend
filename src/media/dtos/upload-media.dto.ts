@@ -7,13 +7,4 @@ export class UploadMediaDTO {
   @IsNotEmpty()
   @IsIn(mediaFolders)
   folder: MediaFolder;
-
-  file: {
-    fieldname: string;
-    originalname: string;
-    encoding: string;
-    mimetype: string;
-    buffer: Buffer;
-    size: number;
-  };
 }
