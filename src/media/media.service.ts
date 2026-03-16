@@ -40,12 +40,15 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
 
   async create(result: UploadApiResponse): Promise<Media> {
     const media = this.mediaRepository.create({
-      ...result,
       publicId: result.public_id,
       url: result.secure_url,
       type: result.resource_type,
       status: 'draft',
       expiresAt: this.getDraftExpiryDate(),
+      width: result.width,
+      height: result.height,
+      format: result.format,
+      bytes: result.bytes,
     });
 
     try {

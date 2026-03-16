@@ -9,9 +9,9 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 
 import { CloudinaryService } from 'src/cloudinary';
-import type { MediaFolder } from 'src/cloudinary';
 
 import { MediaService } from './media.service';
+import { UploadMediaDTO } from './dtos';
 
 @Controller('media')
 export class MediaController {
@@ -23,14 +23,14 @@ export class MediaController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   async upload(
-    @Body('folder') folder: MediaFolder,
-    @UploadedFile() file: { buffer: Buffer } | undefined,
+    @Body() body: UploadMediaDTO,
+    @UploadedFile() file: UploadMediaDTO['file'],
   ) {
     if (!file) throw new BadRequestException('File is required');
 
     const result = await this.cloudinaryService.uploadBuffer(
       file.buffer,
-      folder,
+      body.folder,
     );
 
     return this.mediaService.create(result);
