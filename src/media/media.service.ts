@@ -164,4 +164,23 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
 
     return expiresAt;
   }
+
+  async delete(id: number): Promise<void> {
+    const media = await this.mediaRepository.findOne({
+      where: { id },
+      select: { publicId: true },
+    });
+
+    if (!media) throw new BadRequestException('Media not found.');
+
+    try {
+      await this.cloudinaryService.destroy(media.publicId);
+    } catch (error) {
+      this.logger.warn(
+        `Failed to delete media with publicId ${media.publicId} from Cloudinary during media deletion: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+
+    await this.mediaRepository.delete(id);
+  }
 }
