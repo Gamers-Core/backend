@@ -1,19 +1,22 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import {
-  v2 as cloudinary,
+  v2,
   UploadApiErrorResponse,
   UploadApiResponse,
   UploadStream,
 } from 'cloudinary';
 
-import { MediaFolder } from './types';
-import { UploadedMediaFile } from 'src/media/types';
+import { UploadedMediaFile } from 'src/media';
+
+import { CLOUDINARY } from './cloudinary.provider';
 import { mediaFolderTypeMap } from './const';
+import { MediaFolder } from './types';
 
 @Injectable()
 export class CloudinaryService {
+  constructor(@Inject(CLOUDINARY) private cloudinary: typeof v2) {}
   upload(file: string, folder: MediaFolder): Promise<UploadApiResponse> {
-    return cloudinary.uploader.upload(file, { folder });
+    return this.cloudinary.uploader.upload(file, { folder });
   }
 
   async uploadBuffer(
@@ -23,7 +26,7 @@ export class CloudinaryService {
     this.validateFile(file, folder);
 
     return new Promise<UploadApiResponse>((resolve, reject) => {
-      const stream: UploadStream = cloudinary.uploader.upload_stream(
+      const stream: UploadStream = this.cloudinary.uploader.upload_stream(
         {
           folder,
           resource_type: 'auto',
@@ -53,6 +56,6 @@ export class CloudinaryService {
   }
 
   destroy(publicId: string, invalidate = true) {
-    return cloudinary.uploader.destroy(publicId, { invalidate });
+    return this.cloudinary.uploader.destroy(publicId, { invalidate });
   }
 }
