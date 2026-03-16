@@ -15,7 +15,7 @@ import { generateHashedOtp, generateOtp, getSessionKey } from './helpers';
 import {
   CreateSessionOptions,
   ResendSessionOptions,
-  AuthSession,
+  OTPAuthSession,
   VerifySessionOptions,
 } from './types';
 import { MailService } from 'src/mail';
@@ -31,7 +31,7 @@ export class OtpSessionService {
   private async readSession<P extends AuthPurpose>(
     sessionId: string,
     expectedPurpose: P,
-  ): Promise<AuthSession<P>> {
+  ): Promise<OTPAuthSession<P>> {
     const session = await this.redis.hgetall(getSessionKey(sessionId));
 
     if (

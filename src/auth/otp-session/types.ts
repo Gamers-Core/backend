@@ -1,6 +1,6 @@
 import { AuthPurpose, OtpDataByPurpose } from '../types';
 
-export interface AuthSession<P extends AuthPurpose> {
+export interface OTPAuthSession<P extends AuthPurpose> {
   purpose: P;
   data: OtpDataByPurpose<P>;
   email: string;
