@@ -33,11 +33,6 @@ export class MediaController {
       folder,
     );
 
-    return this.mediaService.create({
-      ...result,
-      publicId: result.public_id,
-      url: result.secure_url,
-      type: result.resource_type,
-    });
+    return this.mediaService.create(result);
   }
 }

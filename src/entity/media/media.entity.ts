@@ -9,8 +9,8 @@ import {
 
 import { Collection } from '../collection.entity';
 import { Product } from '../product';
-import { mediaTypes } from './const';
-import type { MediaType } from './types';
+import { mediaStatuses, mediaTypes } from './const';
+import type { MediaStatus, MediaType } from './types';
 
 @Entity()
 export class Media {
@@ -25,6 +25,13 @@ export class Media {
 
   @Column({ enum: mediaTypes, type: 'simple-enum', default: 'auto' })
   type: MediaType;
+
+  @Column({
+    enum: mediaStatuses,
+    type: 'simple-enum',
+    default: 'draft',
+  })
+  status: MediaStatus;
 
   @Column()
   width: number;
@@ -46,4 +53,7 @@ export class Media {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @Column({ nullable: true })
+  expiresAt: Date | null;
 }
