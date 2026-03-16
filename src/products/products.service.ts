@@ -28,7 +28,9 @@ export class ProductsService {
       );
 
       const product = productRepository.create({
-        ...createProductDTO,
+        title: createProductDTO.title,
+        description: createProductDTO.description,
+        status: createProductDTO.status,
         options: createProductDTO.options ?? null,
       });
 

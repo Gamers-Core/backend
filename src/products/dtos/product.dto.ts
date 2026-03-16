@@ -76,7 +76,7 @@ export class ProductDTO {
 
   @Expose()
   @Type(() => ProductOptionDTO)
-  options?: ProductOptionDTO[];
+  options?: ProductOptionDTO[] | null;
 
   @Expose()
   @Type(() => ProductMediaDTO)
