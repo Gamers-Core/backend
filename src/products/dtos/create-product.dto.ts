@@ -45,11 +45,6 @@ class ProductOptionVariantDTO implements ProductOptionVariant {
   @ValidateNested()
   @Type(() => ProductVariantPriceDTO)
   price: ProductVariantPriceDTO;
-
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  imageId?: number;
 }
 
 class ProductOptionDTO implements ProductOption {
