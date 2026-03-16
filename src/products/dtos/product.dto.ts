@@ -16,9 +16,6 @@ class ProductOptionVariantDTO {
   name: string;
 
   @Expose()
-  imageId?: number;
-
-  @Expose()
   stock: number;
 
   @Expose()
