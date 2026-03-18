@@ -17,7 +17,7 @@ export class BostaService {
     private readonly cacheService: AppCacheService,
   ) {
     const api = this.httpService.axiosRef.create({
-      baseURL: 'http://app.bosta.co/api/v2',
+      baseURL: 'https://app.bosta.co/api/v2',
     });
 
     api.interceptors.request.use((config) => {
