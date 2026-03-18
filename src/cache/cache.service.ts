@@ -24,6 +24,8 @@ export class AppCacheService {
   }
 
   set<T>(key: string, value: T, ttlMs: number = this.defaultTtlMs) {
+    this.cleanupExpired();
+
     this.store.set(key, { value, expiresAt: Date.now() + ttlMs });
   }
 
@@ -47,5 +49,14 @@ export class AppCacheService {
 
   clear() {
     this.store.clear();
+  }
+
+  private cleanupExpired() {
+    const now = Date.now();
+    for (const [key, entry] of this.store.entries()) {
+      if (entry.expiresAt <= now) {
+        this.store.delete(key);
+      }
+    }
   }
 }
