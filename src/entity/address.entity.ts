@@ -43,7 +43,10 @@ export class Address {
   @Column({ default: false })
   isDefault: boolean;
 
-  @ManyToOne(() => User, (user) => user.addresses, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.addresses, {
+    onDelete: 'CASCADE',
+    nullable: false,
+  })
   user: User;
 
   @CreateDateColumn()
