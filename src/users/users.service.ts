@@ -23,6 +23,10 @@ export class UsersService {
     return this.repo.findOne({ where: { id } });
   }
 
+  findFull(id: number) {
+    return this.repo.findOne({ where: { id }, relations: ['addresses'] });
+  }
+
   async updateByEmail(email: string, updatedUser: Partial<CreateUserDTO>) {
     const [user] = await this.find(email);
     if (!user) return null;
