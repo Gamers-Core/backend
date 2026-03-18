@@ -13,6 +13,7 @@ import { RedisModule } from './redis';
 import { CloudinaryModule } from './cloudinary';
 import { UsersModule } from './users';
 import { AuthModule } from './auth';
+import { AddressesModule } from './addresses';
 import { BostaModule } from './bosta';
 import { ProductsModule } from './products';
 import { MediaModule } from './media';
@@ -21,6 +22,7 @@ import { MediaModule } from './media';
   imports: [
     UsersModule,
     AuthModule,
+    AddressesModule,
     BostaModule,
     ProductsModule,
     MediaModule,
