@@ -11,14 +11,19 @@ import {
 
 import { User } from 'src/entity';
 import { Serialize } from 'src/interceptors';
-import { CurrentUser } from 'src/users';
+import { BostaService, CityDTO, DistrictDTO } from 'src/bosta';
+
+import { CurrentUser } from 'src/users/decorators/current-user.decorator';
 
 import { AddressDTO, CreateAddressDTO, UpdateAddressDTO } from './dtos';
 import { AddressesService } from './addresses.service';
 
-@Controller('me/addresses')
+@Controller('users/me/addresses')
 export class AddressesController {
-  constructor(private readonly addressesService: AddressesService) {}
+  constructor(
+    private readonly addressesService: AddressesService,
+    private readonly bostaService: BostaService,
+  ) {}
 
   @Serialize(AddressDTO)
   @Get()
@@ -57,5 +62,17 @@ export class AddressesController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     return this.addressesService.removeAddress(id, user.id);
+  }
+
+  @Serialize(CityDTO)
+  @Get('cities')
+  getCities() {
+    return this.bostaService.getCities();
+  }
+
+  @Serialize(DistrictDTO)
+  @Get('cities/:id/districts')
+  getDistricts(@Param('id') id: string) {
+    return this.bostaService.getDistricts(id);
   }
 }

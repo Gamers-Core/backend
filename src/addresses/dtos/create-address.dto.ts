@@ -12,13 +12,7 @@ export class CreateAddressDTO {
   districtId: string;
 
   @IsString()
-  districtName: string;
-
-  @IsString()
   cityId: string;
-
-  @IsString()
-  cityName: string;
 
   @IsString()
   nameAr: string;

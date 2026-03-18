@@ -1,16 +1,23 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { BostaService } from 'src/bosta';
 import { Address, User } from 'src/entity';
 
 import { CreateAddressDTO, UpdateAddressDTO } from './dtos';
+import { BostaLocation } from './types';
 
 @Injectable()
 export class AddressesService {
   constructor(
     @InjectRepository(Address) private addressesRepo: Repository<Address>,
     @InjectRepository(User) private usersRepo: Repository<User>,
+    private readonly bostaService: BostaService,
   ) {}
 
   async getAddresses(userId: number) {
@@ -21,16 +28,21 @@ export class AddressesService {
     });
   }
 
-  async addAddress(userId: number, createDTO: CreateAddressDTO) {
+  async addAddress(
+    userId: number,
+    { cityId, districtId, ...createDTO }: CreateAddressDTO,
+  ) {
     const user = await this.usersRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
     const addressesCount = await this.addressesRepo.count({
       where: { user: { id: userId } },
     });
+    const locationData = await this.getAddressLocationData(cityId, districtId);
 
     const address = this.addressesRepo.create({
       ...createDTO,
+      ...locationData,
       isDefault: addressesCount === 0,
       user,
     });
@@ -46,6 +58,35 @@ export class AddressesService {
       });
 
       if (!address) throw new NotFoundException('Address not found');
+
+      if (updateDTO.cityId && !updateDTO.districtId)
+        throw new BadRequestException(
+          'districtId is required when cityId changes',
+        );
+
+      if (updateDTO.districtId && !updateDTO.cityId) {
+        const districtInCurrentCity = await this.bostaService.getDistrict(
+          updateDTO.districtId,
+          address.cityId,
+        );
+
+        if (!districtInCurrentCity)
+          throw new BadRequestException(
+            'districtId is not available for the current city; provide cityId with districtId if changing city',
+          );
+      }
+
+      if (updateDTO.cityId || updateDTO.districtId) {
+        const cityId = updateDTO.cityId || address.cityId;
+        const districtId = updateDTO.districtId || address.districtId;
+
+        const locationData = await this.getAddressLocationData(
+          cityId,
+          districtId,
+        );
+
+        Object.assign(updateDTO, locationData);
+      }
 
       Object.assign(address, updateDTO);
 
@@ -134,5 +175,28 @@ export class AddressesService {
 
     fallbackAddress.isDefault = true;
     await addressRepo.save(fallbackAddress);
+  }
+
+  private async getAddressLocationData(
+    cityId: string,
+    districtId: string,
+  ): Promise<BostaLocation> {
+    const city = await this.bostaService.getCity(cityId);
+    const district = await this.bostaService.getDistrict(districtId, cityId);
+
+    if (!city)
+      throw new BadRequestException('Invalid city data: cityId not found');
+
+    if (!district)
+      throw new BadRequestException(
+        'Invalid district data: districtId not found for selected city',
+      );
+
+    return {
+      cityId: city._id,
+      cityName: city.name,
+      districtId: district.districtId,
+      districtName: district.districtName,
+    };
   }
 }

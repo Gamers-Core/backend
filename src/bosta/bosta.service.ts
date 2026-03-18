@@ -2,6 +2,8 @@ import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 
+import { AppCacheService } from 'src/cache';
+
 import { errorHandler, requestManager } from './helpers';
 import { City, District, Instance } from './types';
 
@@ -12,6 +14,7 @@ export class BostaService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
+    private readonly cacheService: AppCacheService,
   ) {
     const api = this.httpService.axiosRef.create({
       baseURL: 'http://app.bosta.co/api/v2',
@@ -33,15 +36,35 @@ export class BostaService {
     this.bosta = requestManager(api);
   }
 
-  getCities() {
-    return this.bosta
-      .get<{ list: City[] }>('/cities')
-      .then((res) => res.data.list);
+  async getCities() {
+    return this.cacheService.getOrSet<City[]>(
+      'bosta:cities',
+      async () =>
+        await this.bosta
+          .get<{ list: City[] }>('/cities')
+          .then((res) => res.data.list),
+    );
   }
 
-  getDistricts(cityId: string) {
-    return this.bosta
-      .get<District[]>(`/cities/${cityId}/districts`)
-      .then((res) => res.data);
+  async getCity(id: string) {
+    const cities = await this.getCities();
+
+    return cities.find((city) => city._id === id);
+  }
+
+  async getDistricts(cityId: string) {
+    return this.cacheService.getOrSet<District[]>(
+      `bosta:districts:${cityId}`,
+      async () =>
+        await this.bosta
+          .get<District[]>(`/cities/${cityId}/districts`)
+          .then((res) => res.data),
+    );
+  }
+
+  getDistrict(id: string, cityId: string) {
+    return this.getDistricts(cityId).then((districts) =>
+      districts.find(({ districtId }) => districtId === id),
+    );
   }
 }
