@@ -1,4 +1,4 @@
-import { PartialType } from '@nestjs/mapped-types';
+import { PartialType } from 'src/common';
 
 import { CreateAddressDTO } from './create-address.dto';
 
