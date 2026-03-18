@@ -3,7 +3,7 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 
 import { errorHandler, requestManager } from './helpers';
-import { Instance } from './types';
+import { City, District, Instance } from './types';
 
 @Injectable()
 export class BostaService {
@@ -31,5 +31,17 @@ export class BostaService {
     api.interceptors.response.use((res) => res, errorHandler);
 
     this.bosta = requestManager(api);
+  }
+
+  getCities() {
+    return this.bosta
+      .get<{ list: City[] }>('/cities')
+      .then((res) => res.data.list);
+  }
+
+  getDistricts(cityId: string) {
+    return this.bosta
+      .get<District[]>(`/cities/${cityId}/districts`)
+      .then((res) => res.data);
   }
 }

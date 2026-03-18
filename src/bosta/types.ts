@@ -35,3 +35,31 @@ export interface ResponseError {
   statusCode: number;
   data: null;
 }
+
+export interface City {
+  _id: string;
+  name: string;
+  nameAr: string;
+  code: string;
+  alias: string;
+  hub: {
+    _id: string;
+    name: string;
+  };
+  sector: number;
+  pickupAvailability: boolean;
+  dropOffAvailability: boolean;
+  showAsDropOff: boolean;
+  showAsPickup: boolean;
+}
+
+export interface District {
+  zoneId: string;
+  zoneName: string;
+  zoneOtherName: string;
+  districtId: string;
+  districtName: string;
+  districtOtherName: string;
+  pickupAvailability: boolean;
+  dropOffAvailability: boolean;
+}
