@@ -9,10 +9,13 @@ import { getDataSourceOptions } from 'datasource';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthGuard } from './guards';
+import { AppCacheModule } from './cache';
 import { RedisModule } from './redis';
 import { CloudinaryModule } from './cloudinary';
 import { UsersModule } from './users';
 import { AuthModule } from './auth';
+import { AddressesModule } from './addresses';
+import { BostaModule } from './bosta';
 import { ProductsModule } from './products';
 import { MediaModule } from './media';
 
@@ -20,6 +23,9 @@ import { MediaModule } from './media';
   imports: [
     UsersModule,
     AuthModule,
+    AddressesModule,
+    BostaModule,
+    AppCacheModule,
     ProductsModule,
     MediaModule,
     RedisModule,
