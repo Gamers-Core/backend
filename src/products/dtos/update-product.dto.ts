@@ -1,15 +1,5 @@
-import { IsOptional, IsString, MinLength } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
 
-import { ProductSharedFieldsDTO } from './product-shared-fields.dto';
+import { CreateProductDTO } from './create-product.dto';
 
-export class UpdateProductDTO extends ProductSharedFieldsDTO {
-  @IsOptional()
-  @IsString()
-  @MinLength(2)
-  title?: string;
-
-  @IsOptional()
-  @IsString()
-  @MinLength(5)
-  description?: string;
-}
+export class UpdateProductDTO extends PartialType(CreateProductDTO) {}
