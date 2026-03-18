@@ -18,7 +18,7 @@ import { CurrentUser } from 'src/users/decorators/current-user.decorator';
 import { AddressDTO, CreateAddressDTO, UpdateAddressDTO } from './dtos';
 import { AddressesService } from './addresses.service';
 
-@Controller('users/me/addresses')
+@Controller('addresses')
 export class AddressesController {
   constructor(
     private readonly addressesService: AddressesService,
