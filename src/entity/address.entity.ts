@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -10,6 +11,10 @@ import {
 import { User } from './user.entity';
 
 @Entity()
+@Index('UQ_address_user_default', ['user'], {
+  unique: true,
+  where: 'isDefault = true',
+})
 export class Address {
   @PrimaryGeneratedColumn()
   id: number;

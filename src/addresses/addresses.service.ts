@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, QueryFailedError, Repository } from 'typeorm';
 
 import { BostaService } from 'src/bosta';
 import { Address, User } from 'src/entity';
@@ -16,7 +16,6 @@ import { BostaLocation } from './types';
 export class AddressesService {
   constructor(
     @InjectRepository(Address) private addressesRepo: Repository<Address>,
-    @InjectRepository(User) private usersRepo: Repository<User>,
     private readonly bostaService: BostaService,
   ) {}
 
@@ -32,22 +31,37 @@ export class AddressesService {
     userId: number,
     { cityId, districtId, ...createDTO }: CreateAddressDTO,
   ) {
-    const user = await this.usersRepo.findOne({ where: { id: userId } });
-    if (!user) throw new NotFoundException('User not found');
+    return this.addressesRepo.manager.transaction(async (manager) => {
+      const addressRepo = manager.getRepository(Address);
+      const userRepo = manager.getRepository(User);
 
-    const addressesCount = await this.addressesRepo.count({
-      where: { user: { id: userId } },
+      const user = await userRepo.findOne({ where: { id: userId } });
+      if (!user) throw new NotFoundException('User not found');
+
+      const locationData = await this.getAddressLocationData(
+        cityId,
+        districtId,
+      );
+
+      const address = addressRepo.create({
+        ...createDTO,
+        ...locationData,
+        isDefault: false,
+        user,
+      });
+
+      const createdAddress = await addressRepo.save(address);
+
+      await this.trySetAddressAsDefault(manager, createdAddress.id, userId);
+
+      const finalAddress = await addressRepo.findOne({
+        where: { id: createdAddress.id, user: { id: userId } },
+      });
+
+      if (!finalAddress) throw new NotFoundException('Address not found');
+
+      return finalAddress;
     });
-    const locationData = await this.getAddressLocationData(cityId, districtId);
-
-    const address = this.addressesRepo.create({
-      ...createDTO,
-      ...locationData,
-      isDefault: addressesCount === 0,
-      user,
-    });
-
-    return this.addressesRepo.save(address);
   }
 
   async updateAddress(id: number, userId: number, updateDTO: UpdateAddressDTO) {
@@ -98,26 +112,16 @@ export class AddressesService {
   }
 
   async setDefaultAddress(id: number, userId: number) {
-    const address = await this.addressesRepo.findOne({
-      where: { id: id, user: { id: userId } },
-    });
-
-    if (!address) throw new NotFoundException('Address not found');
-
     await this.addressesRepo.manager.transaction(async (manager) => {
-      await manager
-        .createQueryBuilder()
-        .update(Address)
-        .set({ isDefault: false })
-        .where('userId = :userId', { userId })
-        .execute();
+      const addressRepo = manager.getRepository(Address);
+      const address = await addressRepo.findOne({
+        where: { id, user: { id: userId } },
+      });
 
-      await manager
-        .createQueryBuilder()
-        .update(Address)
-        .set({ isDefault: true })
-        .where('id = :id AND userId = :userId', { id, userId })
-        .execute();
+      if (!address) throw new NotFoundException('Address not found');
+
+      await this.clearDefaultAddress(manager, userId);
+      await this.trySetAddressAsDefault(manager, id, userId);
     });
 
     const updatedAddress = await this.addressesRepo.findOne({
@@ -198,5 +202,46 @@ export class AddressesService {
       districtId: district.districtId,
       districtName: district.districtName,
     };
+  }
+
+  private async clearDefaultAddress(manager: EntityManager, userId: number) {
+    await manager
+      .createQueryBuilder()
+      .update(Address)
+      .set({ isDefault: false })
+      .where('userId = :userId', { userId })
+      .execute();
+  }
+
+  private async trySetAddressAsDefault(
+    manager: EntityManager,
+    addressId: number,
+    userId: number,
+  ) {
+    await manager
+      .createQueryBuilder()
+      .update(Address)
+      .set({ isDefault: true })
+      .where('id = :addressId AND userId = :userId', { addressId, userId })
+      .execute()
+      .catch((error: unknown) => {
+        if (this.isUniqueConstraintError(error)) return;
+
+        throw error;
+      });
+  }
+
+  private isUniqueConstraintError(error: unknown) {
+    if (!(error instanceof QueryFailedError)) return false;
+
+    const driverError = error.driverError as
+      | { code?: string; message?: string }
+      | undefined;
+
+    return (
+      driverError?.code === '23505' ||
+      driverError?.code === 'SQLITE_CONSTRAINT' ||
+      !!driverError?.message?.toLowerCase().includes('unique')
+    );
   }
 }
