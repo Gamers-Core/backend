@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-import { CloudinaryService } from 'src/cloudinary';
 import { Serialize } from 'src/interceptors';
 
 import { MediaService } from './media.service';
@@ -20,10 +19,7 @@ import { UploadedMediaFile } from './types';
 
 @Controller('media')
 export class MediaController {
-  constructor(
-    private readonly cloudinaryService: CloudinaryService,
-    private readonly mediaService: MediaService,
-  ) {}
+  constructor(private readonly mediaService: MediaService) {}
 
   @Serialize(MediaDTO)
   @Post()
@@ -34,9 +30,7 @@ export class MediaController {
   ) {
     if (!file) throw new BadRequestException('File is required');
 
-    const result = await this.cloudinaryService.uploadBuffer(file, body.folder);
-
-    return this.mediaService.create(result);
+    return this.mediaService.create(file, body);
   }
 
   @Delete(':id')

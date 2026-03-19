@@ -1,10 +1,10 @@
-import { IsIn, IsNotEmpty } from 'class-validator';
+import { IsIn, IsNotEmpty, IsString } from 'class-validator';
 
-import { mediaFolders } from 'src/cloudinary';
-import type { MediaFolder } from 'src/cloudinary';
+import { type MediaEntityType, mediaEntityType } from 'src/entity';
 
 export class UploadMediaDTO {
+  @IsString()
   @IsNotEmpty()
-  @IsIn(mediaFolders)
-  folder: MediaFolder;
+  @IsIn(mediaEntityType)
+  folder: MediaEntityType;
 }

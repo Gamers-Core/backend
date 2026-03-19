@@ -1,5 +1,7 @@
 import { Expose } from 'class-transformer';
 
+import type { MediaType } from 'src/entity';
+
 export class MediaDTO {
   @Expose()
   id: number;
@@ -11,10 +13,7 @@ export class MediaDTO {
   publicId: string;
 
   @Expose()
-  type: string;
-
-  @Expose()
-  status: string;
+  type: MediaType;
 
   @Expose()
   width: number;
@@ -27,10 +26,4 @@ export class MediaDTO {
 
   @Expose()
   bytes: number;
-
-  @Expose()
-  expiresAt: Date | null;
-
-  @Expose()
-  createdAt: Date;
 }
