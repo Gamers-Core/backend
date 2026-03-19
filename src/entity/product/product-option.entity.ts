@@ -19,12 +19,14 @@ export class ProductOptionEntity {
 
   @ManyToOne(() => Product, (product) => product.options, {
     onDelete: 'CASCADE',
+    orphanedRowAction: 'delete',
     nullable: false,
   })
   product: Product;
 
   @OneToMany(() => ProductVariantEntity, (variant) => variant.option, {
     cascade: true,
+    orphanedRowAction: 'delete',
   })
   variants: ProductVariantEntity[];
 }

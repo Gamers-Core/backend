@@ -24,6 +24,7 @@ export class ProductVariantEntity {
 
   @ManyToOne(() => ProductOptionEntity, (option) => option.variants, {
     onDelete: 'CASCADE',
+    orphanedRowAction: 'delete',
     nullable: false,
   })
   option: ProductOptionEntity;

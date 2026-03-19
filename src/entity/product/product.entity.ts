@@ -32,6 +32,7 @@ export class Product {
 
   @OneToMany(() => ProductOptionEntity, (option) => option.product, {
     cascade: true,
+    orphanedRowAction: 'delete',
   })
   options?: ProductOptionEntity[];
 
