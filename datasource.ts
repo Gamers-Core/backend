@@ -8,6 +8,8 @@ import {
   Collection,
   Media,
   Product,
+  ProductOptionEntity,
+  ProductVariantEntity,
   User,
 } from 'src/entity';
 
@@ -21,7 +23,16 @@ export const getDataSourceOptions = (): DataSourceOptions => {
   const dataSourceOptions: Partial<DataSourceOptions> = {
     synchronize: false,
     migrations,
-    entities: [User, Address, Product, Category, Collection, Media],
+    entities: [
+      User,
+      Address,
+      Product,
+      ProductOptionEntity,
+      ProductVariantEntity,
+      Category,
+      Collection,
+      Media,
+    ],
   };
 
   switch (process.env.NODE_ENV) {
