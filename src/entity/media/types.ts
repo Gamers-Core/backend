@@ -1,4 +1,4 @@
-import { mediaStatuses, mediaTypes } from './const';
+import { mediaEntityType, mediaTypes } from './const';
 
 export type MediaType = (typeof mediaTypes)[number];
-export type MediaStatus = (typeof mediaStatuses)[number];
+export type MediaEntityType = (typeof mediaEntityType)[number];
