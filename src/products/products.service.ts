@@ -3,9 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { MediaService } from 'src/media';
-import { Media, Product } from 'src/entity';
+import {
+  Media,
+  Product,
+  ProductOptionEntity,
+  ProductVariantEntity,
+} from 'src/entity';
 
-import { CreateProductDTO, UpdateProductDTO } from './dtos';
+import { CreateProductDTO, ProductOptionDTO, UpdateProductDTO } from './dtos';
 
 @Injectable()
 export class ProductsService {
@@ -31,8 +36,12 @@ export class ProductsService {
         title: createProductDTO.title,
         description: createProductDTO.description,
         status: createProductDTO.status,
-        options: createProductDTO.options,
       });
+
+      product.options = this.mapOptionsToEntities(
+        product,
+        createProductDTO.options,
+      );
 
       const savedProduct = await productRepository.save(product);
 
@@ -96,8 +105,9 @@ export class ProductsService {
 
       Object.assign(product, restUpdatableFields);
 
-      if (typeof options !== 'undefined')
-        product.options = options as Product['options'];
+      if (typeof options !== 'undefined') {
+        product.options = this.mapOptionsToEntities(product, options);
+      }
 
       await productRepository.save(product);
 
@@ -156,5 +166,33 @@ export class ProductsService {
       mediaIdsToAttach,
       mediaIdsToDetach,
     };
+  }
+
+  private mapOptionsToEntities(
+    product: Product,
+    options?: ProductOptionDTO[],
+  ): ProductOptionEntity[] | undefined {
+    if (!options) return;
+
+    return options.map((optionDTO) => {
+      const option = new ProductOptionEntity();
+
+      option.name = optionDTO.name;
+      option.product = product;
+      option.variants = optionDTO.variants.map((variantDTO) => {
+        const variant = new ProductVariantEntity();
+
+        variant.name = variantDTO.name;
+        variant.stock = variantDTO.stock;
+        variant.amount = variantDTO.amount;
+        variant.costPerItem = variantDTO.costPerItem;
+        variant.compareAt = variantDTO.compareAt ?? null;
+        variant.option = option;
+
+        return variant;
+      });
+
+      return option;
+    });
   }
 }

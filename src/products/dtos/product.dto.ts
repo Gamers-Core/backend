@@ -8,7 +8,7 @@ class ProductOptionVariantDTO {
   costPerItem: number;
 
   @Expose()
-  compareAt?: number;
+  compareAt: number | null;
 
   @Expose()
   name: string;
