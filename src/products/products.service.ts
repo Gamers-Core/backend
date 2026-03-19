@@ -31,7 +31,7 @@ export class ProductsService {
         title: createProductDTO.title,
         description: createProductDTO.description,
         status: createProductDTO.status,
-        options: createProductDTO.options ?? null,
+        options: createProductDTO.options,
       });
 
       const savedProduct = await productRepository.save(product);
@@ -49,7 +49,7 @@ export class ProductsService {
   async findAll(): Promise<Product[]> {
     return this.productsRepository.find({
       order: { createdAt: 'DESC' },
-      relations: { media: true },
+      relations: { media: true, options: { variants: true } },
     });
   }
 
@@ -68,6 +68,7 @@ export class ProductsService {
       const product = await this.findOneWithMediaOrFail(id, productRepository);
 
       const { mediaIds, ...updatableFields } = updateProductDTO;
+      const { options, ...restUpdatableFields } = updatableFields;
 
       if (typeof mediaIds !== 'undefined') {
         const { mediaIdsToAttach, mediaIdsToDetach } = this.buildMediaSyncPlan(
@@ -93,7 +94,10 @@ export class ProductsService {
         );
       }
 
-      Object.assign(product, updatableFields);
+      Object.assign(product, restUpdatableFields);
+
+      if (typeof options !== 'undefined')
+        product.options = options as Product['options'];
 
       await productRepository.save(product);
 
@@ -126,7 +130,7 @@ export class ProductsService {
   ) {
     const product = await productRepository.findOne({
       where: { id },
-      relations: { media: true },
+      relations: { media: true, options: { variants: true } },
     });
 
     if (!product) throw new NotFoundException('Product not found');

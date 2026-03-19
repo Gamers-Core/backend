@@ -1,26 +1,20 @@
 import { Expose, Type } from 'class-transformer';
 
-class ProductVariantPriceDTO {
+class ProductOptionVariantDTO {
   @Expose()
   amount: number;
+
+  @Expose()
+  costPerItem: number;
 
   @Expose()
   compareAt?: number;
 
   @Expose()
-  costPerItem?: number;
-}
-
-class ProductOptionVariantDTO {
-  @Expose()
   name: string;
 
   @Expose()
   stock: number;
-
-  @Expose()
-  @Type(() => ProductVariantPriceDTO)
-  price: ProductVariantPriceDTO;
 }
 
 class ProductOptionDTO {

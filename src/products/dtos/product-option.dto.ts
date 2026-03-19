@@ -1,36 +1,14 @@
 import {
-  IsArray,
   IsInt,
   IsOptional,
   IsString,
   Min,
+  IsArray,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-import type {
-  ProductOption,
-  ProductOptionVariant,
-  ProductVariantPrice,
-} from 'src/entity';
-
-export class ProductVariantPriceDTO implements ProductVariantPrice {
-  @IsInt()
-  @Min(0)
-  amount: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  compareAt?: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  costPerItem?: number;
-}
-
-export class ProductOptionVariantDTO implements ProductOptionVariant {
+export class ProductOptionVariantDTO {
   @IsString()
   name: string;
 
@@ -38,12 +16,21 @@ export class ProductOptionVariantDTO implements ProductOptionVariant {
   @Min(0)
   stock: number;
 
-  @ValidateNested()
-  @Type(() => ProductVariantPriceDTO)
-  price: ProductVariantPriceDTO;
+  @IsInt()
+  @Min(0)
+  amount: number;
+
+  @IsInt()
+  @Min(0)
+  costPerItem: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  compareAt?: number;
 }
 
-export class ProductOptionDTO implements ProductOption {
+export class ProductOptionDTO {
   @IsString()
   name: string;
 

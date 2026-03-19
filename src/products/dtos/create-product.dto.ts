@@ -11,7 +11,7 @@ import {
 } from 'class-validator';
 
 import { productStatuses } from 'src/entity';
-import type { ProductOption, ProductStatus } from 'src/entity';
+import type { ProductStatus } from 'src/entity';
 
 import { ProductOptionDTO } from './product-option.dto';
 
@@ -24,7 +24,7 @@ export class CreateProductDTO {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ProductOptionDTO)
-  options?: ProductOption[];
+  options?: ProductOptionDTO[];
 
   @IsOptional()
   @IsArray()
