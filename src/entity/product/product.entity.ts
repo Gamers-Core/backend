@@ -12,8 +12,9 @@ import {
 import { Category } from '../category.entity';
 import { Collection } from '../collection.entity';
 import { Media } from '../media';
+import { ProductOptionEntity } from './product-option.entity';
 import { productStatuses } from './const';
-import type { ProductOption, ProductStatus } from './types';
+import type { ProductStatus } from './types';
 
 @Entity()
 export class Product {
@@ -29,9 +30,11 @@ export class Product {
   @Column({ default: 'unlisted', enum: productStatuses, type: 'simple-enum' })
   status: ProductStatus;
 
-  // TODO: Move options/variants from JSON into dedicated entities when variant-level lifecycle/audit/history is needed.
-  @Column({ nullable: true, type: 'simple-json' })
-  options: ProductOption[] | null;
+  @OneToMany(() => ProductOptionEntity, (option) => option.product, {
+    cascade: true,
+    orphanedRowAction: 'delete',
+  })
+  options?: ProductOptionEntity[];
 
   @ManyToMany(() => Category, (category) => category.products)
   @JoinTable()
