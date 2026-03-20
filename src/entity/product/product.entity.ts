@@ -11,7 +11,6 @@ import {
 
 import { Category } from '../category.entity';
 import { Collection } from '../collection.entity';
-import { Media } from '../media';
 import { ProductOptionEntity } from './product-option.entity';
 import { productStatuses } from './const';
 import type { ProductStatus } from './types';
@@ -43,9 +42,6 @@ export class Product {
   @ManyToMany(() => Collection, (collection) => collection.products)
   @JoinTable()
   collections: Collection[];
-
-  @OneToMany(() => Media, (media) => media.product)
-  media: Media[];
 
   @CreateDateColumn()
   createdAt: Date;

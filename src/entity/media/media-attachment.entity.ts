@@ -11,7 +11,8 @@ import { mediaEntityType } from './const';
 import type { MediaEntityType } from './types';
 
 @Entity()
-@Index('idx_media_attachment_media_id', ['media'])
+@Index(['media', 'entityId', 'entityType'], { unique: true })
+@Index(['entityId', 'entityType'])
 export class MediaAttachment {
   @PrimaryGeneratedColumn()
   id: number;
@@ -25,6 +26,6 @@ export class MediaAttachment {
   @Column({ enum: mediaEntityType, type: 'simple-enum' })
   entityType: MediaEntityType;
 
-  @Column({ default: 0 })
+  @Column()
   order: number;
 }

@@ -43,5 +43,5 @@ export class Media {
   isDeleted: boolean;
 
   @Column({ type: 'datetime', nullable: true })
-  expiresAt: Date;
+  expiresAt: Date | null;
 }
