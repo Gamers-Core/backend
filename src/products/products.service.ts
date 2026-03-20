@@ -2,35 +2,29 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { MediaService } from 'src/media';
-import {
-  Media,
-  Product,
-  ProductOptionEntity,
-  ProductVariantEntity,
-} from 'src/entity';
+import { MediaAttachmentService } from 'src/media';
+import { Product, ProductOptionEntity, ProductVariantEntity } from 'src/entity';
 
-import { CreateProductDTO, ProductOptionDTO, UpdateProductDTO } from './dtos';
+import {
+  CreateProductDTO,
+  ProductDTO,
+  ProductOptionDTO,
+  UpdateProductDTO,
+} from './dtos';
 
 @Injectable()
 export class ProductsService {
   constructor(
+    private readonly mediaAttachmentService: MediaAttachmentService,
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
-    private readonly mediaService: MediaService,
   ) {}
 
-  async create(createProductDTO: CreateProductDTO): Promise<Product> {
+  async create(createProductDTO: CreateProductDTO) {
     const mediaIds = [...new Set(createProductDTO.mediaIds ?? [])];
 
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepository = manager.getRepository(Product);
-      const mediaRepository = manager.getRepository(Media);
-
-      await this.mediaService.assertDraftMediaIdsAttachable(
-        mediaIds,
-        mediaRepository,
-      );
 
       const product = productRepository.create({
         title: createProductDTO.title,
@@ -45,63 +39,64 @@ export class ProductsService {
 
       const savedProduct = await productRepository.save(product);
 
-      await this.mediaService.attachMediaToProduct(
-        mediaIds,
-        savedProduct.id,
-        mediaRepository,
+      await this.mediaAttachmentService.sync(
+        {
+          mediaIds,
+          entityId: savedProduct.id,
+          entityType: 'product',
+        },
+        manager,
       );
 
       return this.findOneWithMediaOrFail(savedProduct.id, productRepository);
     });
   }
 
-  async findAll(): Promise<Product[]> {
-    return this.productsRepository.find({
+  async findAll(): Promise<ProductDTO[]> {
+    const products = await this.productsRepository.find({
       order: { createdAt: 'DESC' },
-      relations: { media: true, options: { variants: true } },
+      relations: { options: { variants: true } },
     });
+
+    const mediaMap = await this.mediaAttachmentService.getBulkMedia(
+      products.map((product) => product.id),
+      'product',
+    );
+
+    const productsWithMedia = products.map((product) => {
+      const media = mediaMap[product.id] ?? [];
+
+      return { ...product, media };
+    });
+
+    return productsWithMedia;
   }
 
-  async findOne(id: number): Promise<Product> {
+  async findOne(id: number) {
     return this.findOneWithMediaOrFail(id);
   }
 
   async update(
     id: number,
     updateProductDTO: UpdateProductDTO,
-  ): Promise<Product> {
+  ): Promise<ProductDTO> {
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepository = manager.getRepository(Product);
-      const mediaRepository = manager.getRepository(Media);
 
-      const product = await this.findOneWithMediaOrFail(id, productRepository);
+      const product = await this.findOneOrFail(id, productRepository);
 
       const { mediaIds, ...updatableFields } = updateProductDTO;
       const { options, ...restUpdatableFields } = updatableFields;
 
-      if (typeof mediaIds !== 'undefined') {
-        const { mediaIdsToAttach, mediaIdsToDetach } = this.buildMediaSyncPlan(
-          mediaIds,
-          product.media,
+      if (typeof mediaIds !== 'undefined')
+        await this.mediaAttachmentService.sync(
+          {
+            mediaIds,
+            entityId: id,
+            entityType: 'product',
+          },
+          manager,
         );
-
-        await this.mediaService.assertDraftMediaIdsAttachable(
-          mediaIdsToAttach,
-          mediaRepository,
-        );
-
-        await this.mediaService.detachMediaFromProduct(
-          mediaIdsToDetach,
-          id,
-          mediaRepository,
-        );
-
-        await this.mediaService.attachMediaToProduct(
-          mediaIdsToAttach,
-          id,
-          mediaRepository,
-        );
-      }
 
       Object.assign(product, restUpdatableFields);
 
@@ -118,16 +113,14 @@ export class ProductsService {
   async delete(id: number): Promise<void> {
     await this.productsRepository.manager.transaction(async (manager) => {
       const productRepository = manager.getRepository(Product);
-      const mediaRepository = manager.getRepository(Media);
 
-      const product = await this.findOneWithMediaOrFail(id, productRepository);
-
-      const attachedMediaIds = product.media.map(({ id }) => id);
-
-      await this.mediaService.detachMediaFromProduct(
-        attachedMediaIds,
-        id,
-        mediaRepository,
+      await this.mediaAttachmentService.sync(
+        {
+          mediaIds: [],
+          entityId: id,
+          entityType: 'product',
+        },
+        manager,
       );
 
       await productRepository.delete(id);
@@ -137,35 +130,29 @@ export class ProductsService {
   private async findOneWithMediaOrFail(
     id: number,
     productRepository: Repository<Product> = this.productsRepository,
-  ) {
+  ): Promise<ProductDTO> {
+    const product = await this.findOneOrFail(id, productRepository);
+
+    const media = await this.mediaAttachmentService.getMedia({
+      entityId: product.id,
+      entityType: 'product',
+    });
+
+    return { ...product, media };
+  }
+
+  private async findOneOrFail(
+    id: number,
+    productRepository: Repository<Product> = this.productsRepository,
+  ): Promise<Product> {
     const product = await productRepository.findOne({
       where: { id },
-      relations: { media: true, options: { variants: true } },
+      relations: { options: { variants: true } },
     });
 
     if (!product) throw new NotFoundException('Product not found');
 
     return product;
-  }
-
-  private buildMediaSyncPlan(requestedMediaIds: number[], media: Media[]) {
-    const uniqueRequestedMediaIds = [...new Set(requestedMediaIds)];
-    const currentMediaIds = media.map(({ id }) => id);
-
-    const currentMediaSet = new Set(currentMediaIds);
-    const requestedMediaSet = new Set(uniqueRequestedMediaIds);
-
-    const mediaIdsToDetach = currentMediaIds.filter(
-      (mediaId) => !requestedMediaSet.has(mediaId),
-    );
-    const mediaIdsToAttach = uniqueRequestedMediaIds.filter(
-      (mediaId) => !currentMediaSet.has(mediaId),
-    );
-
-    return {
-      mediaIdsToAttach,
-      mediaIdsToDetach,
-    };
   }
 
   private mapOptionsToEntities(

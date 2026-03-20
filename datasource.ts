@@ -7,6 +7,7 @@ import {
   Category,
   Collection,
   Media,
+  MediaAttachment,
   Product,
   ProductOptionEntity,
   ProductVariantEntity,
@@ -32,6 +33,7 @@ export const getDataSourceOptions = (): DataSourceOptions => {
       Category,
       Collection,
       Media,
+      MediaAttachment,
     ],
   };
 
