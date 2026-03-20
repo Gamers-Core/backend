@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 
 import { Media, MediaAttachment, MediaEntityType } from 'src/entity';
 
@@ -23,44 +23,50 @@ export class MediaAttachmentService {
     private readonly attachmentRepo: Repository<MediaAttachment>,
   ) {}
 
-  async sync({ mediaIds, ...entity }: MediaAttachmentOptionsDTO) {
+  async sync(
+    { mediaIds, ...entity }: MediaAttachmentOptionsDTO,
+    manager?: EntityManager,
+  ) {
+    const attachmentRepo = manager
+      ? manager.getRepository(MediaAttachment)
+      : this.attachmentRepo;
+    const mediaRepo = manager ? manager.getRepository(Media) : this.mediaRepo;
+
     if (!mediaIds.length) {
-      await this.detachAll(entity);
+      await this.detachAll(entity, attachmentRepo, mediaRepo);
       return [];
     }
 
     const uniqueIds = [...new Set(mediaIds)];
 
-    return this.attachmentRepo.manager.transaction(async (manager) => {
-      const attachmentRepo = manager.getRepository(MediaAttachment);
-      const mediaRepo = manager.getRepository(Media);
-
-      const existingAttachments = await attachmentRepo.find({
-        where: entity,
-        relations: ['media'],
-      });
-
-      const existingIds = existingAttachments.map((a) => a.media.id);
-      const existingSet = new Set(existingIds);
-      const uniqueSet = new Set(uniqueIds);
-
-      const toAttach = uniqueIds.filter((id) => !existingSet.has(id));
-      const toDetach = existingIds.filter((id) => !uniqueSet.has(id));
-
-      await this.attach(
-        { mediaIds: toAttach, ...entity },
-        attachmentRepo,
-        mediaRepo,
-      );
-      await this.detach(
-        { mediaIds: toDetach, ...entity },
-        attachmentRepo,
-        mediaRepo,
-      );
-      await this.reorder({ mediaIds: uniqueIds, ...entity }, attachmentRepo);
-
-      return this.getMedia(entity, attachmentRepo);
+    const existingAttachments = await attachmentRepo.find({
+      where: entity,
+      relations: ['media'],
     });
+
+    const existingIds = existingAttachments.reduce(
+      (ids, { media }) => (media ? [...ids, media.id] : ids),
+      [],
+    );
+    const existingSet = new Set(existingIds);
+    const uniqueSet = new Set(uniqueIds);
+
+    const toAttach = uniqueIds.filter((id) => !existingSet.has(id));
+    const toDetach = existingIds.filter((id) => !uniqueSet.has(id));
+
+    await this.attach(
+      { mediaIds: toAttach, ...entity },
+      attachmentRepo,
+      mediaRepo,
+    );
+    await this.detach(
+      { mediaIds: toDetach, ...entity },
+      attachmentRepo,
+      mediaRepo,
+    );
+    await this.reorder({ mediaIds: uniqueIds, ...entity }, attachmentRepo);
+
+    return this.getMedia(entity, attachmentRepo);
   }
 
   private async attach(

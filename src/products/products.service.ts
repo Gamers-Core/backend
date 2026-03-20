@@ -39,11 +39,14 @@ export class ProductsService {
 
       const savedProduct = await productRepository.save(product);
 
-      await this.mediaAttachmentService.sync({
-        mediaIds,
-        entityId: savedProduct.id,
-        entityType: 'product',
-      });
+      await this.mediaAttachmentService.sync(
+        {
+          mediaIds,
+          entityId: savedProduct.id,
+          entityType: 'product',
+        },
+        manager,
+      );
 
       return this.findOneWithMediaOrFail(savedProduct.id, productRepository);
     });
@@ -86,11 +89,14 @@ export class ProductsService {
       const { options, ...restUpdatableFields } = updatableFields;
 
       if (typeof mediaIds !== 'undefined')
-        await this.mediaAttachmentService.sync({
-          mediaIds,
-          entityId: id,
-          entityType: 'product',
-        });
+        await this.mediaAttachmentService.sync(
+          {
+            mediaIds,
+            entityId: id,
+            entityType: 'product',
+          },
+          manager,
+        );
 
       Object.assign(product, restUpdatableFields);
 
@@ -108,11 +114,14 @@ export class ProductsService {
     await this.productsRepository.manager.transaction(async (manager) => {
       const productRepository = manager.getRepository(Product);
 
-      await this.mediaAttachmentService.sync({
-        mediaIds: [],
-        entityId: id,
-        entityType: 'product',
-      });
+      await this.mediaAttachmentService.sync(
+        {
+          mediaIds: [],
+          entityId: id,
+          entityType: 'product',
+        },
+        manager,
+      );
 
       await productRepository.delete(id);
     });
