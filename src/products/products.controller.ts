@@ -19,6 +19,12 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Serialize(ProductDTO)
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.findOne(id);
+  }
+
+  @Serialize(ProductDTO)
   @Get()
   findAll() {
     return this.productsService.findAll();
@@ -28,12 +34,6 @@ export class ProductsController {
   @Post()
   create(@Body() createProductDTO: CreateProductDTO) {
     return this.productsService.create(createProductDTO);
-  }
-
-  @Serialize(ProductDTO)
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.productsService.findOne(id);
   }
 
   @Serialize(ProductDTO)

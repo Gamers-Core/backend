@@ -1,4 +1,5 @@
 import { Expose, Type } from 'class-transformer';
+import { MediaAttachmentDTO } from 'src/media';
 
 class ProductOptionVariantDTO {
   @Expose()
@@ -26,32 +27,6 @@ class ProductOptionDTO {
   variants: ProductOptionVariantDTO[];
 }
 
-class ProductMediaDTO {
-  @Expose()
-  id: number;
-
-  @Expose()
-  url: string;
-
-  @Expose()
-  publicId: string;
-
-  @Expose()
-  type: string;
-
-  @Expose()
-  width: number;
-
-  @Expose()
-  height: number;
-
-  @Expose()
-  format: string;
-
-  @Expose()
-  bytes: number;
-}
-
 export class ProductDTO {
   @Expose()
   id: number;
@@ -70,8 +45,8 @@ export class ProductDTO {
   options?: ProductOptionDTO[] | null;
 
   @Expose()
-  @Type(() => ProductMediaDTO)
-  media: ProductMediaDTO[];
+  @Type(() => MediaAttachmentDTO)
+  media: MediaAttachmentDTO[];
 
   @Expose()
   createdAt: Date;
