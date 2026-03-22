@@ -5,7 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import { AppCacheService } from 'src/cache';
 
 import { errorHandler, requestManager } from './helpers';
-import { City, District, Instance } from './types';
+import { City, District, Instance, InsuranceFee, ShippingFees } from './types';
+import { ShippingFeesDTO } from './dtos';
 
 @Injectable()
 export class BostaService {
@@ -35,20 +36,18 @@ export class BostaService {
     this.bosta = requestManager(api);
   }
 
-  async getCities() {
+  getCities() {
     return this.cacheService.getOrSet<City[]>(
       'bosta:cities',
       async () => await this.bosta.get<{ list: City[] }>('/cities').then((res) => res.data.list),
     );
   }
 
-  async getCity(id: string) {
-    const cities = await this.getCities();
-
-    return cities.find((city) => city._id === id);
+  getCity(id: string) {
+    return this.getCities().then((cities) => cities.find(({ _id }) => _id === id));
   }
 
-  async getDistricts(cityId: string) {
+  getDistricts(cityId: string) {
     return this.cacheService.getOrSet<District[]>(
       `bosta:districts:${cityId}`,
       async () => await this.bosta.get<District[]>(`/cities/${cityId}/districts`).then((res) => res.data),
@@ -57,5 +56,19 @@ export class BostaService {
 
   getDistrict(id: string, cityId: string) {
     return this.getDistricts(cityId).then((districts) => districts.find(({ districtId }) => districtId === id));
+  }
+
+  getInsuranceFees(goodsValue: number) {
+    return this.bosta
+      .get<InsuranceFee>('/pricing/insuranceFeeEstimate', {
+        params: { goodsValue },
+      })
+      .then((res) => res.data);
+  }
+
+  getShippingFees(params: ShippingFeesDTO) {
+    return this.bosta
+      .get<ShippingFees>('/pricing/shipment/calculator', { params: { ...params, size: 'Normal', type: 'SEND' } })
+      .then((res) => res.data);
   }
 }

@@ -49,3 +49,95 @@ export interface District {
   pickupAvailability: boolean;
   dropOffAvailability: boolean;
 }
+
+export interface InsuranceFee {
+  isInsuranceFeesAdded: boolean;
+  insuranceFees: number;
+}
+
+export interface ShippingFees {
+  tier: {
+    _id: string;
+    name: string;
+    cost: number;
+    zeroCodDiscount: { amount: number };
+    extraCodFee: { percentage: number; codAmount: number; minimumFeeAmount: number };
+    expediteFee: { percentage: number; minimumFeeAmount: number };
+    insuranceFee: { percentage: number; minimumFeeAmount: number };
+    codFee: { amount: number };
+    posFee: { percentage: number; minimumFeeAmount: number };
+    bostaMaterialFee: { amount: number };
+    configurations: {
+      zeroCodDiscount: boolean;
+      extraCodFee: boolean;
+      insuranceFee: boolean;
+      expediteFee: boolean;
+      codFee: boolean;
+      posFee: boolean;
+      paymentFrequency: string;
+      paymentSchedule: any[];
+      paymentTransferMethod: any[];
+      weighting: string;
+      bostaMaterialFee: boolean;
+      restriction: Record<string, any>;
+      openingPackageFee: boolean;
+    };
+    extraWeight: {
+      weightThresholdInKg: number;
+      costForWeightThreshold: number;
+      costForAdditionalKgWeight: number;
+      _id: string;
+      excludeDeliveryTypesFromAdditionalWeighCostEnabled: boolean;
+      excludedDeliveryTypesFromAdditionalWeighCost: any[];
+    };
+    country: {
+      _id: string;
+      name: string;
+      nameAr: string;
+      code: string;
+      currency: string;
+      vat: number;
+    };
+    isInitial: boolean;
+    isDefault: boolean;
+    deleted: boolean;
+    openingPackageFee: { amount: number };
+    createdAt: string;
+    updatedAt: string;
+    flexShipFee: { amount: number };
+    pickupFee: { amount: number; numberOfOrdersThreshold: number };
+  };
+  size: {
+    _id: string;
+    name: string;
+    alias: string;
+    rate: string;
+    cost: number;
+    multiplier: number;
+  };
+  transit: {
+    _id: string;
+    originSectorId: number;
+    destinationSectorId: number;
+    cost: number;
+  };
+  serviceType: {
+    _id: string;
+    name: string;
+    rate: string;
+    cost: number;
+  };
+  extraCodFee: { amount: number; percentage: number };
+  insuranceFee: { amount: number; percentage: number };
+  expediteFee: { amount: number; percentage: number };
+  shippingFee: number;
+  isBostaMaterialFee: boolean;
+  bostaMaterialFee: { amount: number };
+  currency: string;
+  vat: number;
+  priceBeforeVat: number;
+  priceAfterVat: number;
+  sizeEffectCost: number;
+  dropOffZoneFees: number;
+  pickupZoneFees: number;
+}

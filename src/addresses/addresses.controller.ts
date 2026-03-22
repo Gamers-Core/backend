@@ -1,12 +1,12 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
 
 import { User } from 'src/entity';
 import { Serialize } from 'src/interceptors';
-import { BostaService, CityDTO, DistrictDTO } from 'src/bosta';
+import { BostaService, CityDTO, DistrictDTO, ShippingFeesDTO } from 'src/bosta';
 
 import { CurrentUser } from 'src/users/decorators/current-user.decorator';
 
-import { AddressDTO, CreateAddressDTO, UpdateAddressDTO } from './dtos';
+import { AddressDTO, CreateAddressDTO, ShippingFeesResponseDTO, UpdateAddressDTO } from './dtos';
 import { AddressesService } from './addresses.service';
 
 @Controller('addresses')
@@ -55,5 +55,16 @@ export class AddressesController {
   @Get('cities/:id/districts')
   getDistricts(@Param('id') id: string) {
     return this.bostaService.getDistricts(id);
+  }
+
+  @Get('insurance-fees/:amount')
+  getInsuranceFees(@Param('amount', ParseIntPipe) amount: number) {
+    return this.bostaService.getInsuranceFees(amount);
+  }
+
+  @Serialize(ShippingFeesResponseDTO)
+  @Get('shipping-fees')
+  getShippingFees(@Query() query: ShippingFeesDTO) {
+    return this.bostaService.getShippingFees(query);
   }
 }
