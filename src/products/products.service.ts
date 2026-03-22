@@ -3,45 +3,52 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { MediaAttachmentService } from 'src/media';
-import { Product, ProductOptionEntity, ProductVariantEntity } from 'src/entity';
+import { Brand, Product } from 'src/entity';
 
-import {
-  CreateProductDTO,
-  ProductDTO,
-  ProductOptionDTO,
-  UpdateProductDTO,
-} from './dtos';
+import { CreateProductDTO, ProductDTO, UpdateProductDTO } from './dtos';
+import { VariantsService } from './variants.service';
 
 @Injectable()
 export class ProductsService {
   constructor(
     private readonly mediaAttachmentService: MediaAttachmentService,
+    private readonly variantsService: VariantsService,
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
   ) {}
 
   async create(createProductDTO: CreateProductDTO) {
-    const mediaIds = [...new Set(createProductDTO.mediaIds ?? [])];
-
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepository = manager.getRepository(Product);
+      const brandRepository = manager.getRepository(Brand);
+
+      let brand: Brand | null = null;
+      if (typeof createProductDTO.brandId !== 'undefined') {
+        brand = await brandRepository.findOne({
+          where: { id: createProductDTO.brandId },
+        });
+
+        if (!brand) throw new NotFoundException('Brand not found');
+      }
 
       const product = productRepository.create({
         title: createProductDTO.title,
         description: createProductDTO.description,
         status: createProductDTO.status,
+        brand: brand ?? undefined,
+        variants: [],
       });
-
-      product.options = this.mapOptionsToEntities(
-        product,
-        createProductDTO.options,
-      );
-
       const savedProduct = await productRepository.save(product);
+
+      await this.variantsService.sync(
+        savedProduct,
+        createProductDTO.variants,
+        manager,
+      );
 
       await this.mediaAttachmentService.sync(
         {
-          mediaIds,
+          mediaIds: createProductDTO.mediaIds ?? [],
           entityId: savedProduct.id,
           entityType: 'product',
         },
@@ -55,18 +62,29 @@ export class ProductsService {
   async findAll(): Promise<ProductDTO[]> {
     const products = await this.productsRepository.find({
       order: { createdAt: 'DESC' },
-      relations: { options: { variants: true } },
+      relations: { variants: true, brand: true },
     });
+
+    const variantIds = products.flatMap((product) =>
+      product.variants.map((variant) => variant.id),
+    );
 
     const mediaMap = await this.mediaAttachmentService.getBulkMedia(
       products.map((product) => product.id),
       'product',
     );
 
-    const productsWithMedia = products.map((product) => {
-      const media = mediaMap[product.id] ?? [];
+    const variantMediaMap = await this.mediaAttachmentService.getBulkMedia(
+      variantIds,
+      'variant',
+    );
 
-      return { ...product, media };
+    const productsWithMedia = products.map((product) => {
+      return this.serializeProduct(
+        product,
+        mediaMap[product.id] ?? [],
+        variantMediaMap,
+      );
     });
 
     return productsWithMedia;
@@ -82,11 +100,12 @@ export class ProductsService {
   ): Promise<ProductDTO> {
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepository = manager.getRepository(Product);
+      const brandRepository = manager.getRepository(Brand);
 
       const product = await this.findOneOrFail(id, productRepository);
 
-      const { mediaIds, ...updatableFields } = updateProductDTO;
-      const { options, ...restUpdatableFields } = updatableFields;
+      const { variants, mediaIds, brandId, ...updatableFields } =
+        updateProductDTO;
 
       if (typeof mediaIds !== 'undefined')
         await this.mediaAttachmentService.sync(
@@ -98,13 +117,19 @@ export class ProductsService {
           manager,
         );
 
-      Object.assign(product, restUpdatableFields);
+      Object.assign(product, updatableFields);
 
-      if (typeof options !== 'undefined') {
-        product.options = this.mapOptionsToEntities(product, options);
+      if (typeof brandId !== 'undefined') {
+        const brand = await brandRepository.findOne({ where: { id: brandId } });
+        if (!brand) throw new NotFoundException('Brand not found');
+        product.brand = brand;
       }
 
-      await productRepository.save(product);
+      const updatedProduct = await productRepository.save(product);
+
+      if (typeof variants !== 'undefined') {
+        await this.variantsService.sync(updatedProduct, variants, manager);
+      }
 
       return this.findOneWithMediaOrFail(id, productRepository);
     });
@@ -138,7 +163,35 @@ export class ProductsService {
       entityType: 'product',
     });
 
-    return { ...product, media };
+    const variantMediaMap = await this.mediaAttachmentService.getBulkMedia(
+      product.variants.map((variant) => variant.id),
+      'variant',
+    );
+    return this.serializeProduct(product, media, variantMediaMap);
+  }
+
+  private serializeProduct(
+    product: Product,
+    media: ProductDTO['media'],
+    variantMediaMap: Record<number, ProductDTO['variants'][number]['media']>,
+  ): ProductDTO {
+    const variants = product.variants.map((variant) => ({
+      ...variant,
+      media: variantMediaMap[variant.id] ?? [],
+    }));
+    const brand = product.brand
+      ? {
+          id: product.brand?.id,
+          name: product.brand?.name,
+        }
+      : null;
+
+    return {
+      ...product,
+      variants,
+      media,
+      brand,
+    };
   }
 
   private async findOneOrFail(
@@ -147,39 +200,11 @@ export class ProductsService {
   ): Promise<Product> {
     const product = await productRepository.findOne({
       where: { id },
-      relations: { options: { variants: true } },
+      relations: { variants: true, brand: true },
     });
 
     if (!product) throw new NotFoundException('Product not found');
 
     return product;
-  }
-
-  private mapOptionsToEntities(
-    product: Product,
-    options?: ProductOptionDTO[],
-  ): ProductOptionEntity[] | undefined {
-    if (!options) return;
-
-    return options.map((optionDTO) => {
-      const option = new ProductOptionEntity();
-
-      option.name = optionDTO.name;
-      option.product = product;
-      option.variants = optionDTO.variants.map((variantDTO) => {
-        const variant = new ProductVariantEntity();
-
-        variant.name = variantDTO.name;
-        variant.stock = variantDTO.stock;
-        variant.amount = variantDTO.amount;
-        variant.costPerItem = variantDTO.costPerItem;
-        variant.compareAt = variantDTO.compareAt ?? null;
-        variant.option = option;
-
-        return variant;
-      });
-
-      return option;
-    });
   }
 }

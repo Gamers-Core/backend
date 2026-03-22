@@ -3,6 +3,7 @@ import {
   IsArray,
   IsIn,
   IsInt,
+  ArrayMinSize,
   IsOptional,
   IsString,
   Min,
@@ -13,18 +14,18 @@ import {
 import { productStatuses } from 'src/entity';
 import type { ProductStatus } from 'src/entity';
 
-import { ProductOptionDTO } from './product-option.dto';
+import { ProductVariantDTO } from './product-variant.dto';
 
 export class CreateProductDTO {
   @IsOptional()
   @IsIn(productStatuses)
   status?: ProductStatus;
 
-  @IsOptional()
   @IsArray()
+  @ArrayMinSize(1)
   @ValidateNested({ each: true })
-  @Type(() => ProductOptionDTO)
-  options?: ProductOptionDTO[];
+  @Type(() => ProductVariantDTO)
+  variants: ProductVariantDTO[];
 
   @IsOptional()
   @IsArray()
@@ -39,4 +40,9 @@ export class CreateProductDTO {
   @IsString()
   @MinLength(5)
   description: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  brandId?: number;
 }

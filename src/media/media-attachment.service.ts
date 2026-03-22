@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { plainToInstance } from 'class-transformer';
 import { EntityManager, In, Repository } from 'typeorm';
 
 import { Media, MediaAttachment, MediaEntityType } from 'src/entity';
@@ -10,7 +11,6 @@ import {
   MediaAttachmentOptionsDTO,
   EntityAttachmentDTO,
 } from './dtos';
-import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class MediaAttachmentService {
@@ -27,17 +27,13 @@ export class MediaAttachmentService {
     { mediaIds, ...entity }: MediaAttachmentOptionsDTO,
     manager?: EntityManager,
   ) {
-    const attachmentRepo = manager
-      ? manager.getRepository(MediaAttachment)
-      : this.attachmentRepo;
-    const mediaRepo = manager ? manager.getRepository(Media) : this.mediaRepo;
+    manager = manager || this.attachmentRepo.manager;
 
-    if (!mediaIds.length) {
-      await this.detachAll(entity, attachmentRepo, mediaRepo);
-      return [];
-    }
+    const attachmentRepo = manager.getRepository(MediaAttachment);
+    const mediaRepo = manager.getRepository(Media);
 
-    const uniqueIds = [...new Set(mediaIds)];
+    if (!mediaIds.length)
+      return await this.detachAll(entity, attachmentRepo, mediaRepo);
 
     const existingAttachments = await attachmentRepo.find({
       where: entity,
@@ -48,22 +44,24 @@ export class MediaAttachmentService {
       (ids, { media }) => (media ? [...ids, media.id] : ids),
       [],
     );
+    const uniqueIds = [...new Set(mediaIds)];
+
     const existingSet = new Set(existingIds);
-    const uniqueSet = new Set(uniqueIds);
-
     const toAttach = uniqueIds.filter((id) => !existingSet.has(id));
-    const toDetach = existingIds.filter((id) => !uniqueSet.has(id));
-
     await this.attach(
       { mediaIds: toAttach, ...entity },
       attachmentRepo,
       mediaRepo,
     );
+
+    const uniqueSet = new Set(uniqueIds);
+    const toDetach = existingIds.filter((id) => !uniqueSet.has(id));
     await this.detach(
       { mediaIds: toDetach, ...entity },
       attachmentRepo,
       mediaRepo,
     );
+
     await this.reorder({ mediaIds: uniqueIds, ...entity }, attachmentRepo);
 
     return this.getMedia(entity, attachmentRepo);
@@ -78,7 +76,7 @@ export class MediaAttachmentService {
 
     const uniqueIds = [...new Set(mediaIds)];
 
-    await this.assertDraftMedia(uniqueIds);
+    await this.assertDraftMedia(uniqueIds, mediaRepo);
 
     const existing = await attachmentRepo.find({
       where: { entityId, entityType, media: { id: In(uniqueIds) } },
@@ -144,7 +142,7 @@ export class MediaAttachmentService {
       relations: ['media'],
     });
 
-    if (!attachments.length) return;
+    if (!attachments.length) return [];
 
     const mediaIdsToReset = attachments.map(({ media }) => media.id);
 
@@ -154,6 +152,8 @@ export class MediaAttachmentService {
       { id: In(mediaIdsToReset) },
       { expiresAt: this.mediaService.getDraftExpiryDate() },
     );
+
+    return [];
   }
 
   private async reorder(
@@ -185,12 +185,15 @@ export class MediaAttachmentService {
     return await repository.save(mediaAttachments);
   }
 
-  async assertDraftMedia(mediaIds: number[]) {
+  async assertDraftMedia(
+    mediaIds: number[],
+    repo: Repository<Media> = this.mediaRepo,
+  ) {
     if (!mediaIds.length) return;
 
     const uniqueIds = [...new Set(mediaIds)];
 
-    const media = await this.mediaRepo.findBy({
+    const media = await repo.findBy({
       id: In(uniqueIds),
     });
 

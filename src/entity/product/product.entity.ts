@@ -2,16 +2,18 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   JoinTable,
   ManyToMany,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 import { Category } from '../category.entity';
-import { Collection } from '../collection.entity';
-import { ProductOptionEntity } from './product-option.entity';
+import { Brand } from '../brand.entity';
+import { ProductVariantEntity } from './product-variant.entity';
 import { productStatuses } from './const';
 import type { ProductStatus } from './types';
 
@@ -29,19 +31,21 @@ export class Product {
   @Column({ default: 'unlisted', enum: productStatuses, type: 'simple-enum' })
   status: ProductStatus;
 
-  @OneToMany(() => ProductOptionEntity, (option) => option.product, {
+  @OneToMany(() => ProductVariantEntity, (variant) => variant.product, {
     cascade: true,
-    orphanedRowAction: 'delete',
   })
-  options?: ProductOptionEntity[];
+  variants: ProductVariantEntity[];
 
   @ManyToMany(() => Category, (category) => category.products)
   @JoinTable()
   categories: Category[];
 
-  @ManyToMany(() => Collection, (collection) => collection.products)
-  @JoinTable()
-  collections: Collection[];
+  @ManyToOne(() => Brand, (brand) => brand.products, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'brandId' })
+  brand: Brand | null;
 
   @CreateDateColumn()
   createdAt: Date;
