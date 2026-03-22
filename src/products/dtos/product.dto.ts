@@ -1,9 +1,28 @@
 import { Expose, Type } from 'class-transformer';
+
 import { MediaAttachmentDTO } from 'src/media';
 
-class ProductOptionVariantDTO {
+class ProductVariantDTO {
   @Expose()
-  amount: number;
+  id: number;
+
+  @Expose()
+  externalId: string;
+
+  @Expose()
+  name: string | null;
+
+  @Expose()
+  isDefault: boolean;
+
+  @Expose()
+  isActive: boolean;
+
+  @Expose()
+  stock: number;
+
+  @Expose()
+  price: number;
 
   @Expose()
   costPerItem: number;
@@ -12,19 +31,16 @@ class ProductOptionVariantDTO {
   compareAt: number | null;
 
   @Expose()
-  name: string;
-
-  @Expose()
-  stock: number;
+  @Type(() => MediaAttachmentDTO)
+  media: MediaAttachmentDTO[];
 }
 
-class ProductOptionDTO {
+class ProductBrandDTO {
   @Expose()
-  name: string;
+  id: number;
 
   @Expose()
-  @Type(() => ProductOptionVariantDTO)
-  variants: ProductOptionVariantDTO[];
+  name: string;
 }
 
 export class ProductDTO {
@@ -41,12 +57,16 @@ export class ProductDTO {
   status: string;
 
   @Expose()
-  @Type(() => ProductOptionDTO)
-  options?: ProductOptionDTO[] | null;
+  @Type(() => ProductVariantDTO)
+  variants: ProductVariantDTO[];
 
   @Expose()
   @Type(() => MediaAttachmentDTO)
   media: MediaAttachmentDTO[];
+
+  @Expose()
+  @Type(() => ProductBrandDTO)
+  brand: ProductBrandDTO | null;
 
   @Expose()
   createdAt: Date;
