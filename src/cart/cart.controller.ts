@@ -14,21 +14,21 @@ export class CartController {
 
   @Get()
   getCart(@CurrentUser() user: User) {
-    return this.cartService.getCart(user);
+    return this.cartService.getCart(user.id);
   }
 
   @Post()
   addItem(@CurrentUser() user: User, @Body() body: CreateCartItemDTO) {
-    return this.cartService.addItem(user, body);
+    return this.cartService.addItem(user.id, body);
   }
 
   @Patch(':id')
   updateItem(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number, @Body() body: UpdateCartItemDTO) {
-    return this.cartService.updateItem(user, id, body);
+    return this.cartService.updateItem(user.id, id, body);
   }
 
   @Delete()
   clearCart(@CurrentUser() user: User) {
-    return this.cartService.clearCart(user);
+    return this.cartService.clearCart(user.id);
   }
 }
