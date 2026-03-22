@@ -76,7 +76,7 @@ export class MediaAttachmentService {
 
     const uniqueIds = [...new Set(mediaIds)];
 
-    await this.assertDraftMedia(uniqueIds);
+    await this.assertDraftMedia(uniqueIds, mediaRepo);
 
     const existing = await attachmentRepo.find({
       where: { entityId, entityType, media: { id: In(uniqueIds) } },
@@ -185,12 +185,15 @@ export class MediaAttachmentService {
     return await repository.save(mediaAttachments);
   }
 
-  async assertDraftMedia(mediaIds: number[]) {
+  async assertDraftMedia(
+    mediaIds: number[],
+    repo: Repository<Media> = this.mediaRepo,
+  ) {
     if (!mediaIds.length) return;
 
     const uniqueIds = [...new Set(mediaIds)];
 
-    const media = await this.mediaRepo.findBy({
+    const media = await repo.findBy({
       id: In(uniqueIds),
     });
 

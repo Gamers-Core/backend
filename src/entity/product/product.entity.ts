@@ -45,7 +45,7 @@ export class Product {
     onDelete: 'SET NULL',
   })
   @JoinColumn({ name: 'brandId' })
-  brand: Brand;
+  brand: Brand | null;
 
   @CreateDateColumn()
   createdAt: Date;

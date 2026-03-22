@@ -92,14 +92,26 @@ export class VariantsService {
     pairs: SyncedPair[],
     manager?: EntityManager,
   ) {
-    for (const { dto, variant } of pairs) {
-      if (typeof dto.mediaIds === 'undefined') continue;
+    const mediaAttachmentTasks = pairs.reduce<Promise<unknown>[]>(
+      (attachments, { dto, variant }) => {
+        if (typeof dto.mediaIds !== 'undefined')
+          attachments.push(
+            this.mediaAttachmentService.sync(
+              {
+                mediaIds: dto.mediaIds,
+                entityId: variant.id,
+                entityType: 'variant',
+              },
+              manager,
+            ),
+          );
 
-      await this.mediaAttachmentService.sync(
-        { mediaIds: dto.mediaIds, entityId: variant.id, entityType: 'variant' },
-        manager,
-      );
-    }
+        return attachments;
+      },
+      [],
+    );
+
+    await Promise.all(mediaAttachmentTasks);
   }
 
   private normalizeVariantDTOs(variantDTOs: ProductVariantDTO[]) {
