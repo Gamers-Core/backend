@@ -20,7 +20,7 @@ export class UsersService {
   }
 
   findOne(id: number) {
-    return this.repo.findOne({ where: { id } });
+    return this.repo.findOne({ where: { id }, relations: { cart: true } });
   }
 
   findFull(id: number) {

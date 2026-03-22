@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
@@ -16,6 +16,17 @@ export class VariantsService {
     @InjectRepository(ProductVariantEntity)
     private readonly variantRepository: Repository<ProductVariantEntity>,
   ) {}
+
+  async getVariant(externalId: string, isActive: boolean = true, manager?: EntityManager) {
+    manager = manager || this.variantRepository.manager;
+    const variantRepo = manager.getRepository(ProductVariantEntity);
+
+    const variant = await variantRepo.findOne({ where: { externalId, isActive }, relations: ['product'] });
+
+    if (!variant) throw new NotFoundException('Variant not found');
+
+    return variant;
+  }
 
   async sync(product: Product, variantDTOs: ProductVariantDTO[], manager?: EntityManager) {
     if (!variantDTOs) return product;
@@ -128,6 +139,13 @@ export class VariantsService {
 
   private assertVariantValidity(variantDTOs: ProductVariantDTO[]) {
     if (!variantDTOs?.length) return;
+
+    if (variantDTOs.length > 1) {
+      const hasUnnamedVariant = variantDTOs.some(({ name }) => typeof name !== 'string' || name.trim().length === 0);
+
+      if (hasUnnamedVariant)
+        throw new BadRequestException('Variant name is required when a product has multiple variants');
+    }
 
     for (const variantDTO of variantDTOs) {
       if (typeof variantDTO.compareAt === 'number' && variantDTO.compareAt <= variantDTO.price)

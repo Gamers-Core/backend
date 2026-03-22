@@ -18,6 +18,7 @@ import { AddressesModule } from './addresses';
 import { BostaModule } from './bosta';
 import { ProductsModule } from './products';
 import { MediaModule } from './media';
+import { CartModule } from './cart';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { MediaModule } from './media';
     AppCacheModule,
     ProductsModule,
     MediaModule,
+    CartModule,
     RedisModule,
     CloudinaryModule,
     TypeOrmModule.forRoot(getDataSourceOptions()),
