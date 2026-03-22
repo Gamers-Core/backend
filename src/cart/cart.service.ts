@@ -81,17 +81,18 @@ export class CartService {
 
   async updateItem(userId: number, id: number, item: UpdateCartItemDTO) {
     return this.cartRepo.manager.transaction(async (manager) => {
+      const cart = await this.getCart(userId, manager);
       const cartItemRepo = manager.getRepository(CartItem);
 
       const cartItem = await cartItemRepo.findOne({
-        where: { id, cart: { user: { id: userId } } },
+        where: { id, cart: { id: cart.id } },
         relations: { variant: { product: true } },
       });
       if (!cartItem) throw new NotFoundException('Cart item not found');
 
       this.assertVariantStock(cartItem.variant, item.quantity);
 
-      if (item.quantity === 0) await cartItemRepo.delete({ id, cart: { user: { id: userId } } });
+      if (item.quantity === 0) await cartItemRepo.delete({ id, cart: { id: cart.id } });
       else {
         cartItem.quantity = item.quantity;
         await cartItemRepo.save(cartItem);
@@ -105,7 +106,8 @@ export class CartService {
     return this.cartRepo.manager.transaction(async (manager) => {
       const cartItemRepo = manager.getRepository(CartItem);
 
-      await cartItemRepo.delete({ cart: { user: { id: userId } } });
+      const cart = await this.getCart(userId, manager);
+      await cartItemRepo.delete({ cart: { id: cart.id } });
 
       return this.getCart(userId, manager);
     });
