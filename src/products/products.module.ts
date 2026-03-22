@@ -13,5 +13,6 @@ import { VariantsService } from './variants.service';
   imports: [TypeOrmModule.forFeature([Product, Media, MediaAttachment, ProductVariantEntity]), MediaModule],
   controllers: [ProductsController],
   providers: [ProductsService, VariantsService],
+  exports: [VariantsService],
 })
 export class ProductsModule {}
