@@ -23,8 +23,7 @@ export class BostaService {
     api.interceptors.request.use((config) => {
       const token = this.configService.get<string>('BOSTA_TOKEN');
 
-      if (!token)
-        throw new ServiceUnavailableException('BOSTA_TOKEN is not configured');
+      if (!token) throw new ServiceUnavailableException('BOSTA_TOKEN is not configured');
 
       config.headers.Authorization = `Bearer ${token}`;
 
@@ -39,10 +38,7 @@ export class BostaService {
   async getCities() {
     return this.cacheService.getOrSet<City[]>(
       'bosta:cities',
-      async () =>
-        await this.bosta
-          .get<{ list: City[] }>('/cities')
-          .then((res) => res.data.list),
+      async () => await this.bosta.get<{ list: City[] }>('/cities').then((res) => res.data.list),
     );
   }
 
@@ -55,16 +51,11 @@ export class BostaService {
   async getDistricts(cityId: string) {
     return this.cacheService.getOrSet<District[]>(
       `bosta:districts:${cityId}`,
-      async () =>
-        await this.bosta
-          .get<District[]>(`/cities/${cityId}/districts`)
-          .then((res) => res.data),
+      async () => await this.bosta.get<District[]>(`/cities/${cityId}/districts`).then((res) => res.data),
     );
   }
 
   getDistrict(id: string, cityId: string) {
-    return this.getDistricts(cityId).then((districts) =>
-      districts.find(({ districtId }) => districtId === id),
-    );
+    return this.getDistricts(cityId).then((districts) => districts.find(({ districtId }) => districtId === id));
   }
 }

@@ -10,15 +10,7 @@ import { ProductsService } from './products.service';
 import { VariantsService } from './variants.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      Product,
-      Media,
-      MediaAttachment,
-      ProductVariantEntity,
-    ]),
-    MediaModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Product, Media, MediaAttachment, ProductVariantEntity]), MediaModule],
   controllers: [ProductsController],
   providers: [ProductsService, VariantsService],
 })

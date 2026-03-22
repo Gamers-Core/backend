@@ -9,10 +9,7 @@ import { MediaService } from './media.service';
 import { MediaAttachmentService } from './media-attachment.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Media, MediaAttachment]),
-    CloudinaryModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Media, MediaAttachment]), CloudinaryModule],
   controllers: [MediaController],
   providers: [MediaService, MediaAttachmentService],
   exports: [MediaService, MediaAttachmentService],

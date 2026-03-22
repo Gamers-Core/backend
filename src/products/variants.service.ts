@@ -17,11 +17,7 @@ export class VariantsService {
     private readonly variantRepository: Repository<ProductVariantEntity>,
   ) {}
 
-  async sync(
-    product: Product,
-    variantDTOs: ProductVariantDTO[],
-    manager?: EntityManager,
-  ) {
+  async sync(product: Product, variantDTOs: ProductVariantDTO[], manager?: EntityManager) {
     if (!variantDTOs) return product;
 
     const normalizedVariantDTOs = this.normalizeVariantDTOs(variantDTOs);
@@ -35,12 +31,7 @@ export class VariantsService {
     });
     const existingByExternalId = this.createExternalIdMap(existingVariants);
 
-    const syncedPairs = await this.upsert(
-      product,
-      normalizedVariantDTOs,
-      existingByExternalId,
-      variantsRepository,
-    );
+    const syncedPairs = await this.upsert(product, normalizedVariantDTOs, existingByExternalId, variantsRepository);
 
     const keptIds = new Set(syncedPairs.map(({ variant }) => variant.id));
     const toDelete = existingVariants.filter(({ id }) => !keptIds.has(id));
@@ -61,14 +52,9 @@ export class VariantsService {
     if (!variantDTOs.length) return [];
 
     const syncedPairs = variantDTOs.map((dto) => {
-      const existing = dto.externalId
-        ? variantsByExternalId.get(dto.externalId)
-        : undefined;
+      const existing = dto.externalId ? variantsByExternalId.get(dto.externalId) : undefined;
 
-      if (dto.externalId && !existing)
-        throw new BadRequestException(
-          `Invalid variant externalId: ${dto.externalId}`,
-        );
+      if (dto.externalId && !existing) throw new BadRequestException(`Invalid variant externalId: ${dto.externalId}`);
 
       const variant = this.mapEntity(product, dto, existing);
       return { dto, variant };
@@ -79,37 +65,28 @@ export class VariantsService {
     return syncedPairs;
   }
 
-  private async delete(
-    variants: ProductVariantEntity[],
-    variantRepository: Repository<ProductVariantEntity>,
-  ) {
+  private async delete(variants: ProductVariantEntity[], variantRepository: Repository<ProductVariantEntity>) {
     if (!variants.length) return;
 
     await variantRepository.softRemove(variants);
   }
 
-  private async syncVariantMediaByPairs(
-    pairs: SyncedPair[],
-    manager?: EntityManager,
-  ) {
-    const mediaAttachmentTasks = pairs.reduce<Promise<unknown>[]>(
-      (attachments, { dto, variant }) => {
-        if (typeof dto.mediaIds !== 'undefined')
-          attachments.push(
-            this.mediaAttachmentService.sync(
-              {
-                mediaIds: dto.mediaIds,
-                entityId: variant.id,
-                entityType: 'variant',
-              },
-              manager,
-            ),
-          );
+  private async syncVariantMediaByPairs(pairs: SyncedPair[], manager?: EntityManager) {
+    const mediaAttachmentTasks = pairs.reduce<Promise<unknown>[]>((attachments, { dto, variant }) => {
+      if (typeof dto.mediaIds !== 'undefined')
+        attachments.push(
+          this.mediaAttachmentService.sync(
+            {
+              mediaIds: dto.mediaIds,
+              entityId: variant.id,
+              entityType: 'variant',
+            },
+            manager,
+          ),
+        );
 
-        return attachments;
-      },
-      [],
-    );
+      return attachments;
+    }, []);
 
     await Promise.all(mediaAttachmentTasks);
   }
@@ -153,10 +130,7 @@ export class VariantsService {
     if (!variantDTOs?.length) return;
 
     for (const variantDTO of variantDTOs) {
-      if (
-        typeof variantDTO.compareAt === 'number' &&
-        variantDTO.compareAt <= variantDTO.price
-      )
+      if (typeof variantDTO.compareAt === 'number' && variantDTO.compareAt <= variantDTO.price)
         throw new BadRequestException('compareAt must be greater than price');
     }
 
@@ -165,24 +139,18 @@ export class VariantsService {
       if (!variantDTO.externalId) continue;
 
       if (externalIdSet.has(variantDTO.externalId))
-        throw new BadRequestException(
-          `Duplicate variant externalId detected: ${variantDTO.externalId}`,
-        );
+        throw new BadRequestException(`Duplicate variant externalId detected: ${variantDTO.externalId}`);
 
       externalIdSet.add(variantDTO.externalId);
     }
 
-    const defaultCount = variantDTOs.filter(
-      (variant) => variant.isDefault,
-    ).length;
-    if (defaultCount > 1)
-      throw new BadRequestException('Only one default variant allowed');
+    const defaultCount = variantDTOs.filter((variant) => variant.isDefault).length;
+    if (defaultCount > 1) throw new BadRequestException('Only one default variant allowed');
 
     if (variantDTOs.length > 0 && defaultCount === 0)
       throw new BadRequestException('At least one default variant is required');
 
     const activeCount = variantDTOs.filter(({ isActive }) => isActive).length;
-    if (activeCount === 0)
-      throw new BadRequestException('At least one active variant is required');
+    if (activeCount === 0) throw new BadRequestException('At least one active variant is required');
   }
 }

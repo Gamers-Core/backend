@@ -1,9 +1,4 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
 import { UsersService } from 'src/users';
@@ -26,10 +21,7 @@ export class AuthGuard implements CanActivate {
     const userId = req.session?.userId;
 
     if (isPublic) {
-      if (userId)
-        req.currentUser = await this.usersService
-          .findOne(userId)
-          .catch(() => null);
+      if (userId) req.currentUser = await this.usersService.findOne(userId).catch(() => null);
 
       return true;
     }

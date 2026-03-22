@@ -40,11 +40,7 @@ export class ProductsService {
       });
       const savedProduct = await productRepository.save(product);
 
-      await this.variantsService.sync(
-        savedProduct,
-        createProductDTO.variants,
-        manager,
-      );
+      await this.variantsService.sync(savedProduct, createProductDTO.variants, manager);
 
       await this.mediaAttachmentService.sync(
         {
@@ -65,26 +61,17 @@ export class ProductsService {
       relations: { variants: true, brand: true },
     });
 
-    const variantIds = products.flatMap((product) =>
-      product.variants.map((variant) => variant.id),
-    );
+    const variantIds = products.flatMap((product) => product.variants.map((variant) => variant.id));
 
     const mediaMap = await this.mediaAttachmentService.getBulkMedia(
       products.map((product) => product.id),
       'product',
     );
 
-    const variantMediaMap = await this.mediaAttachmentService.getBulkMedia(
-      variantIds,
-      'variant',
-    );
+    const variantMediaMap = await this.mediaAttachmentService.getBulkMedia(variantIds, 'variant');
 
     const productsWithMedia = products.map((product) => {
-      return this.serializeProduct(
-        product,
-        mediaMap[product.id] ?? [],
-        variantMediaMap,
-      );
+      return this.serializeProduct(product, mediaMap[product.id] ?? [], variantMediaMap);
     });
 
     return productsWithMedia;
@@ -94,18 +81,14 @@ export class ProductsService {
     return this.findOneWithMediaOrFail(id);
   }
 
-  async update(
-    id: number,
-    updateProductDTO: UpdateProductDTO,
-  ): Promise<ProductDTO> {
+  async update(id: number, updateProductDTO: UpdateProductDTO): Promise<ProductDTO> {
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepository = manager.getRepository(Product);
       const brandRepository = manager.getRepository(Brand);
 
       const product = await this.findOneOrFail(id, productRepository);
 
-      const { variants, mediaIds, brandId, ...updatableFields } =
-        updateProductDTO;
+      const { variants, mediaIds, brandId, ...updatableFields } = updateProductDTO;
 
       if (typeof mediaIds !== 'undefined')
         await this.mediaAttachmentService.sync(

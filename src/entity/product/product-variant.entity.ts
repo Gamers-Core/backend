@@ -14,10 +14,7 @@ import {
 import { Product } from './product.entity';
 
 @Entity()
-@Check(
-  'CHK_variant_compareAt_gt_price',
-  '"compareAt" IS NULL OR "compareAt" > "price"',
-)
+@Check('CHK_variant_compareAt_gt_price', '"compareAt" IS NULL OR "compareAt" > "price"')
 export class ProductVariantEntity {
   @PrimaryGeneratedColumn()
   id: number;

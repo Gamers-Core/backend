@@ -1,9 +1,4 @@
-import {
-  UseInterceptors,
-  type CallHandler,
-  type ExecutionContext,
-  type NestInterceptor,
-} from '@nestjs/common';
+import { UseInterceptors, type CallHandler, type ExecutionContext, type NestInterceptor } from '@nestjs/common';
 import { plainToInstance, type ClassTransformOptions } from 'class-transformer';
 import { map, type Observable } from 'rxjs';
 
@@ -19,8 +14,7 @@ type SerializeOptions = ClassTransformOptions & {
   context?: SerializeContext;
 };
 
-export const Serialize = (dto: ClassConstructor) =>
-  UseInterceptors(new SerializeInterceptor(dto));
+export const Serialize = (dto: ClassConstructor) => UseInterceptors(new SerializeInterceptor(dto));
 
 export class SerializeInterceptor implements NestInterceptor {
   constructor(private dto: ClassConstructor) {}
@@ -33,8 +27,6 @@ export class SerializeInterceptor implements NestInterceptor {
       ...(currentUserId ? { context: { currentUserId } } : {}),
     };
 
-    return next
-      .handle()
-      .pipe(map((data) => plainToInstance(this.dto, data, options)));
+    return next.handle().pipe(map((data) => plainToInstance(this.dto, data, options)));
   }
 }

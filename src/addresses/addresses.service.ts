@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, QueryFailedError, Repository } from 'typeorm';
 
@@ -27,10 +23,7 @@ export class AddressesService {
     });
   }
 
-  async addAddress(
-    userId: number,
-    { cityId, districtId, ...createDTO }: CreateAddressDTO,
-  ) {
+  async addAddress(userId: number, { cityId, districtId, ...createDTO }: CreateAddressDTO) {
     return this.addressesRepo.manager.transaction(async (manager) => {
       const addressRepo = manager.getRepository(Address);
       const userRepo = manager.getRepository(User);
@@ -38,10 +31,7 @@ export class AddressesService {
       const user = await userRepo.findOne({ where: { id: userId } });
       if (!user) throw new NotFoundException('User not found');
 
-      const locationData = await this.getAddressLocationData(
-        cityId,
-        districtId,
-      );
+      const locationData = await this.getAddressLocationData(cityId, districtId);
 
       const address = addressRepo.create({
         ...createDTO,
@@ -74,15 +64,10 @@ export class AddressesService {
       if (!address) throw new NotFoundException('Address not found');
 
       if (updateDTO.cityId && !updateDTO.districtId)
-        throw new BadRequestException(
-          'districtId is required when cityId changes',
-        );
+        throw new BadRequestException('districtId is required when cityId changes');
 
       if (updateDTO.districtId && !updateDTO.cityId) {
-        const districtInCurrentCity = await this.bostaService.getDistrict(
-          updateDTO.districtId,
-          address.cityId,
-        );
+        const districtInCurrentCity = await this.bostaService.getDistrict(updateDTO.districtId, address.cityId);
 
         if (!districtInCurrentCity)
           throw new BadRequestException(
@@ -94,10 +79,7 @@ export class AddressesService {
         const cityId = updateDTO.cityId || address.cityId;
         const districtId = updateDTO.districtId || address.districtId;
 
-        const locationData = await this.getAddressLocationData(
-          cityId,
-          districtId,
-        );
+        const locationData = await this.getAddressLocationData(cityId, districtId);
 
         Object.assign(updateDTO, locationData);
       }
@@ -160,10 +142,7 @@ export class AddressesService {
     return { deleted: true };
   }
 
-  private async ensureDefaultAddress(
-    userId: number,
-    addressRepo: Repository<Address>,
-  ) {
+  private async ensureDefaultAddress(userId: number, addressRepo: Repository<Address>) {
     const defaultAddress = await addressRepo.findOne({
       where: { user: { id: userId }, isDefault: true },
     });
@@ -181,20 +160,13 @@ export class AddressesService {
     await addressRepo.save(fallbackAddress);
   }
 
-  private async getAddressLocationData(
-    cityId: string,
-    districtId: string,
-  ): Promise<BostaLocation> {
+  private async getAddressLocationData(cityId: string, districtId: string): Promise<BostaLocation> {
     const city = await this.bostaService.getCity(cityId);
     const district = await this.bostaService.getDistrict(districtId, cityId);
 
-    if (!city)
-      throw new BadRequestException('Invalid city data: cityId not found');
+    if (!city) throw new BadRequestException('Invalid city data: cityId not found');
 
-    if (!district)
-      throw new BadRequestException(
-        'Invalid district data: districtId not found for selected city',
-      );
+    if (!district) throw new BadRequestException('Invalid district data: districtId not found for selected city');
 
     return {
       cityId: city._id,
@@ -213,11 +185,7 @@ export class AddressesService {
       .execute();
   }
 
-  private async trySetAddressAsDefault(
-    manager: EntityManager,
-    addressId: number,
-    userId: number,
-  ) {
+  private async trySetAddressAsDefault(manager: EntityManager, addressId: number, userId: number) {
     await manager
       .createQueryBuilder()
       .update(Address)
@@ -234,9 +202,7 @@ export class AddressesService {
   private isUniqueConstraintError(error: unknown) {
     if (!(error instanceof QueryFailedError)) return false;
 
-    const driverError = error.driverError as
-      | { code?: string; message?: string }
-      | undefined;
+    const driverError = error.driverError as { code?: string; message?: string } | undefined;
 
     return (
       driverError?.code === '23505' ||

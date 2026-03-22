@@ -10,8 +10,7 @@ export const CloudinaryProvider = {
     const api_key = configService.get<string>('CLOUDINARY_API_KEY');
     const api_secret = configService.get<string>('CLOUDINARY_API_SECRET');
 
-    if (!cloud_name || !api_key || !api_secret)
-      throw new Error('Cloudinary configuration is required');
+    if (!cloud_name || !api_key || !api_secret) throw new Error('Cloudinary configuration is required');
 
     cloudinary.config({ cloud_name, api_key, api_secret });
 

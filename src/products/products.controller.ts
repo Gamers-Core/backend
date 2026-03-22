@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Patch,
-  Param,
-  ParseIntPipe,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Param, ParseIntPipe, Post } from '@nestjs/common';
 
 import { Serialize } from 'src/interceptors';
 
@@ -38,10 +29,7 @@ export class ProductsController {
 
   @Serialize(ProductDTO)
   @Patch(':id')
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateProductDTO: UpdateProductDTO,
-  ) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateProductDTO: UpdateProductDTO) {
     return this.productsService.update(id, updateProductDTO);
   }
 

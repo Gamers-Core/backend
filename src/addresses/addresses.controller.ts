@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseIntPipe,
-  Patch,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
 
 import { User } from 'src/entity';
 import { Serialize } from 'src/interceptors';
@@ -39,28 +30,18 @@ export class AddressesController {
 
   @Serialize(AddressDTO)
   @Patch(':id')
-  updateAddress(
-    @CurrentUser() user: User,
-    @Param('id', ParseIntPipe) id: number,
-    @Body() body: UpdateAddressDTO,
-  ) {
+  updateAddress(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number, @Body() body: UpdateAddressDTO) {
     return this.addressesService.updateAddress(id, user.id, body);
   }
 
   @Serialize(AddressDTO)
   @Patch(':id/default')
-  setDefaultAddress(
-    @CurrentUser() user: User,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
+  setDefaultAddress(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number) {
     return this.addressesService.setDefaultAddress(id, user.id);
   }
 
   @Delete(':id')
-  deleteAddress(
-    @CurrentUser() user: User,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
+  deleteAddress(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number) {
     return this.addressesService.removeAddress(id, user.id);
   }
 

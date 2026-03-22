@@ -4,12 +4,7 @@ import { ConfigService } from '@nestjs/config';
 
 import { mailsOptions } from './const';
 import { getEmail } from './helpers';
-import {
-  MailOptions,
-  MailOptionsType,
-  MailType,
-  SendMailOptions,
-} from './types';
+import { MailOptions, MailOptionsType, MailType, SendMailOptions } from './types';
 
 @Injectable()
 export class MailService {
@@ -21,10 +16,7 @@ export class MailService {
     if (!this.transporter) {
       const user = this.configService.get<string>('EMAIL_USER');
       const pass = this.configService.get<string>('EMAIL_PASS');
-      if (!user || !pass)
-        throw new Error(
-          'MailService: EMAIL_USER and EMAIL_PASS must be set to send mail.',
-        );
+      if (!user || !pass) throw new Error('MailService: EMAIL_USER and EMAIL_PASS must be set to send mail.');
 
       this.transporter = nodemailer.createTransport({
         host: 'smtp-relay.brevo.com',
@@ -36,10 +28,7 @@ export class MailService {
 
     return this.transporter;
   }
-  send(
-    { title, ...options }: SendMailOptions,
-    mail: MailType,
-  ): ReturnType<nodemailer.Transporter['sendMail']> {
+  send({ title, ...options }: SendMailOptions, mail: MailType): ReturnType<nodemailer.Transporter['sendMail']> {
     return this.getTransporter().sendMail({
       ...options,
       from: `"${title}" <${getEmail(mail)}>`,

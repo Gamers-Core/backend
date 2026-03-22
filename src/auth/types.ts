@@ -7,14 +7,10 @@ export interface AuthSession {
   userId?: number | null;
 }
 
-export type OtpVerifyResultByPurpose<P extends AuthPurpose> =
-  OtpVerifyResultMap[P];
+export type OtpVerifyResultByPurpose<P extends AuthPurpose> = OtpVerifyResultMap[P];
 
 export type OtpVerifyHandlers = {
-  [P in AuthPurpose]: (
-    email: string,
-    data: OtpDataByPurpose<P>,
-  ) => Promise<OtpVerifyResultByPurpose<P>>;
+  [P in AuthPurpose]: (email: string, data: OtpDataByPurpose<P>) => Promise<OtpVerifyResultByPurpose<P>>;
 };
 
 export interface OtpDataMap {

@@ -24,6 +24,4 @@ interface MailOptionsMap extends Omit<SendMailOptions, 'to'> {
 }
 
 export type MailOptionsType = keyof MailOptions;
-export type MailOptionsFn<T extends MailOptionsType> = (
-  values: MailOptions[T],
-) => MailOptionsMap;
+export type MailOptionsFn<T extends MailOptionsType> = (values: MailOptions[T]) => MailOptionsMap;

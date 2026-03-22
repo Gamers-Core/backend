@@ -56,8 +56,7 @@ export class AppModule {
     const cookieKey = this.configService.get<string>('COOKIE_KEY');
     if (!cookieKey) throw new Error('COOKIE_KEY is required');
 
-    const isProduction =
-      this.configService.get<string>('NODE_ENV') === 'production';
+    const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
 
     consumer
       .apply(

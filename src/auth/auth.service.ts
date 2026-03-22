@@ -3,20 +3,10 @@ import { randomBytes } from 'crypto';
 
 import { UsersService } from 'src/users';
 
-import {
-  CreateUserDTO,
-  ForgotPasswordDTO,
-  LoginUserDTO,
-  ResendOTPDTO,
-  VerifyOTPDTO,
-} from './dtos';
+import { CreateUserDTO, ForgotPasswordDTO, LoginUserDTO, ResendOTPDTO, VerifyOTPDTO } from './dtos';
 import { getEncryptedPassword, getHashedPassword } from './helpers';
 import { OtpSessionService } from './otp-session';
-import {
-  AuthPurpose,
-  OtpVerifyHandlers,
-  OtpVerifyResultByPurpose,
-} from './types';
+import { AuthPurpose, OtpVerifyHandlers, OtpVerifyResultByPurpose } from './types';
 
 @Injectable()
 export class AuthService {
@@ -31,8 +21,7 @@ export class AuthService {
     },
     signup: async (email, { name, password }) => {
       const existingUser = await this.usersService.find(email);
-      if (existingUser.length)
-        throw new BadRequestException('Email is already used');
+      if (existingUser.length) throw new BadRequestException('Email is already used');
 
       return this.usersService.create({ name, email, password });
     },
@@ -40,8 +29,7 @@ export class AuthService {
 
   async signup(userDTO: CreateUserDTO) {
     const existingUser = await this.usersService.find(userDTO.email);
-    if (existingUser.length)
-      throw new BadRequestException('Email is already used');
+    if (existingUser.length) throw new BadRequestException('Email is already used');
 
     const password = await getEncryptedPassword(userDTO.password);
 
@@ -61,8 +49,7 @@ export class AuthService {
 
     const userHash = await getHashedPassword(loginUserDTO.password, salt);
 
-    if (hash !== userHash.toString('hex'))
-      throw new BadRequestException('Invalid email or password');
+    if (hash !== userHash.toString('hex')) throw new BadRequestException('Invalid email or password');
 
     return user;
   }
@@ -98,10 +85,7 @@ export class AuthService {
     return this.otpVerifyHandlers[purpose](email, data);
   }
 
-  async resendOTP<P extends AuthPurpose>({
-    purpose,
-    sessionId,
-  }: ResendOTPDTO<P>) {
+  async resendOTP<P extends AuthPurpose>({ purpose, sessionId }: ResendOTPDTO<P>) {
     return this.otpSessionService.resendSession<P>({ purpose, sessionId });
   }
 }

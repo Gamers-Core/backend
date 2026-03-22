@@ -42,10 +42,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
   }
 
   async create(file: UploadedMediaFile, mediaDTO: UploadMediaDTO) {
-    const result = await this.cloudinaryService.uploadBuffer(
-      file,
-      mediaDTO.folder,
-    );
+    const result = await this.cloudinaryService.uploadBuffer(file, mediaDTO.folder);
 
     const media = this.mediaRepository.create({
       publicId: result.public_id,
@@ -111,12 +108,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
         .andWhere('m.expiresAt < :now', { now })
         .andWhere('m.isDeleted = :isDeleted', { isDeleted: false })
         .andWhere((qb) => {
-          const subQuery = qb
-            .subQuery()
-            .select('1')
-            .from(MediaAttachment, 'ma')
-            .where('ma.mediaId = m.id')
-            .getQuery();
+          const subQuery = qb.subQuery().select('1').from(MediaAttachment, 'ma').where('ma.mediaId = m.id').getQuery();
 
           return `NOT EXISTS ${subQuery}`;
         })
@@ -136,10 +128,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
             .andWhere('isDeleted = :isDeleted', { isDeleted: false })
             .andWhere('expiresAt IS NOT NULL')
             .andWhere('expiresAt < :now', { now })
-            .andWhere(
-              'NOT EXISTS (SELECT 1 FROM media_attachment ma WHERE ma.mediaId = :id)',
-              { id: media.id },
-            )
+            .andWhere('NOT EXISTS (SELECT 1 FROM media_attachment ma WHERE ma.mediaId = :id)', { id: media.id })
             .execute();
 
           if (updateResult.affected) {
@@ -152,16 +141,11 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
 
       void this.cleanupSoftDeletedMedia(softDeletedMedia);
     } catch (error) {
-      this.logger.error(
-        'Failed to cleanup expired draft media',
-        error instanceof Error ? error.stack : String(error),
-      );
+      this.logger.error('Failed to cleanup expired draft media', error instanceof Error ? error.stack : String(error));
     }
   }
 
-  private async cleanupSoftDeletedMedia(
-    mediaList: Array<{ id: number; publicId: string }>,
-  ) {
+  private async cleanupSoftDeletedMedia(mediaList: Array<{ id: number; publicId: string }>) {
     if (!mediaList.length) return;
 
     try {
@@ -175,10 +159,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
             .from(Media)
             .where('id = :id', { id: media.id })
             .andWhere('isDeleted = :isDeleted', { isDeleted: true })
-            .andWhere(
-              'NOT EXISTS (SELECT 1 FROM media_attachment ma WHERE ma.mediaId = :id)',
-              { id: media.id },
-            )
+            .andWhere('NOT EXISTS (SELECT 1 FROM media_attachment ma WHERE ma.mediaId = :id)', { id: media.id })
             .execute();
         }),
       );

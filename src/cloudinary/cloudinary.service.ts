@@ -1,15 +1,5 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common';
-import {
-  v2,
-  UploadApiErrorResponse,
-  UploadApiResponse,
-  UploadStream,
-} from 'cloudinary';
+import { BadRequestException, Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { v2, UploadApiErrorResponse, UploadApiResponse, UploadStream } from 'cloudinary';
 
 import { UploadedMediaFile } from 'src/media';
 import { MediaEntityType } from 'src/entity';
@@ -25,10 +15,7 @@ export class CloudinaryService {
     return this.cloudinary.uploader.upload(file, { folder });
   }
 
-  async uploadBuffer(
-    file: UploadedMediaFile,
-    folder: MediaEntityType,
-  ): Promise<UploadApiResponse> {
+  async uploadBuffer(file: UploadedMediaFile, folder: MediaEntityType): Promise<UploadApiResponse> {
     this.validateFile(file, folder);
 
     return new Promise<UploadApiResponse>((resolve, reject) => {
@@ -37,10 +24,7 @@ export class CloudinaryService {
           folder,
           resource_type: 'auto',
         },
-        (
-          error: UploadApiErrorResponse | undefined,
-          result: UploadApiResponse | undefined,
-        ) => {
+        (error: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
           if (error) return reject(new Error(error.message));
           if (!result) return reject(new Error('Cloudinary upload failed.'));
 
@@ -62,19 +46,14 @@ export class CloudinaryService {
     if (!allowedTypes || allowedTypes === 'auto') return;
 
     const fileType = file.mimetype.split('/')[0];
-    if (fileType !== allowedTypes)
-      throw new BadRequestException(
-        `Invalid file type. Allowed type: ${allowedTypes}`,
-      );
+    if (fileType !== allowedTypes) throw new BadRequestException(`Invalid file type. Allowed type: ${allowedTypes}`);
   }
 
   destroy(publicId: string, invalidate = true) {
-    return this.cloudinary.uploader
-      .destroy(publicId, { invalidate })
-      .catch((err) => {
-        throw new InternalServerErrorException(
-          `Failed to delete media from Cloudinary: ${err instanceof Error ? err.message : String(err)}`,
-        );
-      });
+    return this.cloudinary.uploader.destroy(publicId, { invalidate }).catch((err) => {
+      throw new InternalServerErrorException(
+        `Failed to delete media from Cloudinary: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    });
   }
 }

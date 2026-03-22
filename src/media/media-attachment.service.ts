@@ -6,11 +6,7 @@ import { EntityManager, In, Repository } from 'typeorm';
 import { Media, MediaAttachment, MediaEntityType } from 'src/entity';
 
 import { MediaService } from './media.service';
-import {
-  MediaAttachmentDTO,
-  MediaAttachmentOptionsDTO,
-  EntityAttachmentDTO,
-} from './dtos';
+import { MediaAttachmentDTO, MediaAttachmentOptionsDTO, EntityAttachmentDTO } from './dtos';
 
 @Injectable()
 export class MediaAttachmentService {
@@ -23,44 +19,29 @@ export class MediaAttachmentService {
     private readonly attachmentRepo: Repository<MediaAttachment>,
   ) {}
 
-  async sync(
-    { mediaIds, ...entity }: MediaAttachmentOptionsDTO,
-    manager?: EntityManager,
-  ) {
+  async sync({ mediaIds, ...entity }: MediaAttachmentOptionsDTO, manager?: EntityManager) {
     manager = manager || this.attachmentRepo.manager;
 
     const attachmentRepo = manager.getRepository(MediaAttachment);
     const mediaRepo = manager.getRepository(Media);
 
-    if (!mediaIds.length)
-      return await this.detachAll(entity, attachmentRepo, mediaRepo);
+    if (!mediaIds.length) return await this.detachAll(entity, attachmentRepo, mediaRepo);
 
     const existingAttachments = await attachmentRepo.find({
       where: entity,
       relations: ['media'],
     });
 
-    const existingIds = existingAttachments.reduce(
-      (ids, { media }) => (media ? [...ids, media.id] : ids),
-      [],
-    );
+    const existingIds = existingAttachments.reduce((ids, { media }) => (media ? [...ids, media.id] : ids), []);
     const uniqueIds = [...new Set(mediaIds)];
 
     const existingSet = new Set(existingIds);
     const toAttach = uniqueIds.filter((id) => !existingSet.has(id));
-    await this.attach(
-      { mediaIds: toAttach, ...entity },
-      attachmentRepo,
-      mediaRepo,
-    );
+    await this.attach({ mediaIds: toAttach, ...entity }, attachmentRepo, mediaRepo);
 
     const uniqueSet = new Set(uniqueIds);
     const toDetach = existingIds.filter((id) => !uniqueSet.has(id));
-    await this.detach(
-      { mediaIds: toDetach, ...entity },
-      attachmentRepo,
-      mediaRepo,
-    );
+    await this.detach({ mediaIds: toDetach, ...entity }, attachmentRepo, mediaRepo);
 
     await this.reorder({ mediaIds: uniqueIds, ...entity }, attachmentRepo);
 
@@ -96,10 +77,7 @@ export class MediaAttachmentService {
 
     await attachmentRepo.save(attachments);
 
-    const media = await mediaRepo.update(
-      { id: In(newIds) },
-      { expiresAt: null },
-    );
+    const media = await mediaRepo.update({ id: In(newIds) }, { expiresAt: null });
 
     return media.raw as Media[];
   }
@@ -148,10 +126,7 @@ export class MediaAttachmentService {
 
     await attachmentRepo.remove(attachments);
 
-    await mediaRepo.update(
-      { id: In(mediaIdsToReset) },
-      { expiresAt: this.mediaService.getDraftExpiryDate() },
-    );
+    await mediaRepo.update({ id: In(mediaIdsToReset) }, { expiresAt: this.mediaService.getDraftExpiryDate() });
 
     return [];
   }
@@ -167,16 +142,13 @@ export class MediaAttachmentService {
       relations: ['media'],
     });
 
-    const map = new Map(
-      attachments.map((attachment) => [attachment.media.id, attachment]),
-    );
+    const map = new Map(attachments.map((attachment) => [attachment.media.id, attachment]));
 
     const mediaAttachments: MediaAttachment[] = [];
 
     mediaIds.forEach((mediaId, index) => {
       const attachment = map.get(mediaId);
-      if (!attachment)
-        throw new BadRequestException('Invalid media in reorder.');
+      if (!attachment) throw new BadRequestException('Invalid media in reorder.');
 
       attachment.order = index + 1;
       mediaAttachments.push(attachment);
@@ -185,10 +157,7 @@ export class MediaAttachmentService {
     return await repository.save(mediaAttachments);
   }
 
-  async assertDraftMedia(
-    mediaIds: number[],
-    repo: Repository<Media> = this.mediaRepo,
-  ) {
+  async assertDraftMedia(mediaIds: number[], repo: Repository<Media> = this.mediaRepo) {
     if (!mediaIds.length) return;
 
     const uniqueIds = [...new Set(mediaIds)];
@@ -197,14 +166,10 @@ export class MediaAttachmentService {
       id: In(uniqueIds),
     });
 
-    if (media.length !== uniqueIds.length)
-      throw new BadRequestException('Some media items are invalid.');
+    if (media.length !== uniqueIds.length) throw new BadRequestException('Some media items are invalid.');
   }
 
-  async getMediaAttachments(
-    where: EntityAttachmentDTO,
-    attachmentRepo = this.attachmentRepo,
-  ) {
+  async getMediaAttachments(where: EntityAttachmentDTO, attachmentRepo = this.attachmentRepo) {
     return attachmentRepo.find({
       where,
       relations: ['media'],
@@ -212,10 +177,7 @@ export class MediaAttachmentService {
     });
   }
 
-  async getMedia(
-    where: EntityAttachmentDTO,
-    attachmentRepo = this.attachmentRepo,
-  ) {
+  async getMedia(where: EntityAttachmentDTO, attachmentRepo = this.attachmentRepo) {
     const attachments = await this.getMediaAttachments(where, attachmentRepo);
     const validAttachments = attachments.filter(({ media }) => Boolean(media));
 

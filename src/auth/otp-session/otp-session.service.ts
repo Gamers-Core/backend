@@ -12,12 +12,7 @@ import {
   OTP_DEFAULT_TTL_SECONDS,
 } from './const';
 import { generateHashedOtp, generateOtp, getSessionKey } from './helpers';
-import {
-  CreateSessionOptions,
-  ResendSessionOptions,
-  OTPAuthSession,
-  VerifySessionOptions,
-} from './types';
+import { CreateSessionOptions, ResendSessionOptions, OTPAuthSession, VerifySessionOptions } from './types';
 import { MailService } from 'src/mail';
 import { AuthPurpose, OtpDataByPurpose } from '../types';
 
@@ -28,19 +23,10 @@ export class OtpSessionService {
     private readonly mailService: MailService,
   ) {}
 
-  private async readSession<P extends AuthPurpose>(
-    sessionId: string,
-    expectedPurpose: P,
-  ): Promise<OTPAuthSession<P>> {
+  private async readSession<P extends AuthPurpose>(sessionId: string, expectedPurpose: P): Promise<OTPAuthSession<P>> {
     const session = await this.redis.hgetall(getSessionKey(sessionId));
 
-    if (
-      !session ||
-      !session.purpose ||
-      !session.email ||
-      !session.otp ||
-      !session.data
-    )
+    if (!session || !session.purpose || !session.email || !session.otp || !session.data)
       throw new BadRequestException('Session expired');
 
     let parsedData: OtpDataByPurpose<P>;
@@ -50,8 +36,7 @@ export class OtpSessionService {
       throw new BadRequestException('Session expired');
     }
 
-    if (session.purpose !== expectedPurpose)
-      throw new BadRequestException('Session expired');
+    if (session.purpose !== expectedPurpose) throw new BadRequestException('Session expired');
 
     return {
       purpose: expectedPurpose,
@@ -130,15 +115,11 @@ export class OtpSessionService {
     const key = getSessionKey(sessionId);
     const session = await this.readSession<P>(sessionId, purpose);
 
-    if (session.otpResendCount >= maxResends)
-      throw new BadRequestException('OTP resend limit reached');
+    if (session.otpResendCount >= maxResends) throw new BadRequestException('OTP resend limit reached');
 
     const now = Date.now();
-    const canResendOtp =
-      session.otpLastSentAt &&
-      now - session.otpLastSentAt > minResendIntervalMs;
-    if (!canResendOtp)
-      throw new BadRequestException('Please wait before resending OTP');
+    const canResendOtp = session.otpLastSentAt && now - session.otpLastSentAt > minResendIntervalMs;
+    if (!canResendOtp) throw new BadRequestException('Please wait before resending OTP');
 
     const otp = generateOtp();
     const hashedOtp = await generateHashedOtp(otp);
