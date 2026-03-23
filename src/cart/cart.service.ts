@@ -32,12 +32,13 @@ export class CartService {
 
   async addItem(userId: number, item: CreateCartItemDTO) {
     return this.cartRepo.manager.transaction(async (manager) => {
+      const cart = await this.getCart(userId, manager);
       const cartItemRepo = manager.getRepository(CartItem);
       const variant = await this.variantService.getVariant(item.variantExternalId, true, manager);
 
       const existingItem = await cartItemRepo.findOne({
         where: {
-          cart: { user: { id: userId } },
+          cart: { id: cart.id },
           variant: { id: variant.id },
         },
       });
@@ -50,7 +51,7 @@ export class CartService {
         await cartItemRepo.save(existingItem);
       } else {
         const cartItem = cartItemRepo.create({
-          cart: { user: { id: userId } },
+          cart: { id: cart.id },
           variant,
           quantity: item.quantity,
         });
@@ -60,7 +61,7 @@ export class CartService {
 
           const concurrentItem = await cartItemRepo.findOne({
             where: {
-              cart: { user: { id: userId } },
+              cart: { id: cart.id },
               variant: { id: variant.id },
             },
           });
