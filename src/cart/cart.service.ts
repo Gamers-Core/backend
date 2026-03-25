@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, QueryFailedError, Repository } from 'typeorm';
 
+import { withOptionalManager } from 'src/common';
 import { Cart, CartItem, ProductVariantEntity } from 'src/entity';
 import { VariantsService } from 'src/products';
 
@@ -15,19 +16,20 @@ export class CartService {
   ) {}
 
   async getCart(userId: number, manager?: EntityManager) {
-    manager = manager || this.cartRepo.manager;
-    const cartRepo = manager.getRepository(Cart);
+    return withOptionalManager(manager, this.cartRepo.manager, async (manager) => {
+      const cartRepo = manager.getRepository(Cart);
 
-    const cart = await cartRepo.findOne({
-      where: { user: { id: userId } },
-      relations: { items: { variant: { product: true } } },
+      const cart = await cartRepo.findOne({
+        where: { user: { id: userId } },
+        relations: { items: { variant: { product: true } } },
+      });
+      if (!cart) {
+        const newCart = cartRepo.create({ user: { id: userId }, items: [] });
+        return await cartRepo.save(newCart);
+      }
+
+      return cart;
     });
-    if (!cart) {
-      const newCart = cartRepo.create({ user: { id: userId }, items: [] });
-      return await cartRepo.save(newCart);
-    }
-
-    return cart;
   }
 
   async addItem(userId: number, item: CreateCartItemDTO) {
@@ -103,14 +105,14 @@ export class CartService {
     });
   }
 
-  async clearCart(userId: number) {
-    return this.cartRepo.manager.transaction(async (manager) => {
-      const cartItemRepo = manager.getRepository(CartItem);
+  async clearCart(userId: number, manager?: EntityManager) {
+    return withOptionalManager(manager, this.cartRepo.manager, async (entityManager) => {
+      const cartItemRepo = entityManager.getRepository(CartItem);
 
-      const cart = await this.getCart(userId, manager);
+      const cart = await this.getCart(userId, entityManager);
       await cartItemRepo.delete({ cart: { id: cart.id } });
 
-      return this.getCart(userId, manager);
+      return this.getCart(userId, entityManager);
     });
   }
 
