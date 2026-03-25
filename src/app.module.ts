@@ -18,6 +18,7 @@ import { AddressesModule } from './addresses';
 import { BostaModule } from './bosta';
 import { ProductsModule } from './products';
 import { MediaModule } from './media';
+import { OrdersModule } from './orders';
 import { CartModule } from './cart';
 
 @Module({
@@ -29,6 +30,7 @@ import { CartModule } from './cart';
     AppCacheModule,
     ProductsModule,
     MediaModule,
+    OrdersModule,
     CartModule,
     RedisModule,
     CloudinaryModule,

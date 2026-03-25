@@ -54,12 +54,11 @@ export class VariantsService {
     return product;
   }
 
-  async syncStock(externalId: string, usedAmount: number, manager?: EntityManager) {
+  async syncStock(externalId: string, amount: number, manager?: EntityManager) {
     manager = manager || this.variantRepository.manager;
     const variantRepo = manager.getRepository(ProductVariantEntity);
 
-    if (usedAmount > 0) await variantRepo.decrement({ externalId }, 'stock', usedAmount);
-    if (usedAmount < 0) await variantRepo.increment({ externalId }, 'stock', -usedAmount);
+    await variantRepo.increment({ externalId }, 'stock', amount);
 
     return this.getVariant(externalId, true, manager);
   }

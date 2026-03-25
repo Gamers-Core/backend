@@ -1,4 +1,6 @@
+import { randomUUID } from 'node:crypto';
 import {
+  BeforeInsert,
   Column,
   CreateDateColumn,
   Entity,
@@ -71,4 +73,9 @@ export class Order {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @BeforeInsert()
+  ensureOrderNumber() {
+    if (!this.orderNumber) this.orderNumber = `ORD-${randomUUID()}`;
+  }
 }

@@ -1,4 +1,4 @@
-import type { OrderStatus, OrderStatusGuard } from './types';
+import type { OrderStatus, OrderStatusGuard, PaymentStatus } from './types';
 
 export const orderStatuses = [
   'pending',
@@ -16,7 +16,7 @@ export const paymentStatuses = ['unpaid', 'paid', 'refunded'] as const;
 
 export const paymentMethods = ['cod', 'instapay', 'valu', 'card'] as const;
 
-export const orderTransitions = {
+export const orderTransitions: Partial<Record<OrderStatus, OrderStatus[]>> = {
   pending: ['confirmed', 'cancelled'],
   confirmed: ['on-progress', 'on-hold', 'cancelled'],
   'on-progress': ['shipped', 'on-hold', 'cancelled'],
@@ -26,16 +26,16 @@ export const orderTransitions = {
   completed: [],
   returned: [],
   cancelled: [],
-} as const;
+};
 
-export const editableStatuses: OrderStatus[] = ['pending', 'confirmed', 'on-hold', 'on-progress'];
-export const nonUpdatableShippingStatuses: OrderStatus[] = ['delivered', 'completed', 'cancelled'];
-
-export const paymentTransitions = {
+export const paymentTransitions: Partial<Record<PaymentStatus, PaymentStatus[]>> = {
   unpaid: ['paid'],
   paid: ['refunded'],
   refunded: [],
-} as const;
+};
+
+export const editableStatuses: OrderStatus[] = ['pending', 'confirmed', 'on-hold', 'on-progress'];
+export const nonUpdatableShippingStatuses: OrderStatus[] = ['delivered', 'completed', 'cancelled'];
 
 export const orderStatusGuards: Partial<Record<OrderStatus, OrderStatusGuard[]>> = {
   confirmed: [
