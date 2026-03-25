@@ -4,6 +4,7 @@ import { randomBytes } from 'crypto';
 import Redis from 'ioredis';
 
 import { REDIS_CLIENT } from 'src/redis';
+import { MailService } from 'src/mail';
 
 import {
   OTP_DEFAULT_MAX_ATTEMPTS,
@@ -13,7 +14,6 @@ import {
 } from './const';
 import { generateHashedOtp, generateOtp, getSessionKey } from './helpers';
 import { CreateSessionOptions, ResendSessionOptions, OTPAuthSession, VerifySessionOptions } from './types';
-import { MailService } from 'src/mail';
 import { AuthPurpose, OtpDataByPurpose } from '../types';
 
 @Injectable()
