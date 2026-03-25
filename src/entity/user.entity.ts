@@ -10,6 +10,7 @@ import {
 
 import { Address } from './address.entity';
 import { Cart } from './cart';
+import { Order } from './order';
 
 @Entity()
 export class User {
@@ -30,6 +31,9 @@ export class User {
 
   @OneToMany(() => Address, (address) => address.user)
   addresses: Address[];
+
+  @OneToMany(() => Order, (order) => order.user)
+  orders: Order[];
 
   @OneToOne(() => Cart, (cart) => cart.user)
   cart: Cart;

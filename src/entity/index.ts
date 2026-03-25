@@ -4,4 +4,5 @@ export * from './category.entity';
 export * from './brand.entity';
 export * from './product';
 export * from './media';
+export * from './order';
 export * from './cart';
