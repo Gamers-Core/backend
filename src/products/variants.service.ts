@@ -6,6 +6,7 @@ import { Product, ProductVariantEntity } from 'src/entity';
 import { MediaAttachmentService } from 'src/media';
 
 import { ProductVariantDTO } from './dtos';
+import { withOptionalManager } from 'src/common';
 
 type SyncedPair = { dto: ProductVariantDTO; variant: ProductVariantEntity };
 
@@ -28,59 +29,62 @@ export class VariantsService {
     return variant;
   }
 
-  async sync(product: Product, variantDTOs: ProductVariantDTO[], manager?: EntityManager) {
+  sync(product: Product, variantDTOs: ProductVariantDTO[], manager?: EntityManager) {
     if (!variantDTOs) return product;
 
     const normalizedVariantDTOs = this.normalizeVariantDTOs(variantDTOs);
     this.assertVariantValidity(normalizedVariantDTOs);
 
-    manager = manager || this.variantRepository.manager;
-    const variantsRepository = manager.getRepository(ProductVariantEntity);
+    return withOptionalManager(manager, this.variantRepository.manager, async (manager) => {
+      const variantsRepository = manager.getRepository(ProductVariantEntity);
 
-    const existingVariants = await variantsRepository.find({
-      where: { product: { id: product.id } },
+      const existingVariants = await variantsRepository.find({
+        where: { product: { id: product.id } },
+      });
+      const existingByExternalId = this.createExternalIdMap(existingVariants);
+
+      const syncedPairs = await this.upsert(product, normalizedVariantDTOs, existingByExternalId, variantsRepository);
+
+      const keptIds = new Set(syncedPairs.map(({ variant }) => variant.id));
+      const toDelete = existingVariants.filter(({ id }) => !keptIds.has(id));
+      await this.delete(toDelete, variantsRepository);
+
+      await this.syncVariantMediaByPairs(syncedPairs, manager);
+
+      product.variants = syncedPairs.map(({ variant }) => variant);
+      return product;
     });
-    const existingByExternalId = this.createExternalIdMap(existingVariants);
-
-    const syncedPairs = await this.upsert(product, normalizedVariantDTOs, existingByExternalId, variantsRepository);
-
-    const keptIds = new Set(syncedPairs.map(({ variant }) => variant.id));
-    const toDelete = existingVariants.filter(({ id }) => !keptIds.has(id));
-    await this.delete(toDelete, variantsRepository);
-
-    await this.syncVariantMediaByPairs(syncedPairs, manager);
-
-    product.variants = syncedPairs.map(({ variant }) => variant);
-    return product;
   }
 
-  async syncStock(externalId: string, amount: number, manager?: EntityManager) {
-    manager = manager || this.variantRepository.manager;
-    const variantRepo = manager.getRepository(ProductVariantEntity);
+  syncStock(externalId: string, amount: number, manager?: EntityManager) {
+    return withOptionalManager(manager, this.variantRepository.manager, async (manager) => {
+      const variantRepo = manager.getRepository(ProductVariantEntity);
 
-    await variantRepo.increment({ externalId }, 'stock', amount);
+      await variantRepo.increment({ externalId }, 'stock', amount);
 
-    return this.getVariant(externalId, true, manager);
+      return this.getVariant(externalId, true, manager);
+    });
   }
 
-  async reserveStock(externalId: string, requiredAmount: number, manager?: EntityManager) {
-    manager = manager || this.variantRepository.manager;
-    const variantRepo = manager.getRepository(ProductVariantEntity);
+  reserveStock(externalId: string, requiredAmount: number, manager?: EntityManager) {
+    return withOptionalManager(manager, this.variantRepository.manager, async (manager) => {
+      const variantRepo = manager.getRepository(ProductVariantEntity);
 
-    if (requiredAmount < 1) throw new BadRequestException('requiredAmount must be at least 1');
+      if (requiredAmount < 1) throw new BadRequestException('requiredAmount must be at least 1');
 
-    const result = await variantRepo
-      .createQueryBuilder()
-      .update(ProductVariantEntity)
-      .set({ stock: () => `stock - ${requiredAmount}` })
-      .where('externalId = :externalId', { externalId })
-      .andWhere('isActive = :isActive', { isActive: true })
-      .andWhere('stock >= :requiredAmount', { requiredAmount })
-      .execute();
+      const result = await variantRepo
+        .createQueryBuilder()
+        .update(ProductVariantEntity)
+        .set({ stock: () => `stock - ${requiredAmount}` })
+        .where('externalId = :externalId', { externalId })
+        .andWhere('isActive = :isActive', { isActive: true })
+        .andWhere('stock >= :requiredAmount', { requiredAmount })
+        .execute();
 
-    if (!result.affected) throw new BadRequestException(`Insufficient stock for variant ${externalId}`);
+      if (!result.affected) throw new BadRequestException(`Insufficient stock for variant ${externalId}`);
 
-    return this.getVariant(externalId, true, manager);
+      return this.getVariant(externalId, true, manager);
+    });
   }
 
   private async upsert(

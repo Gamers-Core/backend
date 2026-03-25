@@ -7,6 +7,7 @@ import { Media, MediaAttachment, MediaEntityType } from 'src/entity';
 
 import { MediaService } from './media.service';
 import { MediaAttachmentDTO, MediaAttachmentOptionsDTO, EntityAttachmentDTO } from './dtos';
+import { withOptionalManager } from 'src/common';
 
 @Injectable()
 export class MediaAttachmentService {
@@ -19,33 +20,33 @@ export class MediaAttachmentService {
     private readonly attachmentRepo: Repository<MediaAttachment>,
   ) {}
 
-  async sync({ mediaIds, ...entity }: MediaAttachmentOptionsDTO, manager?: EntityManager) {
-    manager = manager || this.attachmentRepo.manager;
+  sync({ mediaIds, ...entity }: MediaAttachmentOptionsDTO, manager?: EntityManager) {
+    return withOptionalManager(manager, this.attachmentRepo.manager, async (manager) => {
+      const attachmentRepo = manager.getRepository(MediaAttachment);
+      const mediaRepo = manager.getRepository(Media);
 
-    const attachmentRepo = manager.getRepository(MediaAttachment);
-    const mediaRepo = manager.getRepository(Media);
+      if (!mediaIds.length) return await this.detachAll(entity, attachmentRepo, mediaRepo);
 
-    if (!mediaIds.length) return await this.detachAll(entity, attachmentRepo, mediaRepo);
+      const existingAttachments = await attachmentRepo.find({
+        where: entity,
+        relations: ['media'],
+      });
 
-    const existingAttachments = await attachmentRepo.find({
-      where: entity,
-      relations: ['media'],
+      const existingIds = existingAttachments.reduce((ids, { media }) => (media ? [...ids, media.id] : ids), []);
+      const uniqueIds = [...new Set(mediaIds)];
+
+      const existingSet = new Set(existingIds);
+      const toAttach = uniqueIds.filter((id) => !existingSet.has(id));
+      await this.attach({ mediaIds: toAttach, ...entity }, attachmentRepo, mediaRepo);
+
+      const uniqueSet = new Set(uniqueIds);
+      const toDetach = existingIds.filter((id) => !uniqueSet.has(id));
+      await this.detach({ mediaIds: toDetach, ...entity }, attachmentRepo, mediaRepo);
+
+      await this.reorder({ mediaIds: uniqueIds, ...entity }, attachmentRepo);
+
+      return this.getMedia(entity, attachmentRepo);
     });
-
-    const existingIds = existingAttachments.reduce((ids, { media }) => (media ? [...ids, media.id] : ids), []);
-    const uniqueIds = [...new Set(mediaIds)];
-
-    const existingSet = new Set(existingIds);
-    const toAttach = uniqueIds.filter((id) => !existingSet.has(id));
-    await this.attach({ mediaIds: toAttach, ...entity }, attachmentRepo, mediaRepo);
-
-    const uniqueSet = new Set(uniqueIds);
-    const toDetach = existingIds.filter((id) => !uniqueSet.has(id));
-    await this.detach({ mediaIds: toDetach, ...entity }, attachmentRepo, mediaRepo);
-
-    await this.reorder({ mediaIds: uniqueIds, ...entity }, attachmentRepo);
-
-    return this.getMedia(entity, attachmentRepo);
   }
 
   private async attach(

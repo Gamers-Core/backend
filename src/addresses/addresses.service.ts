@@ -7,6 +7,7 @@ import { Address, User } from 'src/entity';
 
 import { CreateAddressDTO, UpdateAddressDTO } from './dtos';
 import { BostaLocation } from './types';
+import { withOptionalManager } from 'src/common';
 
 @Injectable()
 export class AddressesService {
@@ -15,31 +16,31 @@ export class AddressesService {
     private readonly bostaService: BostaService,
   ) {}
 
-  async getAddresses(userId: number, manager?: EntityManager) {
-    manager = manager || this.addressesRepo.manager;
+  getAddresses(userId: number, manager?: EntityManager) {
+    return withOptionalManager(manager, this.addressesRepo.manager, (manager) => {
+      const addressRepo = manager.getRepository(Address);
 
-    const addressRepo = manager.getRepository(Address);
-
-    return addressRepo.find({
-      where: { user: { id: userId } },
-      order: { isDefault: 'DESC', createdAt: 'DESC' },
-      relations: { user: false },
+      return addressRepo.find({
+        where: { user: { id: userId } },
+        order: { isDefault: 'DESC', createdAt: 'DESC' },
+        relations: { user: false },
+      });
     });
   }
 
   async getAddress(id: number, userId: number, manager?: EntityManager) {
-    manager = manager || this.addressesRepo.manager;
+    return withOptionalManager(manager, this.addressesRepo.manager, async (manager) => {
+      const addressRepo = manager.getRepository(Address);
 
-    const addressRepo = manager.getRepository(Address);
+      const address = await addressRepo.findOne({
+        where: { id, user: { id: userId } },
+        relations: { user: false },
+      });
 
-    const address = await addressRepo.findOne({
-      where: { id, user: { id: userId } },
-      relations: { user: false },
+      if (!address) throw new NotFoundException('Address not found');
+
+      return address;
     });
-
-    if (!address) throw new NotFoundException('Address not found');
-
-    return address;
   }
 
   async addAddress(userId: number, { cityId, districtId, ...createDTO }: CreateAddressDTO) {
@@ -196,26 +197,30 @@ export class AddressesService {
   }
 
   private async clearDefaultAddress(manager: EntityManager, userId: number) {
-    await manager
-      .createQueryBuilder()
-      .update(Address)
-      .set({ isDefault: false })
-      .where('userId = :userId', { userId })
-      .execute();
+    return withOptionalManager(manager, this.addressesRepo.manager, async (manager) => {
+      await manager
+        .createQueryBuilder()
+        .update(Address)
+        .set({ isDefault: false })
+        .where('userId = :userId', { userId })
+        .execute();
+    });
   }
 
   private async trySetAddressAsDefault(manager: EntityManager, addressId: number, userId: number) {
-    await manager
-      .createQueryBuilder()
-      .update(Address)
-      .set({ isDefault: true })
-      .where('id = :addressId AND userId = :userId', { addressId, userId })
-      .execute()
-      .catch((error: unknown) => {
-        if (this.isUniqueConstraintError(error)) return;
+    return withOptionalManager(manager, this.addressesRepo.manager, async (manager) => {
+      await manager
+        .createQueryBuilder()
+        .update(Address)
+        .set({ isDefault: true })
+        .where('id = :addressId AND userId = :userId', { addressId, userId })
+        .execute()
+        .catch((error: unknown) => {
+          if (this.isUniqueConstraintError(error)) return;
 
-        throw error;
-      });
+          throw error;
+        });
+    });
   }
 
   private isUniqueConstraintError(error: unknown) {
