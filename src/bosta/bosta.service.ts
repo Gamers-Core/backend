@@ -6,7 +6,17 @@ import { AppCacheService } from 'src/cache';
 import { BostaPickupLocation, ShippingFeesResponseDTO } from 'src/addresses';
 
 import { errorHandler, requestManager } from './helpers';
-import { City, District, Instance, InsuranceFee, ShippingFees } from './types';
+import {
+  City,
+  CreateDelivery,
+  CreateDeliveryData,
+  DeliveryResponse,
+  DeliveryType,
+  District,
+  Instance,
+  InsuranceFee,
+  ShippingFees,
+} from './types';
 import { ShippingFeesDTO } from './dtos';
 
 @Injectable()
@@ -67,12 +77,7 @@ export class BostaService {
   }
 
   async getShippingFees(params: ShippingFeesDTO): Promise<ShippingFeesResponseDTO> {
-    const pickupLocations = await this.getPickupLocations();
-    const defaultPickupAddress = pickupLocations.find(({ isDefault }) => isDefault) ?? pickupLocations[0];
-
-    if (!defaultPickupAddress && !params.pickupCity) {
-      throw new ServiceUnavailableException('No pickup location available to calculate shipping fees');
-    }
+    const defaultPickupAddress = await this.getDefaultPickupLocation();
 
     const pickupCity = params.pickupCity ?? defaultPickupAddress?.address.city.name;
 
@@ -102,5 +107,36 @@ export class BostaService {
 
   getPickupLocations() {
     return this.bosta.get<{ list: BostaPickupLocation[] }>('/pickup-locations').then((res) => res.data.list);
+  }
+
+  getDefaultPickupLocation() {
+    return this.getPickupLocations().then((locations) => locations.find(({ isDefault }) => isDefault) ?? locations[0]);
+  }
+
+  async createDelivery(props: CreateDelivery) {
+    const defaultPickupAddress = await this.getDefaultPickupLocation();
+
+    const delivery = await this.bosta
+      .post<DeliveryResponse, CreateDeliveryData>('/deliveries?apiVersion=1', {
+        businessLocationId: defaultPickupAddress._id,
+        type: DeliveryType.DELIVER,
+        flexShippingInfo: {
+          amountToBeCollected: 200,
+          isOrderEligible: true,
+        },
+        notes: props.note,
+        cod: props.cod,
+        dropOffAddress: { cityId: props.cityId, districtId: props.districtId, firstLine: props.detailedAddress },
+        goodsInfo: { amount: props.unitPrice },
+        receiver: {
+          phone: props.phoneNumber,
+          fullName: props.nameAr,
+        },
+        businessReference: props.orderNumber,
+        allowToOpenPackage: props.canOpenPackage,
+      })
+      .then((res) => res.data);
+
+    return delivery;
   }
 }

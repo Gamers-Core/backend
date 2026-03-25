@@ -141,3 +141,84 @@ export interface ShippingFees {
   dropOffZoneFees: number;
   pickupZoneFees: number;
 }
+
+export enum DeliveryType {
+  DELIVER = 10,
+  CASH_COLLECTION = 15,
+  EXCHANGE = 30,
+  CUSTOMER_RETURN = 25,
+}
+
+export interface CreateDeliveryData {
+  type: DeliveryType;
+  specs?: {
+    size?: 'SMALL' | 'MEDIUM' | 'LARGE' | 'Light Bulky' | 'Heavy Bulky';
+    packageType?: 'Parcel' | 'Document' | 'Light Bulky' | 'Heavy Bulky';
+    packageDetails?: {
+      itemsCount?: number;
+      description?: string;
+    };
+  };
+  goodsInfo: {
+    amount: number;
+  };
+  notes?: string;
+  cod: number;
+  dropOffAddress: {
+    cityId: string;
+    districtId: string;
+    firstLine: string;
+    city?: string;
+    districtName?: string;
+  };
+  businessLocationId: string;
+
+  allowToOpenPackage?: boolean;
+  businessReference?: string;
+  receiver: {
+    firstName?: string;
+    lastName?: string;
+    fullName?: string;
+    phone: string;
+    email?: string;
+  };
+  webhookUrl?: string;
+  webhookCustomHeaders?: {
+    Authorization: string;
+  };
+  flexShippingInfo: {
+    isOrderEligible: boolean;
+    amountToBeCollected: number;
+  };
+}
+
+export interface CreateDelivery {
+  cod: number;
+  cityId: string;
+  districtId: string;
+  detailedAddress: string;
+  canOpenPackage: boolean;
+  unitPrice: number;
+  nameAr: string;
+  phoneNumber: string;
+  orderNumber: string;
+  note?: string;
+}
+
+export interface DeliveryResponse {
+  _id: string;
+  trackingNumber: string;
+  businessReference: string;
+  sender: {
+    _id: string;
+    phone: string;
+    name: string;
+    type: string;
+  };
+  message: string;
+  state: {
+    code: number;
+    value: string;
+  };
+  creationSrc: 'API';
+}
