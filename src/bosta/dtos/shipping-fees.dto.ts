@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class ShippingFeesDTO {
   @IsString()
@@ -8,5 +8,6 @@ export class ShippingFeesDTO {
   dropOffCity: string;
 
   @IsString()
-  pickupCity: string;
+  @IsOptional()
+  pickupCity?: string;
 }

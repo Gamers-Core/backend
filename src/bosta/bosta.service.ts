@@ -3,6 +3,7 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 
 import { AppCacheService } from 'src/cache';
+import { BostaPickupLocation, ShippingFeesResponseDTO } from 'src/addresses';
 
 import { errorHandler, requestManager } from './helpers';
 import { City, District, Instance, InsuranceFee, ShippingFees } from './types';
@@ -23,10 +24,9 @@ export class BostaService {
 
     api.interceptors.request.use((config) => {
       const token = this.configService.get<string>('BOSTA_TOKEN');
-
       if (!token) throw new ServiceUnavailableException('BOSTA_TOKEN is not configured');
 
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = token;
 
       return config;
     });
@@ -66,9 +66,41 @@ export class BostaService {
       .then((res) => res.data);
   }
 
-  getShippingFees(params: ShippingFeesDTO) {
-    return this.bosta
-      .get<ShippingFees>('/pricing/shipment/calculator', { params: { ...params, size: 'Normal', type: 'SEND' } })
+  async getShippingFees(params: ShippingFeesDTO): Promise<ShippingFeesResponseDTO> {
+    const pickupLocations = await this.getPickupLocations();
+    const defaultPickupAddress = pickupLocations.find(({ isDefault }) => isDefault) ?? pickupLocations[0];
+
+    if (!defaultPickupAddress && !params.pickupCity) {
+      throw new ServiceUnavailableException('No pickup location available to calculate shipping fees');
+    }
+
+    const pickupCity = params.pickupCity ?? defaultPickupAddress?.address.city.name;
+
+    const { shippingFee, extraCodFee, tier } = await this.bosta
+      .get<ShippingFees>('/pricing/shipment/calculator', {
+        params: { ...params, cod: String(params.cod), size: 'Normal', type: 'SEND', pickupCity },
+      })
       .then((res) => res.data);
+
+    return {
+      shippingFee,
+      codFee: extraCodFee?.amount ?? 0,
+      openingFee: tier?.openingPackageFee?.amount ?? 0,
+    };
+  }
+
+  async calculateShippingFees(cod: number, dropOffCity: string, isCOD: boolean, canOpenPackage: boolean) {
+    const { shippingFee, codFee, openingFee } = await this.getShippingFees({ cod: String(cod), dropOffCity });
+
+    let total = shippingFee;
+
+    if (isCOD) total += codFee;
+    if (canOpenPackage) total += openingFee;
+
+    return total;
+  }
+
+  getPickupLocations() {
+    return this.bosta.get<{ list: BostaPickupLocation[] }>('/pickup-locations').then((res) => res.data.list);
   }
 }
