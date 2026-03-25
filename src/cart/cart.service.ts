@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, QueryFailedError, Repository } from 'typeorm';
 
+import { withOptionalManager } from 'src/common';
 import { Cart, CartItem, ProductVariantEntity } from 'src/entity';
 import { VariantsService } from 'src/products';
 
@@ -15,29 +16,31 @@ export class CartService {
   ) {}
 
   async getCart(userId: number, manager?: EntityManager) {
-    manager = manager || this.cartRepo.manager;
-    const cartRepo = manager.getRepository(Cart);
+    return withOptionalManager(manager, this.cartRepo.manager, async (manager) => {
+      const cartRepo = manager.getRepository(Cart);
 
-    const cart = await cartRepo.findOne({
-      where: { user: { id: userId } },
-      relations: { items: { variant: { product: true } } },
+      const cart = await cartRepo.findOne({
+        where: { user: { id: userId } },
+        relations: { items: { variant: { product: true } } },
+      });
+      if (!cart) {
+        const newCart = cartRepo.create({ user: { id: userId }, items: [] });
+        return await cartRepo.save(newCart);
+      }
+
+      return cart;
     });
-    if (!cart) {
-      const newCart = cartRepo.create({ user: { id: userId }, items: [] });
-      return await cartRepo.save(newCart);
-    }
-
-    return cart;
   }
 
   async addItem(userId: number, item: CreateCartItemDTO) {
     return this.cartRepo.manager.transaction(async (manager) => {
+      const cart = await this.getCart(userId, manager);
       const cartItemRepo = manager.getRepository(CartItem);
       const variant = await this.variantService.getVariant(item.variantExternalId, true, manager);
 
       const existingItem = await cartItemRepo.findOne({
         where: {
-          cart: { user: { id: userId } },
+          cart: { id: cart.id },
           variant: { id: variant.id },
         },
       });
@@ -50,7 +53,7 @@ export class CartService {
         await cartItemRepo.save(existingItem);
       } else {
         const cartItem = cartItemRepo.create({
-          cart: { user: { id: userId } },
+          cart: { id: cart.id },
           variant,
           quantity: item.quantity,
         });
@@ -60,7 +63,7 @@ export class CartService {
 
           const concurrentItem = await cartItemRepo.findOne({
             where: {
-              cart: { user: { id: userId } },
+              cart: { id: cart.id },
               variant: { id: variant.id },
             },
           });
@@ -81,17 +84,18 @@ export class CartService {
 
   async updateItem(userId: number, id: number, item: UpdateCartItemDTO) {
     return this.cartRepo.manager.transaction(async (manager) => {
+      const cart = await this.getCart(userId, manager);
       const cartItemRepo = manager.getRepository(CartItem);
 
       const cartItem = await cartItemRepo.findOne({
-        where: { id, cart: { user: { id: userId } } },
+        where: { id, cart: { id: cart.id } },
         relations: { variant: { product: true } },
       });
       if (!cartItem) throw new NotFoundException('Cart item not found');
 
       this.assertVariantStock(cartItem.variant, item.quantity);
 
-      if (item.quantity === 0) await cartItemRepo.delete({ id, cart: { user: { id: userId } } });
+      if (item.quantity === 0) await cartItemRepo.delete({ id, cart: { id: cart.id } });
       else {
         cartItem.quantity = item.quantity;
         await cartItemRepo.save(cartItem);
@@ -101,13 +105,14 @@ export class CartService {
     });
   }
 
-  async clearCart(userId: number) {
-    return this.cartRepo.manager.transaction(async (manager) => {
-      const cartItemRepo = manager.getRepository(CartItem);
+  async clearCart(userId: number, manager?: EntityManager) {
+    return withOptionalManager(manager, this.cartRepo.manager, async (entityManager) => {
+      const cartItemRepo = entityManager.getRepository(CartItem);
 
-      await cartItemRepo.delete({ cart: { user: { id: userId } } });
+      const cart = await this.getCart(userId, entityManager);
+      await cartItemRepo.delete({ cart: { id: cart.id } });
 
-      return this.getCart(userId, manager);
+      return this.getCart(userId, entityManager);
     });
   }
 

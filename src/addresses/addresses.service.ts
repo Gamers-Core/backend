@@ -15,12 +15,31 @@ export class AddressesService {
     private readonly bostaService: BostaService,
   ) {}
 
-  async getAddresses(userId: number) {
-    return this.addressesRepo.find({
+  async getAddresses(userId: number, manager?: EntityManager) {
+    manager = manager || this.addressesRepo.manager;
+
+    const addressRepo = manager.getRepository(Address);
+
+    return addressRepo.find({
       where: { user: { id: userId } },
       order: { isDefault: 'DESC', createdAt: 'DESC' },
       relations: { user: false },
     });
+  }
+
+  async getAddress(id: number, userId: number, manager?: EntityManager) {
+    manager = manager || this.addressesRepo.manager;
+
+    const addressRepo = manager.getRepository(Address);
+
+    const address = await addressRepo.findOne({
+      where: { id, user: { id: userId } },
+      relations: { user: false },
+    });
+
+    if (!address) throw new NotFoundException('Address not found');
+
+    return address;
   }
 
   async addAddress(userId: number, { cityId, districtId, ...createDTO }: CreateAddressDTO) {

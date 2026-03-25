@@ -10,6 +10,8 @@ import {
   Brand,
   Media,
   MediaAttachment,
+  ItemSnapshot,
+  Order,
   Product,
   ProductVariantEntity,
   User,
@@ -26,7 +28,20 @@ export const getDataSourceOptions = (): DataSourceOptions => {
   const dataSourceOptions: Partial<DataSourceOptions> = {
     synchronize: false,
     migrations,
-    entities: [User, Address, Product, ProductVariantEntity, Category, Brand, Media, MediaAttachment, Cart, CartItem],
+    entities: [
+      User,
+      Address,
+      Product,
+      ProductVariantEntity,
+      Category,
+      Brand,
+      Media,
+      MediaAttachment,
+      ItemSnapshot,
+      Order,
+      Cart,
+      CartItem,
+    ],
     subscribers: [UserSubscriber],
   };
 

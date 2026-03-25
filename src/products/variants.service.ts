@@ -54,6 +54,35 @@ export class VariantsService {
     return product;
   }
 
+  async syncStock(externalId: string, amount: number, manager?: EntityManager) {
+    manager = manager || this.variantRepository.manager;
+    const variantRepo = manager.getRepository(ProductVariantEntity);
+
+    await variantRepo.increment({ externalId }, 'stock', amount);
+
+    return this.getVariant(externalId, true, manager);
+  }
+
+  async reserveStock(externalId: string, requiredAmount: number, manager?: EntityManager) {
+    manager = manager || this.variantRepository.manager;
+    const variantRepo = manager.getRepository(ProductVariantEntity);
+
+    if (requiredAmount < 1) throw new BadRequestException('requiredAmount must be at least 1');
+
+    const result = await variantRepo
+      .createQueryBuilder()
+      .update(ProductVariantEntity)
+      .set({ stock: () => `stock - ${requiredAmount}` })
+      .where('externalId = :externalId', { externalId })
+      .andWhere('isActive = :isActive', { isActive: true })
+      .andWhere('stock >= :requiredAmount', { requiredAmount })
+      .execute();
+
+    if (!result.affected) throw new BadRequestException(`Insufficient stock for variant ${externalId}`);
+
+    return this.getVariant(externalId, true, manager);
+  }
+
   private async upsert(
     product: Product,
     variantDTOs: ProductVariantDTO[],
