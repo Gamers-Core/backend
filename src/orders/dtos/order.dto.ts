@@ -78,6 +78,9 @@ export class OrderDTO {
   shippingAddress: OrderAddressDTO;
 
   @Expose()
+  note: string | null;
+
+  @Expose()
   trackingNumber: string | null;
 
   @Expose()

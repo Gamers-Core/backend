@@ -23,8 +23,6 @@ export class OrdersController {
   @Serialize(OrderDTO)
   @Get(':id')
   async getOrderById(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number) {
-    console.log(await this.ordersService.getOrder(user.id, id));
-
     return this.ordersService.getOrder(user.id, id);
   }
 

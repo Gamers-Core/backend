@@ -18,7 +18,12 @@ import { AddressesService } from 'src/addresses';
 import { CartService } from 'src/cart';
 import { BostaService } from 'src/bosta';
 
-import { assertStatusGuards, assertValidOrderTransition, assertValidPaymentTransition } from './helpers';
+import {
+  assertPaymentStatusGuards,
+  assertStatusGuards,
+  assertValidOrderTransition,
+  assertValidPaymentTransition,
+} from './helpers';
 import { OrderItemsService } from './order-items.service';
 
 @Injectable()
@@ -92,6 +97,7 @@ export class OrdersService {
   async updatePaymentStatus(orderId: number, userId: number, body: UpdateOrderPaymentDTO) {
     return this.updateOrder(orderId, userId, (order) => {
       assertValidPaymentTransition(order.paymentStatus, body.paymentStatus);
+      assertPaymentStatusGuards(order, body.paymentStatus);
       order.paymentStatus = body.paymentStatus;
       if (body.paymentStatus === 'paid') order.paidAt = new Date();
     });
@@ -187,17 +193,17 @@ export class OrdersService {
 
   private updateOrder(orderId: number, userId: number, mutate: (order: Order) => void | Promise<void>) {
     return this.ordersRepo.manager.transaction(async (manager) => {
-      const order = await this.getOrderOrFail(orderId, userId, manager);
+      const order = await this.getOrderOrFail(orderId, userId, manager, true);
       await mutate(order);
 
       return manager.getRepository(Order).save(order);
     });
   }
 
-  private async getOrderOrFail(id: number, userId: number, manager: EntityManager, withItems = false) {
+  private async getOrderOrFail(id: number, userId: number, manager: EntityManager, withRelation = false) {
     const order = await manager.getRepository(Order).findOne({
       where: { id, user: { id: userId } },
-      relations: withItems ? { items: true } : undefined,
+      relations: withRelation ? { items: true, user: true } : undefined,
     });
 
     if (!order) throw new NotFoundException('Order not found');

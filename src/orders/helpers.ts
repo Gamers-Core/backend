@@ -4,6 +4,7 @@ import {
   Order,
   orderStatusGuards,
   orderTransitions,
+  paymentStatusGuards,
   paymentTransitions,
   type OrderStatus,
   type PaymentStatus,
@@ -21,6 +22,13 @@ export function assertValidPaymentTransition(current: PaymentStatus, next: Payme
 
 export function assertStatusGuards(order: Order, nextStatus: OrderStatus) {
   const guards = orderStatusGuards[nextStatus] ?? [];
+
+  guards.forEach(({ isInvalid, message }) => {
+    if (isInvalid(order)) throw new BadRequestException(message);
+  });
+}
+export function assertPaymentStatusGuards(order: Order, nextStatus: PaymentStatus) {
+  const guards = paymentStatusGuards[nextStatus] ?? [];
 
   guards.forEach(({ isInvalid, message }) => {
     if (isInvalid(order)) throw new BadRequestException(message);

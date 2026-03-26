@@ -7,6 +7,7 @@ export type PaymentMethod = (typeof paymentMethods)[number];
 export interface OrderStatusGuardContext {
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
+  status: OrderStatus;
   trackingNumber: string | null;
 }
 
