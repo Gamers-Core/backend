@@ -1,3 +1,4 @@
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { DataSourceOptions, DataSource } from 'typeorm';
 import { join } from 'path';
 import { config } from 'dotenv';
@@ -28,6 +29,10 @@ export const getDataSourceOptions = (): DataSourceOptions => {
   const dataSourceOptions: Partial<DataSourceOptions> = {
     synchronize: false,
     migrations,
+    type: 'postgres',
+    url: process.env.DATABASE_URL,
+    migrationsRun: true,
+    namingStrategy: new SnakeNamingStrategy(),
     entities: [
       User,
       Address,
@@ -44,19 +49,16 @@ export const getDataSourceOptions = (): DataSourceOptions => {
     ],
     subscribers: [UserSubscriber],
   };
+  if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
 
   switch (process.env.NODE_ENV) {
     case 'development':
-      Object.assign(dataSourceOptions, {
-        type: 'sqlite',
-        database: 'db.sqlite',
-        synchronize: true,
-      });
       break;
-    // TODO: add staging and production configs
     case 'staging':
-      break;
     case 'production':
+      Object.assign(dataSourceOptions, {
+        ssl: { rejectUnauthorized: false },
+      });
       break;
     default:
       throw new Error('Unknown environment');

@@ -76,8 +76,8 @@ export class VariantsService {
         .createQueryBuilder()
         .update(ProductVariantEntity)
         .set({ stock: () => `stock - ${requiredAmount}` })
-        .where('externalId = :externalId', { externalId })
-        .andWhere('isActive = :isActive', { isActive: true })
+        .where('external_id = :externalId', { externalId })
+        .andWhere('is_active = :isActive', { isActive: true })
         .andWhere('stock >= :requiredAmount', { requiredAmount })
         .execute();
 

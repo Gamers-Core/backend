@@ -65,7 +65,7 @@ export class Order {
   })
   user: User;
 
-  @Column({ nullable: true, type: 'datetime' })
+  @Column({ nullable: true, type: 'timestamp' })
   paidAt: Date | null;
 
   @CreateDateColumn()
