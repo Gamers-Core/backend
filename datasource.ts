@@ -52,8 +52,9 @@ export const getDataSourceOptions = (): DataSourceOptions => {
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
 
   switch (process.env.NODE_ENV) {
-    case 'development':
+    case 'local':
       break;
+    case 'development':
     case 'staging':
     case 'production':
       Object.assign(dataSourceOptions, {
