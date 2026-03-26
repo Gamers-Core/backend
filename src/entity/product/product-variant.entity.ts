@@ -14,7 +14,7 @@ import {
 import { Product } from './product.entity';
 
 @Entity()
-@Check('CHK_variant_compareAt_gt_price', '"compareAt" IS NULL OR "compareAt" > "price"')
+@Check('CHK_variant_compareAt_gt_price', '"compare_at" IS NULL OR "compare_at" > "price"')
 export class ProductVariantEntity {
   @PrimaryGeneratedColumn()
   id: number;
@@ -40,7 +40,7 @@ export class ProductVariantEntity {
   @Column({ type: 'int' })
   costPerItem: number;
 
-  @Column({ nullable: true, type: 'int', default: null })
+  @Column({ name: 'compare_at', nullable: true, type: 'int', default: null })
   compareAt: number | null;
 
   @ManyToOne(() => Product, (product) => product.variants, {

@@ -36,6 +36,6 @@ export class Media {
   @Column({ default: false })
   isDeleted: boolean;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   expiresAt: Date | null;
 }

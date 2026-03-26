@@ -103,12 +103,12 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     try {
       const expiredDraftMedia = await this.mediaRepository
         .createQueryBuilder('m')
-        .select(['m.id', 'm.publicId'])
-        .where('m.expiresAt IS NOT NULL')
-        .andWhere('m.expiresAt < :now', { now })
-        .andWhere('m.isDeleted = :isDeleted', { isDeleted: false })
+        .select(['m.id', 'm.public_id'])
+        .where('m.expires_at IS NOT NULL')
+        .andWhere('m.expires_at < :now', { now })
+        .andWhere('m.is_deleted = :isDeleted', { isDeleted: false })
         .andWhere((qb) => {
-          const subQuery = qb.subQuery().select('1').from(MediaAttachment, 'ma').where('ma.mediaId = m.id').getQuery();
+          const subQuery = qb.subQuery().select('1').from(MediaAttachment, 'ma').where('ma.media_id = m.id').getQuery();
 
           return `NOT EXISTS ${subQuery}`;
         })
@@ -125,10 +125,10 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
             .update(Media)
             .set({ isDeleted: true })
             .where('id = :id', { id: media.id })
-            .andWhere('isDeleted = :isDeleted', { isDeleted: false })
-            .andWhere('expiresAt IS NOT NULL')
-            .andWhere('expiresAt < :now', { now })
-            .andWhere('NOT EXISTS (SELECT 1 FROM media_attachment ma WHERE ma.mediaId = :id)', { id: media.id })
+            .andWhere('is_deleted = :isDeleted', { isDeleted: false })
+            .andWhere('expires_at IS NOT NULL')
+            .andWhere('expires_at < :now', { now })
+            .andWhere('NOT EXISTS (SELECT 1 FROM media_attachment ma WHERE ma.media_id = :id)', { id: media.id })
             .execute();
 
           if (updateResult.affected) {
@@ -158,8 +158,8 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
             .delete()
             .from(Media)
             .where('id = :id', { id: media.id })
-            .andWhere('isDeleted = :isDeleted', { isDeleted: true })
-            .andWhere('NOT EXISTS (SELECT 1 FROM media_attachment ma WHERE ma.mediaId = :id)', { id: media.id })
+            .andWhere('is_deleted = :isDeleted', { isDeleted: true })
+            .andWhere('NOT EXISTS (SELECT 1 FROM media_attachment ma WHERE ma.media_id = :id)', { id: media.id })
             .execute();
         }),
       );

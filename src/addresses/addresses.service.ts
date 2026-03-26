@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, QueryFailedError, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 
 import { BostaService } from 'src/bosta';
 import { Address, User } from 'src/entity';
@@ -202,7 +202,7 @@ export class AddressesService {
         .createQueryBuilder()
         .update(Address)
         .set({ isDefault: false })
-        .where('userId = :userId', { userId })
+        .where('user_id = :userId', { userId })
         .execute();
     });
   }
@@ -212,26 +212,16 @@ export class AddressesService {
       await manager
         .createQueryBuilder()
         .update(Address)
+        .set({ isDefault: false })
+        .where('user_id = :userId', { userId })
+        .execute();
+
+      await manager
+        .createQueryBuilder()
+        .update(Address)
         .set({ isDefault: true })
-        .where('id = :addressId AND userId = :userId', { addressId, userId })
-        .execute()
-        .catch((error: unknown) => {
-          if (this.isUniqueConstraintError(error)) return;
-
-          throw error;
-        });
+        .where('id = :addressId AND user_id = :userId', { addressId, userId })
+        .execute();
     });
-  }
-
-  private isUniqueConstraintError(error: unknown) {
-    if (!(error instanceof QueryFailedError)) return false;
-
-    const driverError = error.driverError as { code?: string; message?: string } | undefined;
-
-    return (
-      driverError?.code === '23505' ||
-      driverError?.code === 'SQLITE_CONSTRAINT' ||
-      !!driverError?.message?.toLowerCase().includes('unique')
-    );
   }
 }

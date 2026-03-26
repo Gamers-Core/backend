@@ -5,7 +5,7 @@ import { User } from './user.entity';
 @Entity()
 @Index('UQ_address_user_default', ['user'], {
   unique: true,
-  where: 'isDefault = true',
+  where: 'is_default = true',
 })
 export class Address {
   @PrimaryGeneratedColumn()
@@ -32,7 +32,7 @@ export class Address {
   @Column()
   nameAr: string;
 
-  @Column({ default: false })
+  @Column({ name: 'is_default', default: false })
   isDefault: boolean;
 
   @ManyToOne(() => User, (user) => user.addresses, {
