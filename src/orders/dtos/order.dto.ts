@@ -1,7 +1,7 @@
 import { Expose, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 
-import type { OrderStatus, PaymentMethod, PaymentStatus } from 'src/entity';
+import { type OrderStatus, type PaymentMethod, type PaymentStatus } from 'src/entity';
 
 class OrderItemDTO {
   @Expose()
@@ -55,9 +55,20 @@ class OrderAddressDTO {
   cityName: string;
 }
 
+class OrderAllowedActionsDTO {
+  @Expose()
+  statuses: OrderStatus[];
+
+  @Expose()
+  paymentStatuses: PaymentStatus[];
+}
+
 export class OrderDTO {
   @Expose()
   id: number;
+
+  @Expose()
+  orderNumber: string;
 
   @Expose()
   status: OrderStatus;
@@ -67,6 +78,10 @@ export class OrderDTO {
 
   @Expose()
   paymentStatus: PaymentStatus;
+
+  @Expose()
+  @Type(() => OrderAllowedActionsDTO)
+  allowedActions: OrderAllowedActionsDTO;
 
   @Expose()
   @ValidateNested({ each: true })
