@@ -1,3 +1,4 @@
+import SMTPTransport from 'nodemailer/lib/smtp-transport';
 import * as nodemailer from 'nodemailer';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -8,11 +9,11 @@ import { MailOptions, MailOptionsType, MailType, SendMailOptions } from './types
 
 @Injectable()
 export class MailService {
-  private transporter?: nodemailer.Transporter;
+  private transporter?: nodemailer.Transporter<SMTPTransport.SentMessageInfo, SMTPTransport.Options>;
 
   constructor(private readonly configService: ConfigService) {}
 
-  private getTransporter(): nodemailer.Transporter {
+  private getTransporter() {
     if (!this.transporter) {
       const user = this.configService.get<string>('EMAIL_USER');
       const pass = this.configService.get<string>('EMAIL_PASS');
@@ -28,18 +29,14 @@ export class MailService {
 
     return this.transporter;
   }
-  send({ title, ...options }: SendMailOptions, mail: MailType): ReturnType<nodemailer.Transporter['sendMail']> {
+  send({ title, ...options }: SendMailOptions, mail: MailType) {
     return this.getTransporter().sendMail({
       ...options,
       from: `"${title}" <${getEmail(mail)}>`,
     });
   }
 
-  sendTypedMail<T extends MailOptionsType>(
-    to: string,
-    type: T,
-    values: MailOptions[T],
-  ): ReturnType<nodemailer.Transporter['sendMail']> {
+  sendTypedMail<T extends MailOptionsType>(to: string, type: T, values: MailOptions[T]) {
     const { type: mail, ...options } = mailsOptions[type](values);
 
     return this.send({ ...options, to }, mail);

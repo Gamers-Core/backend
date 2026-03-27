@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { customAlphabet } from 'nanoid';
 import {
   BeforeInsert,
   Column,
@@ -14,6 +14,8 @@ import { User } from '../user.entity';
 import { orderStatuses, paymentMethods, paymentStatuses } from './const';
 import type { OrderAddressSnapshot, OrderStatus, PaymentMethod, PaymentStatus } from './types';
 import { ItemSnapshot } from './item-snapshot.entity';
+
+const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 6);
 
 @Entity()
 export class Order {
@@ -76,6 +78,7 @@ export class Order {
 
   @BeforeInsert()
   ensureOrderNumber() {
-    if (!this.orderNumber) this.orderNumber = `ORD-${randomUUID()}`;
+    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    if (!this.orderNumber) this.orderNumber = `GC-${date}-${nanoid()}`;
   }
 }

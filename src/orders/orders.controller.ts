@@ -21,11 +21,9 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Serialize(OrderDTO)
-  @Get(':id')
-  async getOrderById(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number) {
-    console.log(await this.ordersService.getOrder(user.id, id));
-
-    return this.ordersService.getOrder(user.id, id);
+  @Get(':orderNumber')
+  async getOrderById(@CurrentUser() user: User, @Param('orderNumber') orderNumber: string) {
+    return this.ordersService.getOrder(user.id, orderNumber);
   }
 
   @Serialize(OrderDTO)
@@ -47,51 +45,59 @@ export class OrdersController {
   }
 
   @Serialize(OrderDTO)
-  @Patch(':id/paymentStatus')
-  updatePayment(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number, @Body() body: UpdateOrderPaymentDTO) {
-    return this.ordersService.updatePaymentStatus(id, user.id, body);
+  @Patch(':orderNumber/paymentStatus')
+  updatePayment(
+    @CurrentUser() user: User,
+    @Param('orderNumber') orderNumber: string,
+    @Body() body: UpdateOrderPaymentDTO,
+  ) {
+    return this.ordersService.updatePaymentStatus(orderNumber, user.id, body);
   }
 
   @Serialize(OrderDTO)
-  @Patch(':id/status')
-  updateStatus(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number, @Body() body: UpdateOrderStatusDTO) {
-    return this.ordersService.updateStatus(id, user.id, body.status);
+  @Patch(':orderNumber/status')
+  updateStatus(
+    @CurrentUser() user: User,
+    @Param('orderNumber') orderNumber: string,
+    @Body() body: UpdateOrderStatusDTO,
+  ) {
+    return this.ordersService.updateStatus({ orderNumber }, user.id, body.status);
   }
 
   @Serialize(OrderDTO)
-  @Patch(':id/shipping')
+  @Patch(':orderNumber/shipping')
   updateShipping(
     @CurrentUser() user: User,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('orderNumber') orderNumber: string,
     @Body() body: UpdateOrderShippingDTO,
   ) {
-    return this.ordersService.updateShipping(id, user.id, body);
+    return this.ordersService.updateShipping(orderNumber, user.id, body);
   }
 
   @Serialize(OrderDTO)
-  @Post(':id/items')
-  addOrderItem(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number, @Body() body: AddOrderItemDTO) {
-    return this.ordersService.addItems(user.id, id, [body]);
+  @Post(':orderNumber/items')
+  addOrderItem(@CurrentUser() user: User, @Param('orderNumber') orderNumber: string, @Body() body: AddOrderItemDTO) {
+    return this.ordersService.addItems(user.id, orderNumber, [body]);
   }
 
   @Serialize(OrderDTO)
-  @Patch(':id/items/:itemId')
+  @Patch(':orderNumber/items/:itemId')
   updateOrderItem(
     @CurrentUser() user: User,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('orderNumber') orderNumber: string,
     @Param('itemId', ParseIntPipe) itemId: number,
     @Body() body: UpdateOrderItemDTO,
   ) {
-    return this.ordersService.updateOrderItem(user.id, id, itemId, body);
+    return this.ordersService.updateOrderItem(user.id, orderNumber, itemId, body);
   }
 
   @Serialize(OrderDTO)
-  @Delete(':id/items/:itemId')
+  @Delete(':orderNumber/items/:itemId')
   deleteOrderItem(
     @CurrentUser() user: User,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('orderNumber') orderNumber: string,
     @Param('itemId', ParseIntPipe) itemId: number,
   ) {
-    return this.ordersService.deleteOrderItem(user.id, id, itemId);
+    return this.ordersService.deleteOrderItem(user.id, orderNumber, itemId);
   }
 }

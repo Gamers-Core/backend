@@ -1,25 +1,35 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
 import { withOptionalManager } from 'src/common';
-import { editableStatuses, nonUpdatableShippingStatuses, Order, type OrderStatus } from 'src/entity';
+import { CartService } from 'src/cart';
+import { BostaService } from 'src/bosta';
+import { getEmail, MailService } from 'src/mail';
+import { Order, type OrderStatus } from 'src/entity';
+import { AddressesService } from 'src/addresses/addresses.service';
 
+import { editableStatuses, nonUpdatableShippingStatuses } from './statuses';
+import { OrderItemsService } from './order-items.service';
 import {
   AddOrderItemDTO,
   CheckoutOrderDTO,
   CreateOrderDTO,
+  OrderDTO,
   UpdateOrderItemDTO,
   UpdateOrderPaymentDTO,
   UpdateOrderShippingDTO,
 } from './dtos';
-
-import { AddressesService } from 'src/addresses';
-import { CartService } from 'src/cart';
-import { BostaService } from 'src/bosta';
-
-import { assertStatusGuards, assertValidOrderTransition, assertValidPaymentTransition } from './helpers';
-import { OrderItemsService } from './order-items.service';
+import {
+  assertPaymentStatusGuards,
+  assertStatusGuards,
+  assertValidOrderTransition,
+  assertValidPaymentTransition,
+  getAllowedPaymentStatuses,
+  getAllowedStatuses,
+} from './helpers';
+import { OrderIdentifier } from './types';
 
 @Injectable()
 export class OrdersService {
@@ -27,8 +37,10 @@ export class OrdersService {
     @InjectRepository(Order) private readonly ordersRepo: Repository<Order>,
     private readonly cartService: CartService,
     private readonly addressService: AddressesService,
+    @Inject(forwardRef(() => BostaService))
     private readonly bostaService: BostaService,
     private readonly orderItemsService: OrderItemsService,
+    private readonly mailService: MailService,
   ) {}
 
   getOrders(userId: number) {
@@ -39,8 +51,8 @@ export class OrdersService {
     });
   }
 
-  getOrder(userId: number, id: number) {
-    return this.getOrderOrFail(id, userId, this.ordersRepo.manager, true);
+  getOrder(userId: number, orderNumber: string) {
+    return this.getOrderOrFail({ orderNumber }, userId, this.ordersRepo.manager, true);
   }
 
   async checkout(userId: number, body: CheckoutOrderDTO) {
@@ -54,51 +66,58 @@ export class OrdersService {
   }
 
   createOrder(userId: number, body: CreateOrderDTO) {
-    return this.ordersRepo.manager.transaction((manager) => this.createOrderInternal(userId, body, manager));
+    return this.ordersRepo.manager.transaction(async (manager) => {
+      const order = await this.createOrderInternal(userId, body, manager);
+
+      return this.mapToDTO(order);
+    });
   }
 
-  addItems(userId: number, orderId: number, items: AddOrderItemDTO[], manager?: EntityManager) {
+  addItems(userId: number, orderNumber: string, items: AddOrderItemDTO[], manager?: EntityManager) {
     return this.runWithManager(manager)((manager) =>
-      this.mutateItems(orderId, userId, manager, (order, manager) =>
+      this.mutateItems(orderNumber, userId, manager, (order, manager) =>
         this.orderItemsService.addItems(order, items, manager),
       ),
     );
   }
 
-  updateOrderItem(userId: number, orderId: number, itemId: number, body: UpdateOrderItemDTO) {
+  updateOrderItem(userId: number, orderNumber: string, itemId: number, body: UpdateOrderItemDTO) {
     return this.ordersRepo.manager.transaction((manager) =>
-      this.mutateItems(orderId, userId, manager, (order, manager) =>
+      this.mutateItems(orderNumber, userId, manager, (order, manager) =>
         this.orderItemsService.updateItem(order, itemId, body, manager),
       ),
     );
   }
 
-  deleteOrderItem(userId: number, orderId: number, itemId: number) {
+  deleteOrderItem(userId: number, orderNumber: string, itemId: number) {
     return this.ordersRepo.manager.transaction((manager) =>
-      this.mutateItems(orderId, userId, manager, (order, manager) =>
+      this.mutateItems(orderNumber, userId, manager, (order, manager) =>
         this.orderItemsService.deleteItem(order, itemId, manager),
       ),
     );
   }
 
-  async updateStatus(orderId: number, userId: number, status: OrderStatus) {
-    return this.updateOrder(orderId, userId, (order) => {
+  async updateStatus(orderIdentifier: OrderIdentifier, userId: number, status: OrderStatus) {
+    return this.updateOrder(orderIdentifier, userId, async (order) => {
       assertValidOrderTransition(order.status, status);
       assertStatusGuards(order, status);
+
       order.status = status;
+      await this.statusHandlers[status]?.(order);
     });
   }
 
-  async updatePaymentStatus(orderId: number, userId: number, body: UpdateOrderPaymentDTO) {
-    return this.updateOrder(orderId, userId, (order) => {
+  async updatePaymentStatus(orderNumber: string, userId: number, body: UpdateOrderPaymentDTO) {
+    return this.updateOrder({ orderNumber }, userId, (order) => {
       assertValidPaymentTransition(order.paymentStatus, body.paymentStatus);
+      assertPaymentStatusGuards(order, body.paymentStatus);
       order.paymentStatus = body.paymentStatus;
       if (body.paymentStatus === 'paid') order.paidAt = new Date();
     });
   }
 
-  async updateShipping(orderId: number, userId: number, body: UpdateOrderShippingDTO) {
-    return this.updateOrder(orderId, userId, (order) => {
+  async updateShipping(orderNumber: string, userId: number, body: UpdateOrderShippingDTO) {
+    return this.updateOrder({ orderNumber }, userId, (order) => {
       if (nonUpdatableShippingStatuses.includes(order.status))
         throw new BadRequestException('Shipping details can no longer be updated');
 
@@ -139,7 +158,11 @@ export class OrdersService {
 
     if (clearCartAfterCreate) await this.cartService.clearCart(userId, manager);
 
-    return this.getOrderOrFail(order.id, userId, manager, true);
+    const updatedOrder = await this.getOrderOrFail({ orderNumber: order.orderNumber }, userId, manager, true);
+
+    await this.statusHandlers.pending(updatedOrder);
+
+    return updatedOrder;
   }
 
   private async recalculateAndSaveTotals(order: Order, manager: EntityManager) {
@@ -167,12 +190,12 @@ export class OrdersService {
   }
 
   private async mutateItems(
-    orderId: number,
+    orderNumber: string,
     userId: number,
     manager: EntityManager,
     mutate: (order: Order, manager: EntityManager) => Promise<number>,
   ) {
-    const order = await this.getOrderOrFail(orderId, userId, manager, true);
+    const order = await this.getOrderOrFail({ orderNumber }, userId, manager, true);
 
     if (!editableStatuses.includes(order.status))
       throw new BadRequestException('Order cannot be modified in its current status');
@@ -182,26 +205,78 @@ export class OrdersService {
     order.subtotal += diff;
     await this.recalculateAndSaveTotals(order, manager);
 
-    return this.getOrderOrFail(orderId, userId, manager, true);
+    const updatedOrder = await this.getOrderOrFail({ orderNumber }, userId, manager, true);
+
+    return this.mapToDTO(updatedOrder);
   }
 
-  private updateOrder(orderId: number, userId: number, mutate: (order: Order) => void | Promise<void>) {
+  private updateOrder(
+    orderIdentifier: OrderIdentifier,
+    userId: number,
+    mutate: (order: Order) => void | Promise<void>,
+  ) {
     return this.ordersRepo.manager.transaction(async (manager) => {
-      const order = await this.getOrderOrFail(orderId, userId, manager);
+      const order = await this.getOrderOrFail(orderIdentifier, userId, manager, true);
       await mutate(order);
 
-      return manager.getRepository(Order).save(order);
+      const updatedOrder = await manager.getRepository(Order).save(order);
+
+      return this.mapToDTO(updatedOrder);
     });
   }
 
-  private async getOrderOrFail(id: number, userId: number, manager: EntityManager, withItems = false) {
+  private async getOrderOrFail(
+    orderIdentifier: OrderIdentifier,
+    userId: number,
+    manager: EntityManager,
+    withRelation = false,
+  ) {
+    const identifierKey = 'orderNumber' in orderIdentifier ? 'orderNumber' : 'trackingNumber';
+    const identifierValue = orderIdentifier[identifierKey];
+
     const order = await manager.getRepository(Order).findOne({
-      where: { id, user: { id: userId } },
-      relations: withItems ? { items: true } : undefined,
+      where: { [identifierKey]: identifierValue, user: { id: userId } },
+      relations: withRelation ? { items: true, user: true } : undefined,
     });
 
     if (!order) throw new NotFoundException('Order not found');
 
     return order;
   }
+
+  mapToDTO(order: Order): OrderDTO {
+    return plainToInstance(OrderDTO, {
+      ...order,
+      allowedActions: {
+        statuses: getAllowedStatuses(order),
+        paymentStatuses: getAllowedPaymentStatuses(order),
+      },
+    });
+  }
+
+  private readonly statusHandlers = {
+    pending: async (order) => {
+      await this.mailService.sendTypedMail(order.user.email, 'order_confirmation', order);
+    },
+    confirmed: async (order) => {
+      const unitPrice = order.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+
+      const [delivery] = await Promise.all([
+        this.bostaService.createDelivery({
+          ...order.shippingAddress,
+          ...order,
+          unitPrice,
+          cod: order.total,
+          note: order.note ?? undefined,
+        }),
+        this.mailService.sendTypedMail(getEmail('admin'), 'order_reminder', order),
+      ]);
+
+      order.trackingNumber = delivery.trackingNumber;
+    },
+    delivered: async (order) => {
+      if (order.paymentStatus === 'paid')
+        await this.updateStatus({ orderNumber: order.orderNumber }, order.user.id, 'completed');
+    },
+  } as const satisfies Partial<Record<OrderStatus, (order: Order) => void | Promise<void>>>;
 }
