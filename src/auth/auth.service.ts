@@ -109,6 +109,10 @@ export class AuthService {
   }
 
   async resendOTP<P extends AuthPurpose>({ purpose, sessionId }: ResendOTPDTO<P>) {
-    return this.otpSessionService.resendSession<P>({ purpose, sessionId });
+    return withEnvironment(['local', 'development', 'staging'], async (isValid) => {
+      if (isValid) return;
+
+      return this.otpSessionService.resendSession<P>({ purpose, sessionId });
+    });
   }
 }

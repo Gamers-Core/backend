@@ -3,7 +3,7 @@ import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException 
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
-import { withOptionalManager } from 'src/common';
+import { withEnvironment, withOptionalManager } from 'src/common';
 import { CartService } from 'src/cart';
 import { BostaService } from 'src/bosta';
 import { getEmail, MailService } from 'src/mail';
@@ -256,21 +256,29 @@ export class OrdersService {
 
   private readonly statusHandlers = {
     pending: async (order) => {
-      await this.mailService.sendTypedMail(order.user.email, 'order_confirmation', order);
+      await withEnvironment(['production'], async (isValid) => {
+        if (!isValid) return;
+
+        await this.mailService.sendTypedMail(order.user.email, 'order_confirmation', order);
+      });
     },
     confirmed: async (order) => {
       const unitPrice = order.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
 
-      const [delivery] = await Promise.all([
-        this.bostaService.createDelivery({
-          ...order.shippingAddress,
-          ...order,
-          unitPrice,
-          cod: order.total,
-          note: order.note ?? undefined,
-        }),
-        this.mailService.sendTypedMail(getEmail('admin'), 'order_reminder', order),
-      ]);
+      const [delivery] = await withEnvironment(['production'], async (isValid) => {
+        if (!isValid) return [{ trackingNumber: null }];
+
+        return await Promise.all([
+          this.bostaService.createDelivery({
+            ...order.shippingAddress,
+            ...order,
+            unitPrice,
+            cod: order.total,
+            note: order.note ?? undefined,
+          }),
+          this.mailService.sendTypedMail(getEmail('admin'), 'order_reminder', order),
+        ]);
+      });
 
       order.trackingNumber = delivery.trackingNumber;
     },
