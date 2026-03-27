@@ -7,6 +7,7 @@ import { CreateUserDTO, ForgotPasswordDTO, LoginUserDTO, ResendOTPDTO, VerifyOTP
 import { getEncryptedPassword, getHashedPassword } from './helpers';
 import { OtpSessionService } from './otp-session';
 import { AuthPurpose, OtpVerifyHandlers, OtpVerifyResultByPurpose } from './types';
+import { withEnvironment } from 'src/common';
 
 @Injectable()
 export class AuthService {
@@ -33,10 +34,21 @@ export class AuthService {
 
     const password = await getEncryptedPassword(userDTO.password);
 
-    return await this.otpSessionService.createSession({
-      purpose: 'signup',
-      email: userDTO.email,
-      data: { name: userDTO.name, password },
+    return withEnvironment(['local', 'development', 'staging'], async (isValid) => {
+      if (isValid) {
+        await this.otpVerifyHandlers['signup'](userDTO.email, { name: userDTO.name, password });
+
+        return {
+          purpose: 'signup' as const,
+          sessionId: randomBytes(16).toString('hex'),
+        };
+      }
+
+      return await this.otpSessionService.createSession({
+        purpose: 'signup',
+        email: userDTO.email,
+        data: { name: userDTO.name, password },
+      });
     });
   }
 
@@ -64,10 +76,21 @@ export class AuthService {
         sessionId: randomBytes(16).toString('hex'),
       };
 
-    return await this.otpSessionService.createSession({
-      purpose: 'reset_password',
-      email: creds.email,
-      data: { password },
+    return withEnvironment(['local', 'development', 'staging'], async (isValid) => {
+      if (isValid) {
+        await this.otpVerifyHandlers['reset_password'](creds.email, { password });
+
+        return {
+          purpose: 'reset_password' as const,
+          sessionId: randomBytes(16).toString('hex'),
+        };
+      }
+
+      return await this.otpSessionService.createSession({
+        purpose: 'reset_password',
+        email: creds.email,
+        data: { password },
+      });
     });
   }
 
@@ -86,6 +109,10 @@ export class AuthService {
   }
 
   async resendOTP<P extends AuthPurpose>({ purpose, sessionId }: ResendOTPDTO<P>) {
-    return this.otpSessionService.resendSession<P>({ purpose, sessionId });
+    return withEnvironment(['local', 'development', 'staging'], async (isValid) => {
+      if (isValid) return;
+
+      return this.otpSessionService.resendSession<P>({ purpose, sessionId });
+    });
   }
 }

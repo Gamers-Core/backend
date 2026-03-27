@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import { BadRequestException, Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { v2, UploadApiErrorResponse, UploadApiResponse, UploadStream } from 'cloudinary';
 
@@ -9,7 +10,10 @@ import { mediaFolderTypeMap } from './const';
 
 @Injectable()
 export class CloudinaryService {
-  constructor(@Inject(CLOUDINARY) private cloudinary: typeof v2) {}
+  constructor(
+    @Inject(CLOUDINARY) private cloudinary: typeof v2,
+    private readonly configService: ConfigService,
+  ) {}
 
   upload(file: string, folder: MediaEntityType): Promise<UploadApiResponse> {
     return this.cloudinary.uploader.upload(file, { folder });
@@ -18,10 +22,13 @@ export class CloudinaryService {
   async uploadBuffer(file: UploadedMediaFile, folder: MediaEntityType): Promise<UploadApiResponse> {
     this.validateFile(file, folder);
 
+    const env = this.configService.get<string>('NODE_ENV');
+    const folderPath = `${env}/${folder}`;
+
     return new Promise<UploadApiResponse>((resolve, reject) => {
       const stream: UploadStream = this.cloudinary.uploader.upload_stream(
         {
-          folder,
+          folder: folderPath,
           resource_type: 'auto',
         },
         (error: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
