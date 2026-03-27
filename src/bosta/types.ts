@@ -1,5 +1,7 @@
 import { AxiosInstance, AxiosRequestConfig } from 'axios';
 
+import { deliveryTypes } from './const';
+
 export type RequestManager = (instance: AxiosInstance) => {
   get: <T, D = undefined>(url: string, config?: AxiosRequestConfig<D>) => Promise<Response<T>>;
   post: <T, D = undefined>(url: string, data?: D, config?: AxiosRequestConfig<D>) => Promise<Response<T>>;
@@ -142,7 +144,7 @@ export interface ShippingFees {
   pickupZoneFees: number;
 }
 
-export enum DeliveryType {
+export enum CreateDeliveryType {
   DELIVER = 10,
   CASH_COLLECTION = 15,
   EXCHANGE = 30,
@@ -150,7 +152,7 @@ export enum DeliveryType {
 }
 
 export interface CreateDeliveryData {
-  type: DeliveryType;
+  type: CreateDeliveryType;
   specs?: {
     size?: 'SMALL' | 'MEDIUM' | 'LARGE' | 'Light Bulky' | 'Heavy Bulky';
     packageType?: 'Parcel' | 'Document' | 'Light Bulky' | 'Heavy Bulky';
@@ -222,3 +224,5 @@ export interface DeliveryResponse {
   };
   creationSrc: 'API';
 }
+
+export type DeliveryType = (typeof deliveryTypes)[number];

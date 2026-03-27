@@ -11,7 +11,7 @@ import {
   CreateDelivery,
   CreateDeliveryData,
   DeliveryResponse,
-  DeliveryType,
+  CreateDeliveryType,
   District,
   Instance,
   InsuranceFee,
@@ -119,7 +119,7 @@ export class BostaService {
     const delivery = await this.bosta
       .post<DeliveryResponse, CreateDeliveryData>('/deliveries?apiVersion=1', {
         businessLocationId: defaultPickupAddress._id,
-        type: DeliveryType.DELIVER,
+        type: CreateDeliveryType.DELIVER,
         flexShippingInfo: {
           amountToBeCollected: 200,
           isOrderEligible: true,
