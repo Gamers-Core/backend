@@ -6,7 +6,7 @@ export const CLOUDINARY = 'CLOUDINARY';
 export const CloudinaryProvider = {
   provide: CLOUDINARY,
   useFactory: (configService: ConfigService) => {
-    const cloud_name = configService.get<string>('NODE_ENV');
+    const cloud_name = configService.get<string>('CLOUDINARY_CLOUD_NAME');
     const api_key = configService.get<string>('CLOUDINARY_API_KEY');
     const api_secret = configService.get<string>('CLOUDINARY_API_SECRET');
 
