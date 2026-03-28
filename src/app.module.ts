@@ -69,6 +69,7 @@ export class AppModule {
           httpOnly: true,
           sameSite: isProduction ? 'none' : 'lax',
           secure: isProduction,
+          maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
         }),
       )
       .forRoutes('*');
