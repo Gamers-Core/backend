@@ -15,7 +15,6 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "migration:generate": "cross-env NODE_ENV=local ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d datasource.ts migration:generate",
     "migration:run": "cross-env NODE_ENV=production ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d datasource.ts migration:run",
-    "heroku-postbuild": "npm run build",
     "test": "tsc && eslint && prettier --check .",
     "prepare": "husky"
   },

@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 
-import { ItemSnapshot, Order, ProductVariantEntity } from 'src/entity';
+import { ItemSnapshot, Order, ProductVariant } from 'src/entity';
 import { VariantsService } from 'src/products';
 
 import { AddOrderItemDTO, UpdateOrderItemDTO } from './dtos';
@@ -63,7 +63,7 @@ export class OrderItemsService {
     return totalDifference;
   }
 
-  private snapshot(variant: ProductVariantEntity, quantity: number): Omit<ItemSnapshot, 'id' | 'order'> {
+  private snapshot(variant: ProductVariant, quantity: number): Omit<ItemSnapshot, 'id' | 'order'> {
     const unitPrice = variant.price;
     const lineTotal = unitPrice * quantity;
 

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, QueryFailedError, Repository } from 'typeorm';
 
 import { withOptionalManager } from 'src/common';
-import { Cart, CartItem, ProductVariantEntity } from 'src/entity';
+import { Cart, CartItem, ProductVariant } from 'src/entity';
 import { VariantsService } from 'src/products';
 
 import { CreateCartItemDTO, UpdateCartItemDTO } from './dtos';
@@ -116,7 +116,7 @@ export class CartService {
     });
   }
 
-  private assertVariantStock(variant: ProductVariantEntity, requestedQuantity: number) {
+  private assertVariantStock(variant: ProductVariant, requestedQuantity: number) {
     if (requestedQuantity > variant.stock)
       throw new BadRequestException(`Insufficient stock for variant ${variant.externalId}`);
   }

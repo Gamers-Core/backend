@@ -13,7 +13,7 @@ import {
 
 import { Category } from '../category.entity';
 import { Brand } from '../brand.entity';
-import { ProductVariantEntity } from './product-variant.entity';
+import { ProductVariant } from './product-variant.entity';
 import { productStatuses } from './const';
 import type { ProductStatus } from './types';
 
@@ -31,10 +31,10 @@ export class Product {
   @Column({ default: 'unlisted', enum: productStatuses, type: 'simple-enum' })
   status: ProductStatus;
 
-  @OneToMany(() => ProductVariantEntity, (variant) => variant.product, {
+  @OneToMany(() => ProductVariant, (variant) => variant.product, {
     cascade: true,
   })
-  variants: ProductVariantEntity[];
+  variants: ProductVariant[];
 
   @ManyToMany(() => Category, (category) => category.products)
   @JoinTable()

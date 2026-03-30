@@ -14,7 +14,7 @@ import {
   ItemSnapshot,
   Order,
   Product,
-  ProductVariantEntity,
+  ProductVariant,
   User,
 } from 'src/entity';
 import { UserSubscriber } from 'src/subscribers/user.subscriber';
@@ -37,7 +37,7 @@ export const getDataSourceOptions = (): DataSourceOptions => {
       User,
       Address,
       Product,
-      ProductVariantEntity,
+      ProductVariant,
       Category,
       Brand,
       Media,

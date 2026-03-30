@@ -2,25 +2,25 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
-import { Product, ProductVariantEntity } from 'src/entity';
+import { Product, ProductVariant } from 'src/entity';
 import { MediaAttachmentService } from 'src/media';
 
 import { ProductVariantDTO } from './dtos';
 import { withOptionalManager } from 'src/common';
 
-type SyncedPair = { dto: ProductVariantDTO; variant: ProductVariantEntity };
+type SyncedPair = { dto: ProductVariantDTO; variant: ProductVariant };
 
 @Injectable()
 export class VariantsService {
   constructor(
     private readonly mediaAttachmentService: MediaAttachmentService,
-    @InjectRepository(ProductVariantEntity)
-    private readonly variantRepository: Repository<ProductVariantEntity>,
+    @InjectRepository(ProductVariant)
+    private readonly variantRepository: Repository<ProductVariant>,
   ) {}
 
   async getVariant(externalId: string, isActive: boolean = true, manager?: EntityManager) {
     manager = manager || this.variantRepository.manager;
-    const variantRepo = manager.getRepository(ProductVariantEntity);
+    const variantRepo = manager.getRepository(ProductVariant);
 
     const variant = await variantRepo.findOne({ where: { externalId, isActive }, relations: ['product'] });
 
@@ -36,7 +36,7 @@ export class VariantsService {
     this.assertVariantValidity(normalizedVariantDTOs);
 
     return withOptionalManager(manager, this.variantRepository.manager, async (manager) => {
-      const variantsRepository = manager.getRepository(ProductVariantEntity);
+      const variantsRepository = manager.getRepository(ProductVariant);
 
       const existingVariants = await variantsRepository.find({
         where: { product: { id: product.id } },
@@ -58,7 +58,7 @@ export class VariantsService {
 
   syncStock(externalId: string, amount: number, manager?: EntityManager) {
     return withOptionalManager(manager, this.variantRepository.manager, async (manager) => {
-      const variantRepo = manager.getRepository(ProductVariantEntity);
+      const variantRepo = manager.getRepository(ProductVariant);
 
       await variantRepo.increment({ externalId }, 'stock', amount);
 
@@ -68,13 +68,13 @@ export class VariantsService {
 
   reserveStock(externalId: string, requiredAmount: number, manager?: EntityManager) {
     return withOptionalManager(manager, this.variantRepository.manager, async (manager) => {
-      const variantRepo = manager.getRepository(ProductVariantEntity);
+      const variantRepo = manager.getRepository(ProductVariant);
 
       if (requiredAmount < 1) throw new BadRequestException('requiredAmount must be at least 1');
 
       const result = await variantRepo
         .createQueryBuilder()
-        .update(ProductVariantEntity)
+        .update(ProductVariant)
         .set({ stock: () => `stock - ${requiredAmount}` })
         .where('external_id = :externalId', { externalId })
         .andWhere('is_active = :isActive', { isActive: true })
@@ -90,8 +90,8 @@ export class VariantsService {
   private async upsert(
     product: Product,
     variantDTOs: ProductVariantDTO[],
-    variantsByExternalId: Map<string, ProductVariantEntity>,
-    repo: Repository<ProductVariantEntity>,
+    variantsByExternalId: Map<string, ProductVariant>,
+    repo: Repository<ProductVariant>,
   ): Promise<SyncedPair[]> {
     if (!variantDTOs.length) return [];
 
@@ -109,7 +109,7 @@ export class VariantsService {
     return syncedPairs;
   }
 
-  private async delete(variants: ProductVariantEntity[], variantRepository: Repository<ProductVariantEntity>) {
+  private async delete(variants: ProductVariant[], variantRepository: Repository<ProductVariant>) {
     if (!variants.length) return;
 
     await variantRepository.softRemove(variants);
@@ -149,15 +149,15 @@ export class VariantsService {
 
     return normalized;
   }
-  private createExternalIdMap(variants: ProductVariantEntity[] = []) {
+  private createExternalIdMap(variants: ProductVariant[] = []) {
     return new Map(variants.map((variant) => [variant.externalId, variant]));
   }
 
   private mapEntity(
     product: Product,
     dto: ProductVariantDTO,
-    variant: ProductVariantEntity = new ProductVariantEntity(),
-  ): ProductVariantEntity {
+    variant: ProductVariant = new ProductVariant(),
+  ): ProductVariant {
     variant.name = dto.name ?? null;
     variant.isDefault = dto.isDefault ?? false;
     variant.isActive = dto.isActive ?? true;
