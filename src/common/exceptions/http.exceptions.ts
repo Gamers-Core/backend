@@ -1,11 +1,52 @@
-import { HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
-import { AppException } from './app.exception';
+export class AppException extends HttpException {
+  constructor(
+    public message: string,
+    status: HttpStatus,
+  ) {
+    super({ statusCode: status, message }, status);
+  }
+}
 
-export const BadRequestException = (message: string) => new AppException(message, HttpStatus.BAD_REQUEST);
-export const NotFoundException = (message: string) => new AppException(message, HttpStatus.NOT_FOUND);
-export const ForbiddenException = (message: string) => new AppException(message, HttpStatus.FORBIDDEN);
-export const UnauthorizedException = (message: string) => new AppException(message, HttpStatus.UNAUTHORIZED);
-export const ConflictException = (message: string) => new AppException(message, HttpStatus.CONFLICT);
-export const UnprocessableEntityException = (message: string) =>
-  new AppException(message, HttpStatus.UNPROCESSABLE_ENTITY);
+export class BadRequestException extends AppException {
+  constructor(message: string) {
+    super(message, HttpStatus.BAD_REQUEST);
+  }
+}
+
+export class NotFoundException extends AppException {
+  constructor(message: string) {
+    super(message, HttpStatus.NOT_FOUND);
+  }
+}
+
+export class ConflictException extends AppException {
+  constructor(message: string) {
+    super(message, HttpStatus.CONFLICT);
+  }
+}
+
+export class ForbiddenException extends AppException {
+  constructor(message: string) {
+    super(message, HttpStatus.FORBIDDEN);
+  }
+}
+
+export class UnauthorizedException extends AppException {
+  constructor(message: string) {
+    super(message, HttpStatus.UNAUTHORIZED);
+  }
+}
+
+export class ServiceUnavailableException extends AppException {
+  constructor(message: string) {
+    super(message, HttpStatus.SERVICE_UNAVAILABLE);
+  }
+}
+
+export class InternalServerErrorException extends AppException {
+  constructor(message: string) {
+    super(message, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+}

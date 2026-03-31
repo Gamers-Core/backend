@@ -1,13 +1,13 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 
 import { UsersService } from 'src/users';
+import { withEnvironment, BadRequestException } from 'src/common';
 
 import { CreateUserDTO, ForgotPasswordDTO, LoginUserDTO, ResendOTPDTO, VerifyOTPDTO } from './dtos';
 import { getEncryptedPassword, getHashedPassword } from './helpers';
 import { OtpSessionService } from './otp-session';
 import { AuthPurpose, OtpVerifyHandlers, OtpVerifyResultByPurpose } from './types';
-import { withEnvironment } from 'src/common';
 
 @Injectable()
 export class AuthService {

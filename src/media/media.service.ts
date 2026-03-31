@@ -1,16 +1,11 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-  NotFoundException,
-  OnModuleDestroy,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Media, MediaAttachment } from 'src/entity';
 import { CloudinaryService } from 'src/cloudinary';
+import { NotFoundException, InternalServerErrorException } from 'src/common';
+
 import { UploadedMediaFile } from './types';
 import { UploadMediaDTO } from './dtos';
 

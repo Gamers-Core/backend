@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException } from 'src/common';
 
 import { Order, type OrderStatus, type PaymentStatus } from 'src/entity';
 import { orderStatusGuards, orderTransitions, paymentStatusGuards, paymentTransitions } from './statuses';

@@ -22,14 +22,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (!(exception instanceof HttpException)) {
       this.logger.error(exception);
 
-      return response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'Internal server error',
-      });
+      return response
+        .status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .json({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'Internal server error' });
     }
 
-    const status = exception.getStatus();
-    const json = { statusCode: status };
+    const json = {};
 
     const isValidationException = exception instanceof ValidationException;
     if (isValidationException) Object.assign(json, { errors: formatErrors(exception.errors) });
@@ -37,11 +35,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const isAppException = exception instanceof AppException;
     if (isAppException) Object.assign(json, { message: exception.message });
 
-    if (!isValidationException && !isAppException) {
-      const body = exception.getResponse();
-      Object.assign(json, { message: typeof body === 'string' ? body : (body as any).message });
-    }
+    if (!isValidationException && !isAppException) Object.assign(json, { message: exception.message });
 
-    return response.status(status).json(json);
+    const status = exception.getStatus();
+    return response.status(status).json(Object.assign({ status }, json));
   }
 }

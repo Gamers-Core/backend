@@ -9,9 +9,3 @@ export class ValidationException extends HttpException {
     super({ statusCode: status }, status);
   }
 }
-
-export class AppException extends HttpException {
-  constructor(message: string, status: HttpStatus) {
-    super({ statusCode: status, message }, status);
-  }
-}

@@ -1,9 +1,10 @@
 import { ConfigService } from '@nestjs/config';
-import { BadRequestException, Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { v2, UploadApiErrorResponse, UploadApiResponse, UploadStream } from 'cloudinary';
 
 import { UploadedMediaFile } from 'src/media';
 import { MediaEntityType } from 'src/entity';
+import { BadRequestException, InternalServerErrorException } from 'src/common';
 
 import { CLOUDINARY } from './cloudinary.provider';
 import { mediaFolderTypeMap } from './const';
