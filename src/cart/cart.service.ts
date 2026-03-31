@@ -1,10 +1,10 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, QueryFailedError, Repository } from 'typeorm';
 
-import { withOptionalManager } from 'src/common';
 import { Cart, CartItem, ProductVariant } from 'src/entity';
 import { VariantsService } from 'src/products';
+import { withOptionalManager, BadRequestException, NotFoundException } from 'src/common';
 
 import { CreateCartItemDTO, UpdateCartItemDTO } from './dtos';
 

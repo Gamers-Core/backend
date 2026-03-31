@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { MediaAttachmentService } from 'src/media';
 import { Brand, Product } from 'src/entity';
+import { NotFoundException } from 'src/common';
 
 import { CreateProductDTO, ProductDTO, UpdateProductDTO } from './dtos';
 import { VariantsService } from './variants.service';

@@ -1,10 +1,11 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { compare } from 'bcrypt';
 import { randomBytes } from 'crypto';
 import Redis from 'ioredis';
 
 import { REDIS_CLIENT } from 'src/redis';
 import { MailService } from 'src/mail';
+import { BadRequestException } from 'src/common';
 
 import {
   OTP_DEFAULT_MAX_ATTEMPTS,

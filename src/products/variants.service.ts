@@ -1,12 +1,12 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
 import { Product, ProductVariant } from 'src/entity';
 import { MediaAttachmentService } from 'src/media';
+import { withOptionalManager, NotFoundException, BadRequestException } from 'src/common';
 
 import { ProductVariantDTO } from './dtos';
-import { withOptionalManager } from 'src/common';
 
 type SyncedPair = { dto: ProductVariantDTO; variant: ProductVariant };
 

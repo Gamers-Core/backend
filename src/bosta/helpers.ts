@@ -1,14 +1,14 @@
 import { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { HttpException } from '@nestjs/common';
 
 import { RequestManager, Response, ResponseError } from './types';
 import {
   BadRequestException,
   ForbiddenException,
-  HttpException,
-  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
-} from '@nestjs/common';
+  InternalServerErrorException,
+} from 'src/common';
 
 export const requestManager: RequestManager = (instance) => ({
   get: <T, D>(url: string, config?: AxiosRequestConfig<D>) =>

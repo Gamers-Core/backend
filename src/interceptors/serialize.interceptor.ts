@@ -7,7 +7,7 @@ interface ClassConstructor {
 }
 
 type SerializeContext = {
-  currentUserId: number;
+  userId: number;
 };
 
 type SerializeOptions = ClassTransformOptions & {
@@ -21,10 +21,10 @@ export class SerializeInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest();
-    const currentUserId = request?.currentUser?.id;
+    const userId = request?.user?.id;
     const options: SerializeOptions = {
       excludeExtraneousValues: true,
-      ...(currentUserId ? { context: { currentUserId } } : {}),
+      ...(userId ? { context: { userId: userId } } : {}),
     };
 
     return next.handle().pipe(map((data) => plainToInstance(this.dto, data, options)));
