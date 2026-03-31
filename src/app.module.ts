@@ -2,7 +2,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MiddlewareConsumer, Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import cookieSession from 'cookie-session';
-import { APP_GUARD, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 
 import { getDataSourceOptions } from 'datasource';
 
