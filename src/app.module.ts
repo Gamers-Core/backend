@@ -20,6 +20,7 @@ import { ProductsModule } from './products';
 import { MediaModule } from './media';
 import { OrdersModule } from './orders';
 import { CartModule } from './cart';
+import { GlobalExceptionFilter, ValidationException } from './common';
 
 @Module({
   imports: [
@@ -45,7 +46,14 @@ import { CartModule } from './cart';
     AppService,
     {
       provide: APP_PIPE,
-      useValue: new ValidationPipe({ whitelist: true }),
+      useValue: new ValidationPipe({
+        whitelist: true,
+        exceptionFactory: (errors) => new ValidationException(errors),
+      }),
+    },
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
     },
     {
       provide: APP_GUARD,

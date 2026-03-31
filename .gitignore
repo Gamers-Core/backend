@@ -4,7 +4,6 @@
 /build
 
 .env.*
-*.sqlite
 
 # Logs
 logs
