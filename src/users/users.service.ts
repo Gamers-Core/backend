@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { User } from 'src/entity';
 import { CreateUserDTO } from 'src/auth/dtos';
 import { NotFoundException } from 'src/common';
+import { type Locale } from 'src/i18n';
 
 @Injectable()
 export class UsersService {
@@ -26,6 +27,12 @@ export class UsersService {
 
   findFull(id: number) {
     return this.repo.findOne({ where: { id }, relations: ['addresses'] });
+  }
+
+  async updateLocale(id: number, locale: Locale) {
+    const user = await this.repo.update(id, { locale });
+
+    return user.affected ? this.findOne(id) : null;
   }
 
   async updateByEmail(email: string, updatedUser: Partial<CreateUserDTO>) {

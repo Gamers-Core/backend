@@ -1,8 +1,10 @@
 import { Expose, Transform } from 'class-transformer';
 
+import type { Locale } from 'src/i18n';
+
 type TransformContext = {
   context?: {
-    currentUserId?: number;
+    userId?: number;
   };
 };
 
@@ -17,11 +19,14 @@ export class BasicUserDTO {
   email: string;
 
   @Expose()
-  @Transform(({ obj, options }) => {
-    const currentUserId = (options as TransformContext | undefined)?.context?.currentUserId;
-    if (!currentUserId) return false;
+  locale: Locale;
 
-    return obj.id === currentUserId;
+  @Expose()
+  @Transform(({ obj, options }) => {
+    const userId = (options as TransformContext | undefined)?.context?.userId;
+    if (!userId) return false;
+
+    return obj.id === userId;
   })
   isMe: boolean;
 }
