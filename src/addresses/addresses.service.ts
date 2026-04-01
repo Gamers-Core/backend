@@ -39,7 +39,7 @@ export class AddressesService {
         relations: { user: false },
       });
 
-      if (!address) throw new NotFoundException('Address not found');
+      if (!address) throw new NotFoundException(['address.notFound']);
 
       return address;
     });
@@ -51,7 +51,7 @@ export class AddressesService {
       const userRepo = manager.getRepository(User);
 
       const user = await userRepo.findOne({ where: { id: userId } });
-      if (!user) throw new NotFoundException('User not found');
+      if (!user) throw new NotFoundException(['user.notFound']);
 
       const locationData = await this.getAddressLocationData(cityId, districtId);
 
@@ -70,7 +70,7 @@ export class AddressesService {
         where: { id: createdAddress.id, user: { id: userId } },
       });
 
-      if (!finalAddress) throw new NotFoundException('Address not found');
+      if (!finalAddress) throw new NotFoundException(['address.notFound']);
 
       return finalAddress;
     });
@@ -83,18 +83,15 @@ export class AddressesService {
         where: { id, user: { id: userId } },
       });
 
-      if (!address) throw new NotFoundException('Address not found');
+      if (!address) throw new NotFoundException(['address.notFound']);
 
       if (updateDTO.cityId && !updateDTO.districtId)
-        throw new BadRequestException('districtId is required when cityId changes');
+        throw new BadRequestException(['address.districtRequiredOnCityChange']);
 
       if (updateDTO.districtId && !updateDTO.cityId) {
         const districtInCurrentCity = await this.bostaService.getDistrict(updateDTO.districtId, address.cityId);
 
-        if (!districtInCurrentCity)
-          throw new BadRequestException(
-            'districtId is not available for the current city; provide cityId with districtId if changing city',
-          );
+        if (!districtInCurrentCity) throw new BadRequestException(['address.districtNotAvailableForCity']);
       }
 
       if (updateDTO.cityId || updateDTO.districtId) {
@@ -122,7 +119,7 @@ export class AddressesService {
         where: { id, user: { id: userId } },
       });
 
-      if (!address) throw new NotFoundException('Address not found');
+      if (!address) throw new NotFoundException(['address.notFound']);
 
       await this.clearDefaultAddress(manager, userId);
       await this.trySetAddressAsDefault(manager, id, userId);
@@ -132,7 +129,7 @@ export class AddressesService {
       where: { id, user: { id: userId } },
     });
 
-    if (!updatedAddress) throw new NotFoundException('Address not found');
+    if (!updatedAddress) throw new NotFoundException(['address.notFound']);
 
     return updatedAddress;
   }
@@ -142,7 +139,7 @@ export class AddressesService {
       where: { id, user: { id: userId } },
     });
 
-    if (!address) throw new NotFoundException('Address not found');
+    if (!address) throw new NotFoundException(['address.notFound']);
 
     await this.addressesRepo.manager.transaction(async (manager) => {
       await manager.remove(Address, address);
@@ -186,9 +183,9 @@ export class AddressesService {
     const city = await this.bostaService.getCity(cityId);
     const district = await this.bostaService.getDistrict(districtId, cityId);
 
-    if (!city) throw new BadRequestException('Invalid city data: cityId not found');
+    if (!city) throw new BadRequestException(['address.cityInvalid']);
 
-    if (!district) throw new BadRequestException('Invalid district data: districtId not found for selected city');
+    if (!district) throw new BadRequestException(['address.districtInvalid']);
 
     return {
       cityId: city._id,

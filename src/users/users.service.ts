@@ -44,7 +44,7 @@ export class UsersService {
 
   async update(id: number, updatedUser: Partial<CreateUserDTO>) {
     const user = await this.findOne(id);
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException(['user.notFound']);
 
     return this.updateUser(user, updatedUser);
   }
@@ -58,7 +58,7 @@ export class UsersService {
   async remove(id: number) {
     const user = await this.findOne(id);
 
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException(['user.notFound']);
 
     return this.repo.remove(user);
   }

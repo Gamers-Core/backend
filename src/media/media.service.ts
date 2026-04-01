@@ -66,7 +66,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
         error instanceof Error ? error.stack : String(error),
       );
 
-      throw new InternalServerErrorException('Failed to save media record');
+      throw new InternalServerErrorException(['media.saveFailed']);
     }
   }
 
@@ -76,7 +76,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
       select: { publicId: true },
     });
 
-    if (!media) throw new NotFoundException('Media not found');
+    if (!media) throw new NotFoundException(['media.notFound']);
 
     try {
       await this.cloudinaryService.destroy(media.publicId);

@@ -1,4 +1,5 @@
 import { BadRequestException } from 'src/common';
+import { Translate } from 'src/i18n';
 
 import { Order, type OrderStatus, type PaymentStatus } from 'src/entity';
 import { orderStatusGuards, orderTransitions, paymentStatusGuards, paymentTransitions } from './statuses';
@@ -6,27 +7,27 @@ import { orderStatusGuards, orderTransitions, paymentStatusGuards, paymentTransi
 export const assertValidOrderTransition = (current: OrderStatus, next: OrderStatus) => {
   const allowed = orderTransitions[current] ?? [];
 
-  if (!allowed.includes(next)) throw new BadRequestException(`Invalid transition: ${current} → ${next}`);
+  if (!allowed.includes(next)) throw new BadRequestException(['orders.invalidTransition', { current, next }]);
 };
 
 export const assertValidPaymentTransition = (current: PaymentStatus, next: PaymentStatus) => {
   const allowed = paymentTransitions[current] ?? [];
 
-  if (!allowed.includes(next)) throw new BadRequestException(`Invalid payment transition: ${current} → ${next}`);
+  if (!allowed.includes(next)) throw new BadRequestException(['orders.invalidPaymentTransition', { current, next }]);
 };
 
 export const assertStatusGuards = (order: Order, nextStatus: OrderStatus) => {
   const guards = orderStatusGuards[nextStatus] ?? [];
 
   guards.forEach(({ isInvalid, message }) => {
-    if (isInvalid(order)) throw new BadRequestException(message);
+    if (isInvalid(order)) throw new BadRequestException([message] as unknown as Translate<typeof message>);
   });
 };
 export const assertPaymentStatusGuards = (order: Order, nextStatus: PaymentStatus) => {
   const guards = paymentStatusGuards[nextStatus] ?? [];
 
   guards.forEach(({ isInvalid, message }) => {
-    if (isInvalid(order)) throw new BadRequestException(message);
+    if (isInvalid(order)) throw new BadRequestException([message] as unknown as Translate<typeof message>);
   });
 };
 

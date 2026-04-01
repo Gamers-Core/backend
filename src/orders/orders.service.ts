@@ -58,7 +58,7 @@ export class OrdersService {
   async checkout(userId: number, body: CheckoutOrderDTO) {
     return this.ordersRepo.manager.transaction(async (manager) => {
       const cart = await this.cartService.getCart(userId, manager);
-      if (!cart.items.length) throw new BadRequestException('Cart is empty');
+      if (!cart.items.length) throw new BadRequestException(['orders.cartEmpty']);
 
       const variants = cart.items.map(({ variant, quantity }) => ({ externalId: variant.externalId, quantity }));
       return this.createOrderInternal(userId, { ...body, variants }, manager, true);
@@ -119,7 +119,7 @@ export class OrdersService {
   async updateShipping(orderNumber: string, userId: number, body: UpdateOrderShippingDTO) {
     return this.updateOrder({ orderNumber }, userId, (order) => {
       if (nonUpdatableShippingStatuses.includes(order.status))
-        throw new BadRequestException('Shipping details can no longer be updated');
+        throw new BadRequestException(['orders.shippingDetailsNotUpdatable']);
 
       if (body.trackingNumber !== undefined) order.trackingNumber = body.trackingNumber;
     });
@@ -131,7 +131,7 @@ export class OrdersService {
     manager: EntityManager,
     clearCartAfterCreate: boolean = false,
   ) {
-    if (!body.variants.length) throw new BadRequestException('Order must include at least one item');
+    if (!body.variants.length) throw new BadRequestException(['orders.mustIncludeAtLeastOneItem']);
 
     const orderRepo = manager.getRepository(Order);
 
@@ -197,8 +197,7 @@ export class OrdersService {
   ) {
     const order = await this.getOrderOrFail({ orderNumber }, userId, manager, true);
 
-    if (!editableStatuses.includes(order.status))
-      throw new BadRequestException('Order cannot be modified in its current status');
+    if (!editableStatuses.includes(order.status)) throw new BadRequestException(['orders.notEditableInCurrentStatus']);
 
     const diff = await mutate(order, manager);
 
@@ -239,7 +238,7 @@ export class OrdersService {
       relations: withRelation ? { items: true, user: true } : undefined,
     });
 
-    if (!order) throw new NotFoundException('Order not found');
+    if (!order) throw new NotFoundException(['orders.notFound']);
 
     return order;
   }

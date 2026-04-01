@@ -1,10 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 
 import { AppCacheService } from 'src/cache';
 import { BostaPickupLocation, ShippingFeesResponseDTO } from 'src/addresses';
-import { ServiceUnavailableException } from 'src/common';
 
 import { errorHandler, requestManager } from './helpers';
 import {

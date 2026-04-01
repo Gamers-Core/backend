@@ -22,7 +22,7 @@ export class AuthService {
     },
     signup: async (email, { name, password }) => {
       const existingUser = await this.usersService.find(email);
-      if (existingUser.length) throw new BadRequestException('Email is already used');
+      if (existingUser.length) throw new BadRequestException(['auth.emailAlreadyUsed']);
 
       return this.usersService.create({ name, email, password });
     },
@@ -30,7 +30,7 @@ export class AuthService {
 
   async signup(userDTO: CreateUserDTO) {
     const existingUser = await this.usersService.find(userDTO.email);
-    if (existingUser.length) throw new BadRequestException('Email is already used');
+    if (existingUser.length) throw new BadRequestException(['auth.emailAlreadyUsed']);
 
     const password = await getEncryptedPassword(userDTO.password);
 
@@ -55,13 +55,13 @@ export class AuthService {
   async login(loginUserDTO: LoginUserDTO) {
     const [user] = await this.usersService.find(loginUserDTO.email);
 
-    if (!user) throw new BadRequestException('Invalid email or password');
+    if (!user) throw new BadRequestException(['auth.invalidCredentials']);
 
     const [salt, hash] = user.password.split('.');
 
     const userHash = await getHashedPassword(loginUserDTO.password, salt);
 
-    if (hash !== userHash.toString('hex')) throw new BadRequestException('Invalid email or password');
+    if (hash !== userHash.toString('hex')) throw new BadRequestException(['auth.invalidCredentials']);
 
     return user;
   }

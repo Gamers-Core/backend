@@ -24,7 +24,7 @@ export class VariantsService {
 
     const variant = await variantRepo.findOne({ where: { externalId, isActive }, relations: ['product'] });
 
-    if (!variant) throw new NotFoundException('Variant not found');
+    if (!variant) throw new NotFoundException(['products.variantNotFound']);
 
     return variant;
   }
@@ -70,7 +70,7 @@ export class VariantsService {
     return withOptionalManager(manager, this.variantRepository.manager, async (manager) => {
       const variantRepo = manager.getRepository(ProductVariant);
 
-      if (requiredAmount < 1) throw new BadRequestException('requiredAmount must be at least 1');
+      if (requiredAmount < 1) throw new BadRequestException(['products.requiredAmountMin']);
 
       const result = await variantRepo
         .createQueryBuilder()
@@ -81,7 +81,7 @@ export class VariantsService {
         .andWhere('stock >= :requiredAmount', { requiredAmount })
         .execute();
 
-      if (!result.affected) throw new BadRequestException(`Insufficient stock for variant ${externalId}`);
+      if (!result.affected) throw new BadRequestException(['products.insufficientStock', { externalId }]);
 
       return this.getVariant(externalId, true, manager);
     });
@@ -98,7 +98,8 @@ export class VariantsService {
     const syncedPairs = variantDTOs.map((dto) => {
       const existing = dto.externalId ? variantsByExternalId.get(dto.externalId) : undefined;
 
-      if (dto.externalId && !existing) throw new BadRequestException(`Invalid variant externalId: ${dto.externalId}`);
+      if (dto.externalId && !existing)
+        throw new BadRequestException(['products.invalidVariantExternalId', { externalId: dto.externalId }]);
 
       const variant = this.mapEntity(product, dto, existing);
       return { dto, variant };
@@ -176,13 +177,12 @@ export class VariantsService {
     if (variantDTOs.length > 1) {
       const hasUnnamedVariant = variantDTOs.some(({ name }) => typeof name !== 'string' || name.trim().length === 0);
 
-      if (hasUnnamedVariant)
-        throw new BadRequestException('Variant name is required when a product has multiple variants');
+      if (hasUnnamedVariant) throw new BadRequestException(['products.variantNameRequiredForMultiple']);
     }
 
     for (const variantDTO of variantDTOs) {
       if (typeof variantDTO.compareAt === 'number' && variantDTO.compareAt <= variantDTO.price)
-        throw new BadRequestException('compareAt must be greater than price');
+        throw new BadRequestException(['products.compareAtMustBeGreaterThanPrice']);
     }
 
     const externalIdSet = new Set<string>();
@@ -190,18 +190,18 @@ export class VariantsService {
       if (!variantDTO.externalId) continue;
 
       if (externalIdSet.has(variantDTO.externalId))
-        throw new BadRequestException(`Duplicate variant externalId detected: ${variantDTO.externalId}`);
+        throw new BadRequestException(['products.duplicateVariantExternalId', { externalId: variantDTO.externalId }]);
 
       externalIdSet.add(variantDTO.externalId);
     }
 
     const defaultCount = variantDTOs.filter((variant) => variant.isDefault).length;
-    if (defaultCount > 1) throw new BadRequestException('Only one default variant allowed');
+    if (defaultCount > 1) throw new BadRequestException(['products.onlyOneDefaultVariantAllowed']);
 
     if (variantDTOs.length > 0 && defaultCount === 0)
-      throw new BadRequestException('At least one default variant is required');
+      throw new BadRequestException(['products.defaultVariantRequired']);
 
     const activeCount = variantDTOs.filter(({ isActive }) => isActive).length;
-    if (activeCount === 0) throw new BadRequestException('At least one active variant is required');
+    if (activeCount === 0) throw new BadRequestException(['products.activeVariantRequired']);
   }
 }

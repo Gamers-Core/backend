@@ -1,10 +1,10 @@
 import { ConfigService } from '@nestjs/config';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { v2, UploadApiErrorResponse, UploadApiResponse, UploadStream } from 'cloudinary';
 
 import { UploadedMediaFile } from 'src/media';
 import { MediaEntityType } from 'src/entity';
-import { BadRequestException, InternalServerErrorException } from 'src/common';
+import { BadRequestException } from 'src/common';
 
 import { CLOUDINARY } from './cloudinary.provider';
 import { mediaFolderTypeMap } from './const';
@@ -46,7 +46,7 @@ export class CloudinaryService {
 
   validateFile(file: UploadedMediaFile, folder: MediaEntityType) {
     if (!file.mimetype?.includes('/')) {
-      throw new BadRequestException('Invalid file type');
+      throw new BadRequestException(['media.invalidType']);
     }
 
     const allowedTypes = mediaFolderTypeMap[folder];
@@ -54,7 +54,7 @@ export class CloudinaryService {
     if (!allowedTypes || allowedTypes === 'auto') return;
 
     const fileType = file.mimetype.split('/')[0];
-    if (fileType !== allowedTypes) throw new BadRequestException(`Invalid file type. Allowed type: ${allowedTypes}`);
+    if (fileType !== allowedTypes) throw new BadRequestException(['media.invalidTypeWithAllowed', { allowedTypes }]);
   }
 
   destroy(publicId: string, invalidate = true) {

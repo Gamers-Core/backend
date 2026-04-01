@@ -1,14 +1,10 @@
 import { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { HttpException } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 
 import { RequestManager, Response, ResponseError } from './types';
-import {
-  BadRequestException,
-  ForbiddenException,
-  NotFoundException,
-  UnauthorizedException,
-  InternalServerErrorException,
-} from 'src/common';
+import { ServiceUnavailableException } from 'src/common';
+
+const logger = new Logger('BostaErrorHandler');
 
 export const requestManager: RequestManager = (instance) => ({
   get: <T, D>(url: string, config?: AxiosRequestConfig<D>) =>
@@ -22,21 +18,10 @@ export const requestManager: RequestManager = (instance) => ({
 });
 
 export const errorHandler = (err: AxiosError<ResponseError>) => {
-  const message = err.response?.data.message || err.message;
-  const errStatus = err.response?.status || err.status;
+  const status = err.response?.status ?? err.status;
+  const upstreamMessage = err.response?.data?.message ?? err.message;
 
-  switch (errStatus) {
-    case 400:
-      throw new BadRequestException(message);
-    case 401:
-      throw new UnauthorizedException('Unauthorized');
-    case 403:
-      throw new ForbiddenException('Forbidden');
-    case 404:
-      throw new NotFoundException('Not Found');
-    case 500:
-      throw new InternalServerErrorException('Internal Server Error');
-    default:
-      throw new HttpException(message, errStatus || 500);
-  }
+  logger.error(`Bosta API request failed${status ? ` (status: ${status})` : ''}: ${upstreamMessage}`);
+
+  throw new ServiceUnavailableException(['bosta.unavailable']);
 };

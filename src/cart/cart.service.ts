@@ -91,7 +91,7 @@ export class CartService {
         where: { id, cart: { id: cart.id } },
         relations: { variant: { product: true } },
       });
-      if (!cartItem) throw new NotFoundException('Cart item not found');
+      if (!cartItem) throw new NotFoundException(['cart.itemNotFound']);
 
       this.assertVariantStock(cartItem.variant, item.quantity);
 
@@ -118,7 +118,7 @@ export class CartService {
 
   private assertVariantStock(variant: ProductVariant, requestedQuantity: number) {
     if (requestedQuantity > variant.stock)
-      throw new BadRequestException(`Insufficient stock for variant ${variant.externalId}`);
+      throw new BadRequestException(['cart.insufficientStock', { externalId: variant.externalId }]);
   }
 
   private isUniqueConstraintError(error: unknown) {
