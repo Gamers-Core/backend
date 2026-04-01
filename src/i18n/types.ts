@@ -1,9 +1,11 @@
 import messages from './messages';
 
-import { locales } from './index';
+import { locales, translate } from './index';
 
 export type Locale = (typeof locales)[number];
 export type Messages = typeof messages;
+export type TranslateFn = typeof translate;
+export type TranslateFnWithoutLocale = <K extends I18nKey>(options: Translate<K>) => Messages[Locale][K];
 
 export type EN = Messages['en'];
 export type AR = Messages['ar'];

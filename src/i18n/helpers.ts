@@ -8,7 +8,7 @@ import { defaultLocale, locales } from './const';
 
 export const translate = <Key extends I18nKey, L extends Locale = Locale>(
   [key, options]: Translate<Key>,
-  locale: L,
+  locale: L = defaultLocale as L,
 ): Messages[L][Key] => {
   const translation = messages[locale][key];
   if (!options) return translation;

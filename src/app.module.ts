@@ -21,6 +21,7 @@ import { MediaModule } from './media';
 import { OrdersModule } from './orders';
 import { CartModule } from './cart';
 import { GlobalExceptionFilter, ValidationException } from './common';
+import { I18nModule } from './i18n';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { GlobalExceptionFilter, ValidationException } from './common';
     CartModule,
     RedisModule,
     CloudinaryModule,
+    I18nModule,
     TypeOrmModule.forRoot(getDataSourceOptions()),
     ConfigModule.forRoot({
       isGlobal: true,
