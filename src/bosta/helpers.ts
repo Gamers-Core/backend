@@ -23,5 +23,5 @@ export const errorHandler = (err: AxiosError<ResponseError>) => {
 
   logger.error(`Bosta API request failed${status ? ` (status: ${status})` : ''}: ${upstreamMessage}`);
 
-  throw new ServiceUnavailableException(['bosta.unavailable']);
+  throw new ServiceUnavailableException('bosta.unavailable');
 };

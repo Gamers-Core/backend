@@ -91,7 +91,7 @@ export class CartService {
         where: { id, cart: { id: cart.id } },
         relations: { variant: { product: true } },
       });
-      if (!cartItem) throw new NotFoundException(['cart.itemNotFound']);
+      if (!cartItem) throw new NotFoundException('cart.itemNotFound');
 
       this.assertVariantStock(cartItem.variant, item.quantity);
 

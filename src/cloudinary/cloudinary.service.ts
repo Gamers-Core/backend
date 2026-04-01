@@ -46,7 +46,7 @@ export class CloudinaryService {
 
   validateFile(file: UploadedMediaFile, folder: MediaEntityType) {
     if (!file.mimetype?.includes('/')) {
-      throw new BadRequestException(['media.invalidType']);
+      throw new BadRequestException('media.invalidType');
     }
 
     const allowedTypes = mediaFolderTypeMap[folder];

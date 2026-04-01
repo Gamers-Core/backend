@@ -18,7 +18,7 @@ export const renderMailWrapper = (t: TranslateFnWithoutLocale, content: string, 
 
   <hr style="margin: 20px 0;" />
 
-  <p style="font-size: 12px; color: #888;">${t(['mail.common.automatedEmail'])}</p>
+  <p style="font-size: 12px; color: #888;">${t('mail.common.automatedEmail')}</p>
 </div>
 `;
 };

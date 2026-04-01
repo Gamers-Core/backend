@@ -29,7 +29,7 @@ export class ProductsService {
           where: { id: createProductDTO.brandId },
         });
 
-        if (!brand) throw new NotFoundException(['products.brandNotFound']);
+        if (!brand) throw new NotFoundException('products.brandNotFound');
       }
 
       const product = productRepository.create({
@@ -105,7 +105,7 @@ export class ProductsService {
 
       if (typeof brandId !== 'undefined') {
         const brand = await brandRepository.findOne({ where: { id: brandId } });
-        if (!brand) throw new NotFoundException(['products.brandNotFound']);
+        if (!brand) throw new NotFoundException('products.brandNotFound');
         product.brand = brand;
       }
 
@@ -187,7 +187,7 @@ export class ProductsService {
       relations: { variants: true, brand: true },
     });
 
-    if (!product) throw new NotFoundException(['products.productNotFound']);
+    if (!product) throw new NotFoundException('products.productNotFound');
 
     return product;
   }

@@ -29,16 +29,16 @@ export class OtpSessionService {
     const session = await this.redis.hgetall(getSessionKey(sessionId));
 
     if (!session || !session.purpose || !session.email || !session.otp || !session.data)
-      throw new BadRequestException(['auth.otp.expired']);
+      throw new BadRequestException('auth.otp.expired');
 
     let parsedData: OtpDataByPurpose<P>;
     try {
       parsedData = JSON.parse(session.data) as OtpDataByPurpose<P>;
     } catch {
-      throw new BadRequestException(['auth.otp.expired']);
+      throw new BadRequestException('auth.otp.expired');
     }
 
-    if (session.purpose !== expectedPurpose) throw new BadRequestException(['auth.otp.expired']);
+    if (session.purpose !== expectedPurpose) throw new BadRequestException('auth.otp.expired');
 
     return {
       purpose: expectedPurpose,
@@ -92,13 +92,13 @@ export class OtpSessionService {
 
     if (session.otpAttempts >= maxAttempts) {
       await this.redis.del(key);
-      throw new BadRequestException(['auth.otp.tooManyAttempts']);
+      throw new BadRequestException('auth.otp.tooManyAttempts');
     }
 
     const isValid = await compare(otp, session.otp);
     if (!isValid) {
       await this.redis.hincrby(key, 'otp_attempts', 1);
-      throw new BadRequestException(['auth.otp.invalid']);
+      throw new BadRequestException('auth.otp.invalid');
     }
 
     await this.redis.del(key);
@@ -118,11 +118,11 @@ export class OtpSessionService {
     const key = getSessionKey(sessionId);
     const session = await this.readSession<P>(sessionId, purpose);
 
-    if (session.otpResendCount >= maxResends) throw new BadRequestException(['auth.otp.resendLimitExceeded']);
+    if (session.otpResendCount >= maxResends) throw new BadRequestException('auth.otp.resendLimitExceeded');
 
     const now = Date.now();
     const canResendOtp = session.otpLastSentAt && now - session.otpLastSentAt > minResendIntervalMs;
-    if (!canResendOtp) throw new BadRequestException(['auth.otp.resendTooSoon']);
+    if (!canResendOtp) throw new BadRequestException('auth.otp.resendTooSoon');
 
     const otp = generateOtp();
     const hashedOtp = await generateHashedOtp(otp);

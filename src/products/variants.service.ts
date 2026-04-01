@@ -24,7 +24,7 @@ export class VariantsService {
 
     const variant = await variantRepo.findOne({ where: { externalId, isActive }, relations: ['product'] });
 
-    if (!variant) throw new NotFoundException(['products.variantNotFound']);
+    if (!variant) throw new NotFoundException('products.variantNotFound');
 
     return variant;
   }
@@ -70,7 +70,7 @@ export class VariantsService {
     return withOptionalManager(manager, this.variantRepository.manager, async (manager) => {
       const variantRepo = manager.getRepository(ProductVariant);
 
-      if (requiredAmount < 1) throw new BadRequestException(['products.requiredAmountMin']);
+      if (requiredAmount < 1) throw new BadRequestException('products.requiredAmountMin');
 
       const result = await variantRepo
         .createQueryBuilder()
@@ -177,12 +177,12 @@ export class VariantsService {
     if (variantDTOs.length > 1) {
       const hasUnnamedVariant = variantDTOs.some(({ name }) => typeof name !== 'string' || name.trim().length === 0);
 
-      if (hasUnnamedVariant) throw new BadRequestException(['products.variantNameRequiredForMultiple']);
+      if (hasUnnamedVariant) throw new BadRequestException('products.variantNameRequiredForMultiple');
     }
 
     for (const variantDTO of variantDTOs) {
       if (typeof variantDTO.compareAt === 'number' && variantDTO.compareAt <= variantDTO.price)
-        throw new BadRequestException(['products.compareAtMustBeGreaterThanPrice']);
+        throw new BadRequestException('products.compareAtMustBeGreaterThanPrice');
     }
 
     const externalIdSet = new Set<string>();
@@ -196,12 +196,11 @@ export class VariantsService {
     }
 
     const defaultCount = variantDTOs.filter((variant) => variant.isDefault).length;
-    if (defaultCount > 1) throw new BadRequestException(['products.onlyOneDefaultVariantAllowed']);
+    if (defaultCount > 1) throw new BadRequestException('products.onlyOneDefaultVariantAllowed');
 
-    if (variantDTOs.length > 0 && defaultCount === 0)
-      throw new BadRequestException(['products.defaultVariantRequired']);
+    if (variantDTOs.length > 0 && defaultCount === 0) throw new BadRequestException('products.defaultVariantRequired');
 
     const activeCount = variantDTOs.filter(({ isActive }) => isActive).length;
-    if (activeCount === 0) throw new BadRequestException(['products.activeVariantRequired']);
+    if (activeCount === 0) throw new BadRequestException('products.activeVariantRequired');
   }
 }
