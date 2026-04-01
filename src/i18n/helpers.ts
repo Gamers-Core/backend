@@ -1,5 +1,3 @@
-import { Request } from 'express';
-
 import { formatNumber } from 'src/helpers';
 
 import messages from './messages';
@@ -13,10 +11,13 @@ export const translate = <Key extends I18nKey, L extends Locale = Locale>(
   const key = (Array.isArray(options) ? options[0] : options) as Key;
 
   const translation = messages[locale][key];
-  if (!options[1]) return translation;
+
+  const params = Array.isArray(options) ? options[1] : undefined;
+  if (!params) return translation;
 
   const fn = formatNumber(locale);
-  return Object.entries(options[1]).reduce(
+
+  return Object.entries(params).reduce(
     (acc, [placeholder, value]) =>
       acc.replaceAll(
         `{${placeholder}}`,
