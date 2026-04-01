@@ -122,7 +122,7 @@ export class OtpSessionService {
 
     const now = Date.now();
     const canResendOtp = session.otpLastSentAt && now - session.otpLastSentAt > minResendIntervalMs;
-    if (!canResendOtp) throw new BadRequestException(['auth.otp.resendLimitExceeded']);
+    if (!canResendOtp) throw new BadRequestException(['auth.otp.resendTooSoon']);
 
     const otp = generateOtp();
     const hashedOtp = await generateHashedOtp(otp);

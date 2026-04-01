@@ -1,4 +1,4 @@
-import { I18nKey } from 'src/i18n';
+import { Translate } from 'src/i18n';
 import { orderStatuses, paymentMethods, paymentStatuses } from './const';
 
 export type OrderStatus = (typeof orderStatuses)[number];
@@ -14,7 +14,7 @@ export interface OrderStatusGuardContext {
 
 export interface OrderStatusGuard {
   isInvalid: (context: OrderStatusGuardContext) => boolean;
-  message: I18nKey;
+  message: Translate;
 }
 
 export interface OrderAddressSnapshot {

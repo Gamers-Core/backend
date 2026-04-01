@@ -7,17 +7,19 @@ import type { I18nKey, Locale, Messages, Translate } from './types';
 import { defaultLocale, locales } from './const';
 
 export const translate = <Key extends I18nKey, L extends Locale = Locale>(
-  [key, options]: Translate<Key>,
+  options: Translate<Key>,
   locale: L = defaultLocale as L,
 ): Messages[L][Key] => {
+  const key = (Array.isArray(options) ? options[0] : options) as Key;
+
   const translation = messages[locale][key];
-  if (!options) return translation;
+  if (!options[1]) return translation;
 
   const fn = formatNumber(locale);
-  return Object.entries(options).reduce(
-    (acc, [key, value]) =>
-      acc.replace(
-        `{${key}}`,
+  return Object.entries(options[1]).reduce(
+    (acc, [placeholder, value]) =>
+      acc.replaceAll(
+        `{${placeholder}}`,
         String(typeof value === 'number' ? fn(value, { useGrouping: false }) : value),
       ) as Messages[L][Key],
     translation,

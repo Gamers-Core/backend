@@ -167,7 +167,7 @@ export class MediaAttachmentService {
       id: In(uniqueIds),
     });
 
-    if (media.length !== uniqueIds.length) throw new BadRequestException(['media.required']);
+    if (media.length !== uniqueIds.length) throw new BadRequestException(['media.invalid']);
   }
 
   async getMediaAttachments(where: EntityAttachmentDTO, attachmentRepo = this.attachmentRepo) {

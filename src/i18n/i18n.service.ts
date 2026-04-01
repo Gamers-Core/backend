@@ -13,10 +13,6 @@ export class I18nService {
     return resolveLocale(this.request);
   }
 
-  set locale(locale: Locale) {
-    this.request['locale'] = locale;
-  }
-
   t<Key extends I18nKey, L extends Locale = Locale>(
     translateOption: TranslateOption<Key>,
     locale: L = this.locale as L,
