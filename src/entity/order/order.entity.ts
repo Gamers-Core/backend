@@ -25,13 +25,13 @@ export class Order {
   @Column({ unique: true })
   orderNumber: string;
 
-  @Column({ default: 'pending', enum: orderStatuses, type: 'simple-enum' })
+  @Column({ default: 'pending', enum: orderStatuses, type: 'enum' })
   status: OrderStatus;
 
-  @Column({ default: 'unpaid', enum: paymentStatuses, type: 'simple-enum' })
+  @Column({ default: 'unpaid', enum: paymentStatuses, type: 'enum' })
   paymentStatus: PaymentStatus;
 
-  @Column({ default: 'cod', enum: paymentMethods, type: 'simple-enum' })
+  @Column({ default: 'cod', enum: paymentMethods, type: 'enum' })
   paymentMethod: PaymentMethod;
 
   @OneToMany(() => ItemSnapshot, (item) => item.order, { cascade: true })

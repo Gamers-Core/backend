@@ -17,7 +17,7 @@ export class MediaAttachment {
   @Column()
   entityId: number;
 
-  @Column({ enum: mediaEntityType, type: 'simple-enum' })
+  @Column({ enum: mediaEntityType, type: 'enum' })
   entityType: MediaEntityType;
 
   @Column()

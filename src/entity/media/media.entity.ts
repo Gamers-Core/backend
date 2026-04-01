@@ -15,7 +15,7 @@ export class Media {
   @Column({ unique: true })
   publicId: string;
 
-  @Column({ enum: mediaTypes, type: 'simple-enum', default: 'auto' })
+  @Column({ enum: mediaTypes, type: 'enum', default: 'auto' })
   type: MediaType;
 
   @Column()
