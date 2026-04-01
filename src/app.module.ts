@@ -21,7 +21,7 @@ import { MediaModule } from './media';
 import { OrdersModule } from './orders';
 import { CartModule } from './cart';
 import { GlobalExceptionFilter, ValidationException } from './common';
-import { I18nModule } from './i18n';
+import { I18nModule, LocaleContextMiddleware } from './i18n';
 
 @Module({
   imports: [
@@ -64,7 +64,10 @@ import { I18nModule } from './i18n';
   ],
 })
 export class AppModule {
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    private localeContextMiddleware: LocaleContextMiddleware,
+  ) {}
 
   configure(consumer: MiddlewareConsumer) {
     const cookieKey = this.configService.get<string>('COOKIE_KEY');
@@ -81,6 +84,7 @@ export class AppModule {
           secure: isProduction,
           maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
         }),
+        this.localeContextMiddleware.use.bind(this.localeContextMiddleware),
       )
       .forRoutes('*');
   }

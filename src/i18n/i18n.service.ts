@@ -1,16 +1,15 @@
-import { Inject, Injectable, Scope } from '@nestjs/common';
-import { REQUEST } from '@nestjs/core';
-import { type Request } from 'express';
+import { Injectable } from '@nestjs/common';
 
-import type { I18nKey, Locale, Messages, TranslateFnWithoutLocale, Translate as TranslateOption } from './types';
-import { resolveLocale, translate } from './helpers';
+import type { I18nKey, Locale, Messages, Translate as TranslateOption } from './types';
+import { translate } from './helpers';
+import { LocaleContextService } from './locale-context.service';
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class I18nService {
-  constructor(@Inject(REQUEST) private request: Request) {}
+  constructor(private readonly localeContextService: LocaleContextService) {}
 
   get locale(): Locale {
-    return resolveLocale(this.request);
+    return this.localeContextService.locale;
   }
 
   t<Key extends I18nKey, L extends Locale = Locale>(
@@ -18,9 +17,5 @@ export class I18nService {
     locale: L = this.locale as L,
   ): Messages[L][Key] {
     return translate(translateOption, locale);
-  }
-
-  tLocale<L extends Locale = Locale>(locale: L = this.locale as L): TranslateFnWithoutLocale {
-    return (options) => translate(options, locale);
   }
 }
