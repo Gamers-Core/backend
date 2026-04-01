@@ -40,7 +40,7 @@ export default {
 
   'orders.invalidTransition': 'Invalid order status transition: {current} → {next}',
   'orders.invalidPaymentTransition': 'Invalid payment status transition: {current} → {next}',
-  'orders.shipped.mustBePaidOnCOD': 'Orders must be paid before shipping if not cash-on-delivery',
+  'orders.shipped.mustBePaidBeforeCOD': 'Orders must be paid before shipping if not cash-on-delivery',
   'orders.shipped.trackingNumberRequired': 'Tracking number required before shipping',
   'orders.completed.mustBeDeliveredAndPaid': 'Order must be delivered and paid before completion',
   'orders.refunded.onlyReturned': 'Only returned orders can be refunded',

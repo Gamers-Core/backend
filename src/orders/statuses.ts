@@ -25,7 +25,7 @@ export const orderStatusGuards: Partial<Record<OrderStatus, OrderStatusGuard[]>>
   shipped: [
     {
       isInvalid: ({ paymentMethod, paymentStatus }) => paymentMethod !== 'cod' && paymentStatus !== 'paid',
-      message: 'orders.shipped.mustBePaidOnCOD',
+      message: 'orders.shipped.mustBePaidBeforeCOD',
     },
     {
       isInvalid: ({ trackingNumber }) => !trackingNumber,

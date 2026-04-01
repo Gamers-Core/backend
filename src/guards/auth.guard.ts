@@ -27,14 +27,14 @@ export class AuthGuard implements CanActivate {
     if (!userId) {
       if (isPublic) return true;
 
-      throw new UnauthorizedException(['unauthorized']);
+      throw new UnauthorizedException('unauthenticated');
     }
 
     const user = await this.usersService.findOne(userId);
     if (!user) {
       if (isPublic) return true;
 
-      throw new UnauthorizedException(['unauthenticated']);
+      throw new UnauthorizedException('unauthorized');
     }
 
     this.localeContextService.setCurrentUserLocale(user.locale);
