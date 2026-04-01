@@ -1,15 +1,9 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
-import { ValidationError } from 'class-validator';
+
+import { resolveLocale, translate } from 'src/i18n';
 
 import { AppException, ValidationException } from '../exceptions';
-
-function formatErrors(errors: ValidationError[]) {
-  return errors.map((error) => ({
-    property: error.property,
-    constraints: error.constraints ?? {},
-    children: error.children?.length ? formatErrors(error.children) : [],
-  }));
-}
+import { formatErrors } from './helpers';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -33,7 +27,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (isValidationException) Object.assign(json, { errors: formatErrors(exception.errors) });
 
     const isAppException = exception instanceof AppException;
-    if (isAppException) Object.assign(json, { message: exception.message });
+    if (isAppException)
+      Object.assign(json, { message: translate(exception.translate, resolveLocale(ctx.getRequest())) });
 
     if (!isValidationException && !isAppException) Object.assign(json, { message: exception.message });
 

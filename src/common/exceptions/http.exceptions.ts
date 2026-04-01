@@ -1,52 +1,54 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 
-export class AppException extends HttpException {
+import { I18nKey, Translate } from 'src/i18n';
+
+export class AppException<T extends I18nKey = I18nKey> extends HttpException {
   constructor(
-    public message: string,
     status: HttpStatus,
+    public readonly translate: Translate<T>,
   ) {
-    super({ statusCode: status, message }, status);
+    super({ status, message: translate }, status);
   }
 }
 
-export class BadRequestException extends AppException {
-  constructor(message: string) {
-    super(message, HttpStatus.BAD_REQUEST);
+export class BadRequestException<T extends I18nKey> extends AppException<T> {
+  constructor(message: Translate<T>) {
+    super(HttpStatus.BAD_REQUEST, message);
   }
 }
 
-export class NotFoundException extends AppException {
-  constructor(message: string) {
-    super(message, HttpStatus.NOT_FOUND);
+export class NotFoundException<T extends I18nKey> extends AppException<T> {
+  constructor(message: Translate<T>) {
+    super(HttpStatus.NOT_FOUND, message);
   }
 }
 
-export class ConflictException extends AppException {
-  constructor(message: string) {
-    super(message, HttpStatus.CONFLICT);
+export class ConflictException<T extends I18nKey> extends AppException<T> {
+  constructor(message: Translate<T>) {
+    super(HttpStatus.CONFLICT, message);
   }
 }
 
-export class ForbiddenException extends AppException {
-  constructor(message: string) {
-    super(message, HttpStatus.FORBIDDEN);
+export class ForbiddenException<T extends I18nKey> extends AppException<T> {
+  constructor(message: Translate<T>) {
+    super(HttpStatus.FORBIDDEN, message);
   }
 }
 
-export class UnauthorizedException extends AppException {
-  constructor(message: string) {
-    super(message, HttpStatus.UNAUTHORIZED);
+export class UnauthorizedException<T extends I18nKey> extends AppException<T> {
+  constructor(message: Translate<T>) {
+    super(HttpStatus.UNAUTHORIZED, message);
   }
 }
 
-export class ServiceUnavailableException extends AppException {
-  constructor(message: string) {
-    super(message, HttpStatus.SERVICE_UNAVAILABLE);
+export class ServiceUnavailableException<T extends I18nKey> extends AppException<T> {
+  constructor(message: Translate<T>) {
+    super(HttpStatus.SERVICE_UNAVAILABLE, message);
   }
 }
 
-export class InternalServerErrorException extends AppException {
-  constructor(message: string) {
-    super(message, HttpStatus.INTERNAL_SERVER_ERROR);
+export class InternalServerErrorException<T extends I18nKey> extends AppException<T> {
+  constructor(message: Translate<T>) {
+    super(HttpStatus.INTERNAL_SERVER_ERROR, message);
   }
 }
