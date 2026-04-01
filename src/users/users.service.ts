@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeepPartial, Repository } from 'typeorm';
 
 import { User } from 'src/entity';
 import { CreateUserDTO } from 'src/auth/dtos';
@@ -29,10 +29,8 @@ export class UsersService {
     return this.repo.findOne({ where: { id }, relations: ['addresses'] });
   }
 
-  async updateLocale(id: number, locale: Locale) {
-    const user = await this.repo.update(id, { locale });
-
-    return user.affected ? this.findOne(id) : null;
+  updateLocale(user: User, locale: Locale) {
+    return this.updateUser(user, { locale });
   }
 
   async updateByEmail(email: string, updatedUser: Partial<CreateUserDTO>) {
@@ -49,7 +47,7 @@ export class UsersService {
     return this.updateUser(user, updatedUser);
   }
 
-  private async updateUser(user: User, updatedUser: Partial<CreateUserDTO>) {
+  private async updateUser(user: User, updatedUser: DeepPartial<User>) {
     Object.assign(user, updatedUser);
 
     return this.repo.save(user);
