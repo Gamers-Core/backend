@@ -6,6 +6,6 @@ export class ValidationException extends HttpException {
     public readonly errors: ValidationError[],
     status: HttpStatus = HttpStatus.BAD_REQUEST,
   ) {
-    super({ statusCode: status }, status);
+    super({ status }, status);
   }
 }

@@ -1,6 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { Request } from 'express';
 
-import { resolveLocale, translate } from 'src/i18n';
+import { translate } from 'src/i18n';
 
 import { AppException, ValidationException } from '../exceptions';
 import { formatErrors } from './helpers';
@@ -12,27 +13,27 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
+    const request = ctx.getRequest<Request>();
 
     if (!(exception instanceof HttpException)) {
       this.logger.error(exception);
 
       return response
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'Internal server error' });
+        .json({ status: HttpStatus.INTERNAL_SERVER_ERROR, message: 'Internal server error' });
     }
 
-    const json = {};
+    const payload: Record<string, unknown> = {};
 
     const isValidationException = exception instanceof ValidationException;
-    if (isValidationException) Object.assign(json, { errors: formatErrors(exception.errors) });
+    if (isValidationException) payload.errors = formatErrors(exception.errors);
 
     const isAppException = exception instanceof AppException;
-    if (isAppException)
-      Object.assign(json, { message: translate(exception.translate, resolveLocale(ctx.getRequest())) });
+    if (isAppException) payload.message = translate(exception.translate, request.locale);
 
-    if (!isValidationException && !isAppException) Object.assign(json, { message: exception.message });
+    if (!isValidationException && !isAppException) payload.message = exception.message;
 
     const status = exception.getStatus();
-    return response.status(status).json(Object.assign({ status }, json));
+    return response.status(status).json({ status, ...payload });
   }
 }

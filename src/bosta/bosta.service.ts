@@ -65,7 +65,7 @@ export class BostaService {
   }
 
   getDistrict(id: string, cityId: string) {
-    return this.getDistricts(cityId).then((districts) => districts.find(({ districtId }) => districtId === id));
+    return this.getDistricts(cityId).then((districts) => districts?.find(({ districtId }) => districtId === id));
   }
 
   getInsuranceFees(goodsValue: number) {

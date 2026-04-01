@@ -3,7 +3,7 @@ import * as nodemailer from 'nodemailer';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { I18nService, Locale } from 'src/i18n';
+import { I18nService, Locale, translateWithoutLocale } from 'src/i18n';
 
 import { mailTemplates } from './templates';
 import { getEmail, renderMailWrapper } from './helpers';
@@ -47,7 +47,7 @@ export class MailService {
     values: MailOptions[T],
     locale: Locale = this.i18nService.locale,
   ) {
-    const t = this.i18nService.tLocale(locale);
+    const t = translateWithoutLocale(locale);
 
     const { type: mail, html, ...options } = mailTemplates[type](t, values);
     const renderedHtml = renderMailWrapper(t, html(t, values), locale);

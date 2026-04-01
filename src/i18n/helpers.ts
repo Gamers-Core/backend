@@ -3,8 +3,8 @@ import { Request } from 'express';
 import { formatNumber } from 'src/helpers';
 
 import messages from './messages';
-import type { I18nKey, Locale, Messages, Translate } from './types';
-import { defaultLocale, locales } from './const';
+import { defaultLocale } from './const';
+import type { I18nKey, Locale, Messages, Translate, TranslateFnWithoutLocale } from './types';
 
 export const translate = <Key extends I18nKey, L extends Locale = Locale>(
   options: Translate<Key>,
@@ -26,9 +26,7 @@ export const translate = <Key extends I18nKey, L extends Locale = Locale>(
   );
 };
 
-export const resolveLocale = (request: Request): Locale => {
-  const headerLocale = request.headers['x-locale'] as Locale | undefined;
-  if (headerLocale && locales.includes(headerLocale)) return headerLocale;
-
-  return request.user?.locale ?? defaultLocale;
-};
+export const translateWithoutLocale =
+  <L extends Locale = Locale>(locale: L): TranslateFnWithoutLocale =>
+  (options) =>
+    translate(options, locale);
