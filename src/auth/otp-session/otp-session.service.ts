@@ -16,6 +16,7 @@ import {
 import { generateHashedOtp, generateOtp, getSessionKey } from './helpers';
 import { CreateSessionOptions, ResendSessionOptions, OTPAuthSession, VerifySessionOptions } from './types';
 import { AuthPurpose, OtpDataByPurpose } from '../types';
+import { Locale } from 'src/i18n';
 
 @Injectable()
 export class OtpSessionService {
@@ -50,12 +51,10 @@ export class OtpSessionService {
     };
   }
 
-  async createSession<P extends AuthPurpose>({
-    purpose,
-    email,
-    data,
-    ttlSeconds = OTP_DEFAULT_TTL_SECONDS,
-  }: CreateSessionOptions<P>) {
+  async createSession<P extends AuthPurpose>(
+    { purpose, email, data, ttlSeconds = OTP_DEFAULT_TTL_SECONDS }: CreateSessionOptions<P>,
+    locale?: Locale,
+  ) {
     const sessionId = randomBytes(16).toString('hex');
     const key = getSessionKey(sessionId);
 
@@ -77,7 +76,7 @@ export class OtpSessionService {
       .expire(key, ttlSeconds)
       .exec();
 
-    await this.mailService.sendTypedMail(email, purpose, { otp });
+    await this.mailService.sendTypedMail(email, purpose, { otp }, locale);
 
     return { purpose, sessionId };
   }
@@ -107,12 +106,15 @@ export class OtpSessionService {
     return [session.email, session.data];
   }
 
-  async resendSession<P extends AuthPurpose>({
-    purpose,
-    sessionId,
-    maxResends = OTP_DEFAULT_MAX_RESENDS,
-    minResendIntervalMs = OTP_DEFAULT_MIN_RESEND_INTERVAL_MS,
-  }: ResendSessionOptions<P>) {
+  async resendSession<P extends AuthPurpose>(
+    {
+      purpose,
+      sessionId,
+      maxResends = OTP_DEFAULT_MAX_RESENDS,
+      minResendIntervalMs = OTP_DEFAULT_MIN_RESEND_INTERVAL_MS,
+    }: ResendSessionOptions<P>,
+    locale?: Locale,
+  ) {
     const key = getSessionKey(sessionId);
     const session = await this.readSession<P>(sessionId, purpose);
 
@@ -135,6 +137,6 @@ export class OtpSessionService {
     const ttl = await this.redis.ttl(key);
     if (ttl > 0) await this.redis.expire(key, ttl);
 
-    await this.mailService.sendTypedMail(session.email, purpose, { otp });
+    await this.mailService.sendTypedMail(session.email, purpose, { otp }, locale);
   }
 }

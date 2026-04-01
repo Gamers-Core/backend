@@ -3,6 +3,7 @@ import { randomBytes } from 'crypto';
 
 import { UsersService } from 'src/users';
 import { withEnvironment, BadRequestException } from 'src/common';
+import { Locale } from 'src/i18n';
 
 import { CreateUserDTO, ForgotPasswordDTO, LoginUserDTO, ResendOTPDTO, VerifyOTPDTO } from './dtos';
 import { getEncryptedPassword, getHashedPassword } from './helpers';
@@ -29,8 +30,8 @@ export class AuthService {
   };
 
   async signup(userDTO: CreateUserDTO) {
-    const existingUser = await this.usersService.find(userDTO.email);
-    if (existingUser.length) throw new BadRequestException(['auth.emailAlreadyUsed']);
+    const [existingUser] = await this.usersService.find(userDTO.email);
+    if (existingUser) throw new BadRequestException(['auth.emailAlreadyUsed']);
 
     const password = await getEncryptedPassword(userDTO.password);
 
@@ -86,11 +87,14 @@ export class AuthService {
         };
       }
 
-      return await this.otpSessionService.createSession({
-        purpose: 'reset_password',
-        email: creds.email,
-        data: { password },
-      });
+      return await this.otpSessionService.createSession(
+        {
+          purpose: 'reset_password',
+          email: creds.email,
+          data: { password },
+        },
+        user.locale,
+      );
     });
   }
 
@@ -108,11 +112,11 @@ export class AuthService {
     return this.otpVerifyHandlers[purpose](email, data);
   }
 
-  async resendOTP<P extends AuthPurpose>({ purpose, sessionId }: ResendOTPDTO<P>) {
+  async resendOTP<P extends AuthPurpose>({ purpose, sessionId }: ResendOTPDTO<P>, locale?: Locale) {
     return withEnvironment(['local', 'development', 'staging'], async (isValid) => {
       if (isValid) return;
 
-      return this.otpSessionService.resendSession<P>({ purpose, sessionId });
+      return this.otpSessionService.resendSession<P>({ purpose, sessionId }, locale);
     });
   }
 }

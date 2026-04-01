@@ -1,9 +1,11 @@
 import { AuthPurpose } from 'src/auth';
 import { Order } from 'src/entity';
+import { TranslateFnWithoutLocale } from 'src/i18n';
 
-import { mails } from './const';
+import { mails, mailsOptions } from './const';
 
 export type MailType = (typeof mails)[number];
+export type MailOptionsType = (typeof mailsOptions)[number];
 
 export interface SendMailOptions {
   title: string;
@@ -16,9 +18,14 @@ export type MailOptions = {
   order_reminder: Order;
   order_confirmation: Order;
 } & { [K in AuthPurpose]: { otp: string } };
-interface MailOptionsMap extends Omit<SendMailOptions, 'to'> {
+export interface MailOptionsMap<T extends MailOptionsType> extends Omit<SendMailOptions, 'to' | 'html'> {
   type: MailType;
+  html: MailTemplateFn<T>;
 }
 
-export type MailOptionsType = keyof MailOptions;
-export type MailOptionsFn<T extends MailOptionsType> = (values: MailOptions[T]) => MailOptionsMap;
+export type MailOptionsFn<T extends MailOptionsType> = (
+  t: TranslateFnWithoutLocale,
+  values: MailOptions[T],
+) => MailOptionsMap<T>;
+export type MailTemplatesMap = { [K in MailOptionsType]: MailOptionsFn<K> };
+export type MailTemplateFn<T extends MailOptionsType> = (t: TranslateFnWithoutLocale, values: MailOptions[T]) => string;
