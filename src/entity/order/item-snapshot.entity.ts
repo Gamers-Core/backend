@@ -1,5 +1,8 @@
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
+import { type Localized } from 'src/i18n';
+import { parse } from 'src/common';
+
 import { Order } from './order.entity';
 
 @Entity()
@@ -13,8 +16,11 @@ export class ItemSnapshot {
   @Column('varchar', { length: 36 })
   variantExternalId: string;
 
-  @Column({ type: 'varchar', length: 255 })
-  variantName: string;
+  @Column('jsonb', { transformer: parse })
+  productTitle: Localized;
+
+  @Column('jsonb', { transformer: parse })
+  variantName: Localized;
 
   @Column('int')
   quantity: number;

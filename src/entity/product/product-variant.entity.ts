@@ -11,6 +11,9 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+import { Localized } from 'src/i18n';
+import { parse } from 'src/common';
+
 import { Product } from './product.entity';
 
 @Entity()
@@ -22,8 +25,8 @@ export class ProductVariant {
   @Column({ unique: true, length: 36 })
   externalId: string;
 
-  @Column({ nullable: true, type: 'varchar', length: 255 })
-  name: string | null;
+  @Column('jsonb', { nullable: true, transformer: parse })
+  name: Localized | null;
 
   @Column({ default: false })
   isDefault: boolean;

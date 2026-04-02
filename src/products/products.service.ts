@@ -2,20 +2,23 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { MediaAttachmentService } from 'src/media';
+import { MediaAttachmentDTO, MediaAttachmentService } from 'src/media';
 import { Brand, Product } from 'src/entity';
 import { NotFoundException } from 'src/common';
+import { I18nService } from 'src/i18n';
 
 import { CreateProductDTO, ProductDTO, UpdateProductDTO } from './dtos';
 import { VariantsService } from './variants.service';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class ProductsService {
   constructor(
-    private readonly mediaAttachmentService: MediaAttachmentService,
-    private readonly variantsService: VariantsService,
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
+    private readonly mediaAttachmentService: MediaAttachmentService,
+    private readonly variantsService: VariantsService,
+    private readonly i18nService: I18nService,
   ) {}
 
   async create(createProductDTO: CreateProductDTO) {
@@ -151,31 +154,35 @@ export class ProductsService {
       product.variants.map((variant) => variant.id),
       'variant',
     );
+
     return this.serializeProduct(product, media, variantMediaMap);
   }
 
   private serializeProduct(
     product: Product,
     media: ProductDTO['media'],
-    variantMediaMap: Record<number, ProductDTO['variants'][number]['media']>,
+    variantMediaMap: Record<number, MediaAttachmentDTO[]>,
   ): ProductDTO {
     const variants = product.variants.map((variant) => ({
       ...variant,
+      name: this.i18nService.localize(variant.name),
       media: variantMediaMap[variant.id] ?? [],
     }));
     const brand = product.brand
       ? {
           id: product.brand?.id,
-          name: product.brand?.name,
+          name: this.i18nService.localize(product.brand.name),
         }
       : null;
 
-    return {
+    return plainToInstance(ProductDTO, {
       ...product,
+      title: this.i18nService.localize(product.title),
+      description: this.i18nService.localize(product.description),
       variants,
       media,
       brand,
-    };
+    });
   }
 
   private async findOneOrFail(

@@ -4,6 +4,7 @@ import { EntityManager, Repository } from 'typeorm';
 
 import { Product, ProductVariant } from 'src/entity';
 import { MediaAttachmentService } from 'src/media';
+import { isLocalized } from 'src/i18n';
 import { withOptionalManager, NotFoundException, BadRequestException } from 'src/common';
 
 import { ProductVariantDTO } from './dtos';
@@ -13,9 +14,9 @@ type SyncedPair = { dto: ProductVariantDTO; variant: ProductVariant };
 @Injectable()
 export class VariantsService {
   constructor(
-    private readonly mediaAttachmentService: MediaAttachmentService,
     @InjectRepository(ProductVariant)
     private readonly variantRepository: Repository<ProductVariant>,
+    private readonly mediaAttachmentService: MediaAttachmentService,
   ) {}
 
   async getVariant(externalId: string, isActive: boolean = true, manager?: EntityManager) {
@@ -175,7 +176,7 @@ export class VariantsService {
     if (!variantDTOs?.length) return;
 
     if (variantDTOs.length > 1) {
-      const hasUnnamedVariant = variantDTOs.some(({ name }) => typeof name !== 'string' || name.trim().length === 0);
+      const hasUnnamedVariant = variantDTOs.some(({ name }) => !isLocalized(name));
 
       if (hasUnnamedVariant) throw new BadRequestException('products.variantNameRequiredForMultiple');
     }

@@ -11,6 +11,9 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+import { type Localized } from 'src/i18n';
+import { parse } from 'src/common';
+
 import { Category } from '../category.entity';
 import { Brand } from '../brand.entity';
 import { ProductVariant } from './product-variant.entity';
@@ -22,11 +25,11 @@ export class Product {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  title: string;
+  @Column('jsonb', { transformer: parse })
+  title: Localized;
 
-  @Column({ type: 'text' })
-  description: string;
+  @Column('jsonb', { transformer: parse })
+  description: Localized;
 
   @Column('enum', { default: 'unlisted', enum: productStatuses })
   status: ProductStatus;

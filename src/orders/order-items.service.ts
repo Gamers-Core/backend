@@ -70,9 +70,9 @@ export class OrderItemsService {
 
     return {
       productId: variant.product.id,
-      productTitle: variant.product.title,
       variantExternalId: variant.externalId,
-      variantName: variant.name ?? variant.product.title,
+      productTitle: { ...variant.product.title },
+      variantName: { ...(variant.name ?? variant.product.title) },
       quantity,
       unitPrice,
       lineTotal,

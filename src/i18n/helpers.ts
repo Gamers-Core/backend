@@ -32,6 +32,17 @@ export const translateWithoutLocale =
   (options) =>
     translate(options, locale);
 
+export const localize = (value: Localized, locale: Locale): string => value[locale] ?? value[defaultLocale];
+
 export const isLocaleKey = (key: string): key is Locale => locales.includes(key as Locale);
 
-export const localize = (value: Localized, locale: Locale): string => value[locale] ?? value[defaultLocale];
+export const isLocalized = (value: unknown): value is Localized => {
+  if (!value || typeof value !== 'object' || !(defaultLocale in value)) return false;
+
+  const localized = value as Localized;
+  return Object.entries(localized).every(([key, text]) => {
+    if (!isLocaleKey(key)) return false;
+
+    return typeof text === 'string' && text.trim().length >= 2;
+  });
+};

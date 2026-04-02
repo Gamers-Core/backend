@@ -1,18 +1,9 @@
 import { Type } from 'class-transformer';
-import {
-  IsArray,
-  IsIn,
-  IsInt,
-  ArrayMinSize,
-  IsOptional,
-  IsString,
-  Min,
-  MinLength,
-  ValidateNested,
-} from 'class-validator';
+import { IsArray, IsIn, IsInt, ArrayMinSize, IsOptional, Min, ValidateNested } from 'class-validator';
 
 import { productStatuses } from 'src/entity';
-import type { ProductStatus } from 'src/entity';
+import { type ProductStatus } from 'src/entity';
+import { IsLocalized, type Localized } from 'src/i18n';
 
 import { ProductVariantDTO } from './product-variant.dto';
 
@@ -33,13 +24,11 @@ export class CreateProductDTO {
   @Min(1, { each: true })
   mediaIds?: number[];
 
-  @IsString()
-  @MinLength(2)
-  title: string;
+  @IsLocalized()
+  title: Localized;
 
-  @IsString()
-  @MinLength(5)
-  description: string;
+  @IsLocalized()
+  description: Localized;
 
   @IsOptional()
   @IsInt()
