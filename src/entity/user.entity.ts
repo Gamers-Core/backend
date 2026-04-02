@@ -31,7 +31,7 @@ export class User {
   @Column({ default: false })
   isAdmin: boolean;
 
-  @Column({ default: defaultLocale, enum: locales, type: 'enum' })
+  @Column('enum', { default: defaultLocale, enum: locales })
   locale: Locale;
 
   @OneToMany(() => Address, (address) => address.user)

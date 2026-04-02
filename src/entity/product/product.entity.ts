@@ -28,7 +28,7 @@ export class Product {
   @Column({ type: 'text' })
   description: string;
 
-  @Column({ default: 'unlisted', enum: productStatuses, type: 'enum' })
+  @Column('enum', { default: 'unlisted', enum: productStatuses })
   status: ProductStatus;
 
   @OneToMany(() => ProductVariant, (variant) => variant.product, {

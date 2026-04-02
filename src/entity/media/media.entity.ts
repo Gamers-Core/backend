@@ -15,7 +15,7 @@ export class Media {
   @Column({ unique: true })
   publicId: string;
 
-  @Column({ enum: mediaTypes, type: 'enum', default: 'auto' })
+  @Column('enum', { enum: mediaTypes, default: 'auto' })
   type: MediaType;
 
   @Column()
@@ -36,6 +36,6 @@ export class Media {
   @Column({ default: false })
   isDeleted: boolean;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column('timestamp', { nullable: true })
   expiresAt: Date | null;
 }

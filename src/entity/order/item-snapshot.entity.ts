@@ -10,22 +10,19 @@ export class ItemSnapshot {
   @Column({ type: 'int' })
   productId: number;
 
-  @Column({ type: 'varchar', length: 255 })
-  productTitle: string;
-
-  @Column({ type: 'varchar', length: 36 })
+  @Column('varchar', { length: 36 })
   variantExternalId: string;
 
   @Column({ type: 'varchar', length: 255 })
   variantName: string;
 
-  @Column({ type: 'int' })
+  @Column('int')
   quantity: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column('decimal', { precision: 10, scale: 2 })
   unitPrice: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column('decimal', { precision: 10, scale: 2 })
   lineTotal: number;
 
   @ManyToOne(() => Order, (order) => order.items, {

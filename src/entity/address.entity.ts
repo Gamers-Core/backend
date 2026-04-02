@@ -14,7 +14,7 @@ export class Address {
   @Column()
   phoneNumber: string;
 
-  @Column({ type: 'text' })
+  @Column('text')
   detailedAddress: string;
 
   @Column()

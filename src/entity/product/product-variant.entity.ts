@@ -31,16 +31,16 @@ export class ProductVariant {
   @Column({ default: true })
   isActive: boolean;
 
-  @Column({ type: 'int' })
+  @Column('int')
   stock: number;
 
-  @Column({ type: 'int' })
+  @Column('int')
   price: number;
 
-  @Column({ type: 'int' })
+  @Column('int')
   costPerItem: number;
 
-  @Column({ name: 'compare_at', nullable: true, type: 'int', default: null })
+  @Column('int', { name: 'compare_at', nullable: true, default: null })
   compareAt: number | null;
 
   @ManyToOne(() => Product, (product) => product.variants, {
