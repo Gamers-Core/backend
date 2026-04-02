@@ -1,8 +1,8 @@
 import { formatNumber } from 'src/helpers';
 
 import messages from './messages';
-import { defaultLocale } from './const';
-import type { I18nKey, Locale, Messages, Translate, TranslateFnWithoutLocale } from './types';
+import { defaultLocale, locales } from './const';
+import type { I18nKey, Locale, Localized, Messages, Translate, TranslateFnWithoutLocale } from './types';
 
 export const translate = <Key extends I18nKey, L extends Locale = Locale>(
   options: Translate<Key>,
@@ -31,3 +31,7 @@ export const translateWithoutLocale =
   <L extends Locale = Locale>(locale: L): TranslateFnWithoutLocale =>
   (options) =>
     translate(options, locale);
+
+export const isLocaleKey = (key: string): key is Locale => locales.includes(key as Locale);
+
+export const localize = (value: Localized, locale: Locale): string => value[locale] ?? value[defaultLocale];

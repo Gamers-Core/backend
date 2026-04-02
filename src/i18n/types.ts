@@ -1,6 +1,6 @@
 import messages from './messages';
 
-import { locales } from './const';
+import { defaultLocale, locales } from './const';
 import { translate } from './helpers';
 
 export type Locale = (typeof locales)[number];
@@ -10,6 +10,10 @@ export type TranslateFnWithoutLocale = <K extends I18nKey>(options: Translate<K>
 
 export type EN = Messages['en'];
 export type AR = Messages['ar'];
+
+export type Localized<T extends Locale = Locale> = {
+  en: string;
+} & Partial<Record<Exclude<T, typeof defaultLocale>, string>>;
 
 export type I18nKey = Extract<keyof EN, keyof AR>;
 export type LanguageTranslations = EN | AR;
