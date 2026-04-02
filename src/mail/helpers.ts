@@ -1,11 +1,11 @@
-import { Locale, TranslateFnWithoutLocale } from 'src/i18n';
+import { defaultLocale, Locale, TranslateFnWithoutLocale } from 'src/i18n';
 
 import { MailType } from './types';
 import { MAIL_DOMAIN } from './const';
 
 export const getEmail = <T extends MailType>(mail: T) => `${mail}@${MAIL_DOMAIN}` as const;
 
-export const renderMailWrapper = (t: TranslateFnWithoutLocale, content: string, locale: Locale = 'en') => {
+export const renderMailWrapper = (t: TranslateFnWithoutLocale, content: string, locale: Locale = defaultLocale) => {
   const isRtl = locale === 'ar';
   const dir = isRtl ? 'rtl' : 'ltr';
   const align = isRtl ? 'right' : 'left';

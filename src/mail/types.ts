@@ -1,5 +1,5 @@
 import { AuthPurpose } from 'src/auth';
-import { Order } from 'src/entity';
+import { OrderDTO } from 'src/orders';
 import { TranslateFnWithoutLocale } from 'src/i18n';
 
 import { mails, mailsOptions } from './const';
@@ -15,8 +15,8 @@ export interface SendMailOptions {
 }
 
 export type MailOptions = {
-  order_reminder: Order;
-  order_confirmation: Order;
+  order_reminder: OrderDTO;
+  order_confirmation: OrderDTO;
 } & { [K in AuthPurpose]: { otp: string } };
 export interface MailOptionsMap<T extends MailOptionsType> extends Omit<SendMailOptions, 'to' | 'html'> {
   type: MailType;

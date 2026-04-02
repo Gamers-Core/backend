@@ -108,6 +108,9 @@ export class OrderDTO {
   total: number;
 
   @Expose()
+  currency: string;
+
+  @Expose()
   createdAt: Date;
 
   @Expose()
