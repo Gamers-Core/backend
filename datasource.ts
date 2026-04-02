@@ -2,6 +2,7 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { DataSourceOptions, DataSource } from 'typeorm';
 import { join } from 'path';
 import { config } from 'dotenv';
+import 'src/types';
 
 import {
   Address,
