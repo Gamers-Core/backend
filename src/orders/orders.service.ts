@@ -258,7 +258,7 @@ export class OrdersService {
       await withEnvironment(['production'], async (isValid) => {
         if (!isValid) return;
 
-        await this.mailService.sendTypedMail(order.user.email, 'order_confirmation', order);
+        await this.mailService.sendTypedMail(order.user.email, 'order_confirmation', this.mapToDTO(order));
       });
     },
     confirmed: async (order) => {
@@ -275,7 +275,7 @@ export class OrdersService {
             cod: order.total,
             note: order.note ?? undefined,
           }),
-          this.mailService.sendTypedMail(getEmail('admin'), 'order_reminder', order),
+          this.mailService.sendTypedMail(getEmail('admin'), 'order_reminder', this.mapToDTO(order)),
         ]);
       });
 
