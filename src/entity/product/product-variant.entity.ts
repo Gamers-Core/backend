@@ -16,7 +16,7 @@ import { parse } from 'src/common';
 
 import { Product } from './product.entity';
 
-@Entity()
+@Entity('product_variant_entity')
 @Check('CHK_variant_compareAt_gt_price', '"compare_at" IS NULL OR "compare_at" > "price"')
 export class ProductVariant {
   @PrimaryGeneratedColumn()
