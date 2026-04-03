@@ -1,5 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 
+import { Localize } from 'src/i18n';
 import { MediaAttachmentDTO } from 'src/media';
 
 class ProductVariantDTO {
@@ -10,6 +11,7 @@ class ProductVariantDTO {
   externalId: string;
 
   @Expose()
+  @Localize()
   name: string | null;
 
   @Expose()
@@ -40,6 +42,7 @@ class ProductBrandDTO {
   id: number;
 
   @Expose()
+  @Localize()
   name: string;
 }
 
@@ -48,9 +51,11 @@ export class ProductDTO {
   id: number;
 
   @Expose()
+  @Localize()
   title: string;
 
   @Expose()
+  @Localize()
   description: string;
 
   @Expose()

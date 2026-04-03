@@ -3,6 +3,7 @@ import { randomBytes } from 'crypto';
 
 import { UsersService } from 'src/users';
 import { withEnvironment, BadRequestException } from 'src/common';
+import { Locale } from 'src/i18n';
 
 import { CreateUserDTO, ForgotPasswordDTO, LoginUserDTO, ResendOTPDTO, VerifyOTPDTO } from './dtos';
 import { getEncryptedPassword, getHashedPassword } from './helpers';
@@ -22,15 +23,15 @@ export class AuthService {
     },
     signup: async (email, { name, password }) => {
       const existingUser = await this.usersService.find(email);
-      if (existingUser.length) throw new BadRequestException('Email is already used');
+      if (existingUser.length) throw new BadRequestException('auth.emailAlreadyUsed');
 
       return this.usersService.create({ name, email, password });
     },
   };
 
   async signup(userDTO: CreateUserDTO) {
-    const existingUser = await this.usersService.find(userDTO.email);
-    if (existingUser.length) throw new BadRequestException('Email is already used');
+    const [existingUser] = await this.usersService.find(userDTO.email);
+    if (existingUser) throw new BadRequestException('auth.emailAlreadyUsed');
 
     const password = await getEncryptedPassword(userDTO.password);
 
@@ -55,13 +56,13 @@ export class AuthService {
   async login(loginUserDTO: LoginUserDTO) {
     const [user] = await this.usersService.find(loginUserDTO.email);
 
-    if (!user) throw new BadRequestException('Invalid email or password');
+    if (!user) throw new BadRequestException('auth.invalidCredentials');
 
     const [salt, hash] = user.password.split('.');
 
     const userHash = await getHashedPassword(loginUserDTO.password, salt);
 
-    if (hash !== userHash.toString('hex')) throw new BadRequestException('Invalid email or password');
+    if (hash !== userHash.toString('hex')) throw new BadRequestException('auth.invalidCredentials');
 
     return user;
   }
@@ -86,11 +87,14 @@ export class AuthService {
         };
       }
 
-      return await this.otpSessionService.createSession({
-        purpose: 'reset_password',
-        email: creds.email,
-        data: { password },
-      });
+      return await this.otpSessionService.createSession(
+        {
+          purpose: 'reset_password',
+          email: creds.email,
+          data: { password },
+        },
+        user.locale,
+      );
     });
   }
 
@@ -108,11 +112,11 @@ export class AuthService {
     return this.otpVerifyHandlers[purpose](email, data);
   }
 
-  async resendOTP<P extends AuthPurpose>({ purpose, sessionId }: ResendOTPDTO<P>) {
+  async resendOTP<P extends AuthPurpose>({ purpose, sessionId }: ResendOTPDTO<P>, locale?: Locale) {
     return withEnvironment(['local', 'development', 'staging'], async (isValid) => {
       if (isValid) return;
 
-      return this.otpSessionService.resendSession<P>({ purpose, sessionId });
+      return this.otpSessionService.resendSession<P>({ purpose, sessionId }, locale);
     });
   }
 }

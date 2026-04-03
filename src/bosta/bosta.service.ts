@@ -1,10 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 
 import { AppCacheService } from 'src/cache';
 import { BostaPickupLocation, ShippingFeesResponseDTO } from 'src/addresses';
-import { ServiceUnavailableException } from 'src/common';
 
 import { errorHandler, requestManager } from './helpers';
 import {
@@ -35,6 +34,7 @@ export class BostaService {
 
     api.interceptors.request.use((config) => {
       const token = this.configService.get<string>('BOSTA_TOKEN');
+      // Using ServiceUnavailableException here because the absence of the token is a configuration issue that prevents the service from functioning, rather than a client error.
       if (!token) throw new ServiceUnavailableException('BOSTA_TOKEN is not configured');
 
       config.headers.Authorization = token;
@@ -66,7 +66,7 @@ export class BostaService {
   }
 
   getDistrict(id: string, cityId: string) {
-    return this.getDistricts(cityId).then((districts) => districts.find(({ districtId }) => districtId === id));
+    return this.getDistricts(cityId).then((districts) => districts?.find(({ districtId }) => districtId === id));
   }
 
   getInsuranceFees(goodsValue: number) {

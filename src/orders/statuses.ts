@@ -25,17 +25,17 @@ export const orderStatusGuards: Partial<Record<OrderStatus, OrderStatusGuard[]>>
   shipped: [
     {
       isInvalid: ({ paymentMethod, paymentStatus }) => paymentMethod !== 'cod' && paymentStatus !== 'paid',
-      message: 'Orders must be paid before shipping if not cash-on-delivery',
+      message: 'orders.shipped.mustBePaidBeforeCOD',
     },
     {
       isInvalid: ({ trackingNumber }) => !trackingNumber,
-      message: 'Tracking number required before shipping',
+      message: 'orders.shipped.trackingNumberRequired',
     },
   ],
   completed: [
     {
       isInvalid: ({ status, paymentStatus }) => status !== 'delivered' || paymentStatus !== 'paid',
-      message: 'Order must be delivered and paid before completion',
+      message: 'orders.completed.mustBeDeliveredAndPaid',
     },
   ],
 };
@@ -43,24 +43,24 @@ export const paymentStatusGuards: Partial<Record<PaymentStatus, OrderStatusGuard
   refunded: [
     {
       isInvalid: ({ status }) => status !== 'returned',
-      message: 'Only returned orders can be refunded',
+      message: 'orders.refunded.onlyReturned',
     },
   ],
   paid: [
     {
       isInvalid: ({ paymentMethod, status }) => paymentMethod === 'cod' && status !== 'delivered',
-      message: 'COD orders can only be marked as paid after delivery',
+      message: 'orders.paid.CODOnlyAfterDelivery',
     },
     {
       isInvalid: ({ paymentMethod, status }) =>
         paymentMethod !== 'cod' &&
         paymentMethod !== 'instapay' &&
         !['pending', 'confirmed', 'on-progress', 'on-hold', 'shipped'].includes(status),
-      message: 'Online payments must happen before delivery',
+      message: 'orders.paid.onlinePaymentsBeforeDelivery',
     },
     {
       isInvalid: ({ paymentMethod, status }) => paymentMethod === 'instapay' && status !== 'on-progress',
-      message: 'Instapay payments must be marked as paid during on-progress status',
+      message: 'orders.paid.instapayPaymentsBeforeDelivery',
     },
   ],
 };

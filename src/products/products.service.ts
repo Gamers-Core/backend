@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { MediaAttachmentService } from 'src/media';
+import { MediaAttachmentDTO, MediaAttachmentService } from 'src/media';
 import { Brand, Product } from 'src/entity';
 import { NotFoundException } from 'src/common';
 
@@ -12,10 +12,10 @@ import { VariantsService } from './variants.service';
 @Injectable()
 export class ProductsService {
   constructor(
-    private readonly mediaAttachmentService: MediaAttachmentService,
-    private readonly variantsService: VariantsService,
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
+    private readonly mediaAttachmentService: MediaAttachmentService,
+    private readonly variantsService: VariantsService,
   ) {}
 
   async create(createProductDTO: CreateProductDTO) {
@@ -29,7 +29,7 @@ export class ProductsService {
           where: { id: createProductDTO.brandId },
         });
 
-        if (!brand) throw new NotFoundException('Brand not found');
+        if (!brand) throw new NotFoundException('products.brandNotFound');
       }
 
       const product = productRepository.create({
@@ -56,7 +56,7 @@ export class ProductsService {
     });
   }
 
-  async findAll(): Promise<ProductDTO[]> {
+  async findAll() {
     const products = await this.productsRepository.find({
       order: { createdAt: 'DESC' },
       relations: { variants: true, brand: true },
@@ -82,7 +82,7 @@ export class ProductsService {
     return this.findOneWithMediaOrFail(id);
   }
 
-  async update(id: number, updateProductDTO: UpdateProductDTO): Promise<ProductDTO> {
+  async update(id: number, updateProductDTO: UpdateProductDTO) {
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepository = manager.getRepository(Product);
       const brandRepository = manager.getRepository(Brand);
@@ -105,7 +105,7 @@ export class ProductsService {
 
       if (typeof brandId !== 'undefined') {
         const brand = await brandRepository.findOne({ where: { id: brandId } });
-        if (!brand) throw new NotFoundException('Brand not found');
+        if (!brand) throw new NotFoundException('products.brandNotFound');
         product.brand = brand;
       }
 
@@ -136,10 +136,7 @@ export class ProductsService {
     });
   }
 
-  private async findOneWithMediaOrFail(
-    id: number,
-    productRepository: Repository<Product> = this.productsRepository,
-  ): Promise<ProductDTO> {
+  private async findOneWithMediaOrFail(id: number, productRepository: Repository<Product> = this.productsRepository) {
     const product = await this.findOneOrFail(id, productRepository);
 
     const media = await this.mediaAttachmentService.getMedia({
@@ -151,31 +148,18 @@ export class ProductsService {
       product.variants.map((variant) => variant.id),
       'variant',
     );
+
     return this.serializeProduct(product, media, variantMediaMap);
   }
 
   private serializeProduct(
     product: Product,
     media: ProductDTO['media'],
-    variantMediaMap: Record<number, ProductDTO['variants'][number]['media']>,
-  ): ProductDTO {
-    const variants = product.variants.map((variant) => ({
-      ...variant,
-      media: variantMediaMap[variant.id] ?? [],
-    }));
-    const brand = product.brand
-      ? {
-          id: product.brand?.id,
-          name: product.brand?.name,
-        }
-      : null;
+    variantMediaMap: Record<number, MediaAttachmentDTO[]>,
+  ) {
+    const variants = product.variants.map((variant) => ({ ...variant, media: variantMediaMap[variant.id] ?? [] }));
 
-    return {
-      ...product,
-      variants,
-      media,
-      brand,
-    };
+    return { ...product, variants, media };
   }
 
   private async findOneOrFail(
@@ -187,7 +171,7 @@ export class ProductsService {
       relations: { variants: true, brand: true },
     });
 
-    if (!product) throw new NotFoundException('Product not found');
+    if (!product) throw new NotFoundException('products.productNotFound');
 
     return product;
   }

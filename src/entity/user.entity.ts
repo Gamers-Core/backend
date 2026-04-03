@@ -8,6 +8,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+import { defaultLocale, type Locale, locales } from 'src/i18n';
+
 import { Address } from './address.entity';
 import { Cart } from './cart';
 import { Order } from './order';
@@ -28,6 +30,9 @@ export class User {
 
   @Column({ default: false })
   isAdmin: boolean;
+
+  @Column('enum', { default: defaultLocale, enum: locales })
+  locale: Locale;
 
   @OneToMany(() => Address, (address) => address.user)
   addresses: Address[];

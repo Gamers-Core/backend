@@ -2,6 +2,7 @@ import { Expose, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 
 import { type OrderStatus, type PaymentMethod, type PaymentStatus } from 'src/entity';
+import { Localize } from 'src/i18n';
 
 class OrderItemDTO {
   @Expose()
@@ -11,12 +12,14 @@ class OrderItemDTO {
   productId: number;
 
   @Expose()
+  @Localize()
   productTitle: string;
 
   @Expose()
   variantExternalId: string;
 
   @Expose()
+  @Localize()
   variantName: string;
 
   @Expose()
@@ -106,6 +109,9 @@ export class OrderDTO {
 
   @Expose()
   total: number;
+
+  @Expose()
+  currency: string;
 
   @Expose()
   createdAt: Date;

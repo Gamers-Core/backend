@@ -1,15 +1,18 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
 
 import { UsersService } from 'src/users';
 import { IS_PUBLIC_KEY } from 'src/auth';
 import { UnauthorizedException } from 'src/common';
+import { LocaleContextService } from 'src/i18n';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly usersService: UsersService,
     private readonly reflector: Reflector,
+    private readonly localeContextService: LocaleContextService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -18,20 +21,23 @@ export class AuthGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    const req = context.switchToHttp().getRequest();
+    const req = context.switchToHttp().getRequest<Request>();
     const userId = req.session?.userId;
 
-    if (isPublic) {
-      if (userId) req.user = await this.usersService.findOne(userId).catch(() => null);
+    if (!userId) {
+      if (isPublic) return true;
 
-      return true;
+      throw new UnauthorizedException('unauthenticated');
     }
 
-    if (!userId) throw new UnauthorizedException('Not authenticated');
-
     const user = await this.usersService.findOne(userId);
-    if (!user) throw new UnauthorizedException('User not found');
+    if (!user) {
+      if (isPublic) return true;
 
+      throw new UnauthorizedException('unauthorized');
+    }
+
+    this.localeContextService.locale = user.locale;
     req.user = user;
 
     return true;

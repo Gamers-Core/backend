@@ -1,43 +1,45 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
-import { ValidationError } from 'class-validator';
+
+import { LocaleContextService, translate } from 'src/i18n';
 
 import { AppException, ValidationException } from '../exceptions';
-
-function formatErrors(errors: ValidationError[]) {
-  return errors.map((error) => ({
-    property: error.property,
-    constraints: error.constraints ?? {},
-    children: error.children?.length ? formatErrors(error.children) : [],
-  }));
-}
+import { formatErrors } from './helpers';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
+  constructor(private readonly localeContext: LocaleContextService) {}
+
   private readonly logger = new Logger(GlobalExceptionFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
+    const locale = this.localeContext.locale;
 
     if (!(exception instanceof HttpException)) {
       this.logger.error(exception);
 
       return response
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({ statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: 'Internal server error' });
+        .json({ status: HttpStatus.INTERNAL_SERVER_ERROR, message: 'Internal server error' });
     }
 
-    const json = {};
+    const payload: Record<string, unknown> = {};
 
     const isValidationException = exception instanceof ValidationException;
-    if (isValidationException) Object.assign(json, { errors: formatErrors(exception.errors) });
+    if (isValidationException) payload.errors = formatErrors(exception.errors);
 
     const isAppException = exception instanceof AppException;
-    if (isAppException) Object.assign(json, { message: exception.message });
+    if (isAppException) payload.message = translate(exception.translate, locale);
 
-    if (!isValidationException && !isAppException) Object.assign(json, { message: exception.message });
+    if (!isValidationException && !isAppException) {
+      const body = exception.getResponse();
+
+      if (typeof body === 'string') payload.message = body;
+      else if ('message' in body && typeof body.message === 'string') payload.message = body.message;
+    }
 
     const status = exception.getStatus();
-    return response.status(status).json(Object.assign({ status }, json));
+    return response.status(status).json({ status, ...payload });
   }
 }

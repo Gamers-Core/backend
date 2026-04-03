@@ -23,7 +23,7 @@ export class CartItem {
   })
   variant: ProductVariant;
 
-  @Column({ type: 'int' })
+  @Column('int')
   quantity: number;
 
   @CreateDateColumn()

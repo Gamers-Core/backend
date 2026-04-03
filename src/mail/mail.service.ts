@@ -3,15 +3,20 @@ import * as nodemailer from 'nodemailer';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { mailsOptions } from './const';
-import { getEmail } from './helpers';
+import { I18nService, Locale, translateWithoutLocale } from 'src/i18n';
+
+import { mailTemplates } from './templates';
+import { getEmail, renderMailWrapper } from './helpers';
 import { MailOptions, MailOptionsType, MailType, SendMailOptions } from './types';
 
 @Injectable()
 export class MailService {
   private transporter?: nodemailer.Transporter<SMTPTransport.SentMessageInfo, SMTPTransport.Options>;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly i18nService: I18nService,
+  ) {}
 
   private getTransporter() {
     if (!this.transporter) {
@@ -36,9 +41,17 @@ export class MailService {
     });
   }
 
-  sendTypedMail<T extends MailOptionsType>(to: string, type: T, values: MailOptions[T]) {
-    const { type: mail, ...options } = mailsOptions[type](values);
+  sendTypedMail<T extends MailOptionsType>(
+    to: string,
+    type: T,
+    values: MailOptions[T],
+    locale: Locale = this.i18nService.locale,
+  ) {
+    const t = translateWithoutLocale(locale);
 
-    return this.send({ ...options, to }, mail);
+    const { type: mail, html, ...options } = mailTemplates[type](t, values);
+    const renderedHtml = renderMailWrapper(t, html(t, values), locale);
+
+    return this.send({ ...options, html: renderedHtml, to }, mail);
   }
 }

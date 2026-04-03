@@ -1,6 +1,7 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param, ParseEnumPipe, Patch } from '@nestjs/common';
 
 import { User } from 'src/entity';
+import { locales, type Locale } from 'src/i18n';
 import { Serialize } from 'src/interceptors';
 
 import { CurrentUser } from './decorators';
@@ -21,5 +22,11 @@ export class UsersController {
   @Get('me/full')
   getFullCurrentUser(@CurrentUser() user: User) {
     return this.usersService.findFull(user.id);
+  }
+
+  @Serialize(BasicUserDTO)
+  @Patch('me/locale/:locale')
+  updateLocale(@CurrentUser() user: User, @Param('locale', new ParseEnumPipe(locales)) locale: Locale) {
+    return this.usersService.updateLocale(user, locale);
   }
 }

@@ -10,6 +10,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+import { parse } from 'src/common';
+
 import { User } from '../user.entity';
 import { orderStatuses, paymentMethods, paymentStatuses } from './const';
 import type { OrderAddressSnapshot, OrderStatus, PaymentMethod, PaymentStatus } from './types';
@@ -25,40 +27,40 @@ export class Order {
   @Column({ unique: true })
   orderNumber: string;
 
-  @Column({ default: 'pending', enum: orderStatuses, type: 'simple-enum' })
+  @Column('enum', { default: 'pending', enum: orderStatuses })
   status: OrderStatus;
 
-  @Column({ default: 'unpaid', enum: paymentStatuses, type: 'simple-enum' })
+  @Column('enum', { default: 'unpaid', enum: paymentStatuses })
   paymentStatus: PaymentStatus;
 
-  @Column({ default: 'cod', enum: paymentMethods, type: 'simple-enum' })
+  @Column('enum', { default: 'cod', enum: paymentMethods })
   paymentMethod: PaymentMethod;
 
   @OneToMany(() => ItemSnapshot, (item) => item.order, { cascade: true })
   items: ItemSnapshot[];
 
-  @Column({ type: 'simple-json' })
+  @Column('jsonb', { transformer: parse })
   shippingAddress: OrderAddressSnapshot;
 
-  @Column({ nullable: true, type: 'text' })
+  @Column('text', { nullable: true })
   note: string | null;
 
-  @Column({ nullable: true, type: 'varchar', length: 255 })
+  @Column('varchar', { nullable: true, length: 255 })
   trackingNumber: string | null;
 
   @Column({ default: false })
   canOpenPackage: boolean;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column('decimal', { precision: 10, scale: 2 })
   subtotal: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column('decimal', { precision: 10, scale: 2, default: 0 })
   shippingFee: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  @Column('decimal', { precision: 10, scale: 2 })
   total: number;
 
-  @Column({ default: 'EGP' })
+  @Column('varchar', { default: 'EGP' })
   currency: string;
 
   @ManyToOne(() => User, (user) => user.orders, {
@@ -67,7 +69,7 @@ export class Order {
   })
   user: User;
 
-  @Column({ nullable: true, type: 'timestamp' })
+  @Column('timestamp', { nullable: true })
   paidAt: Date | null;
 
   @CreateDateColumn()

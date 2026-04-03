@@ -12,7 +12,7 @@ export class OrderItemsService {
   constructor(private readonly variantsService: VariantsService) {}
 
   async addItems(order: Order, items: AddOrderItemDTO[], manager: EntityManager) {
-    if (!items.length) throw new BadRequestException('Items are required');
+    if (!items.length) throw new BadRequestException('orders.itemsRequired');
 
     const itemSnapshotRepo = manager.getRepository(ItemSnapshot);
     const itemSnapshots: Array<Omit<ItemSnapshot, 'id'> & { order: Order }> = [];
@@ -53,7 +53,7 @@ export class OrderItemsService {
   }
 
   async deleteItem(order: Order, itemId: number, manager: EntityManager) {
-    if (order.items.length <= 1) throw new BadRequestException('Order must contain at least one item');
+    if (order.items.length <= 1) throw new BadRequestException('orders.mustContainAtLeastOneItem');
 
     const item = this.getItemOrFail(order, itemId);
     const totalDifference = -item.lineTotal;
@@ -70,9 +70,9 @@ export class OrderItemsService {
 
     return {
       productId: variant.product.id,
-      productTitle: variant.product.title,
       variantExternalId: variant.externalId,
-      variantName: variant.name ?? variant.product.title,
+      productTitle: { ...variant.product.title },
+      variantName: { ...(variant.name ?? variant.product.title) },
       quantity,
       unitPrice,
       lineTotal,
@@ -81,7 +81,7 @@ export class OrderItemsService {
 
   private getItemOrFail(order: Order, itemId: number) {
     const item = order.items.find(({ id }) => id === itemId);
-    if (!item) throw new NotFoundException('Order item not found');
+    if (!item) throw new NotFoundException('orders.itemNotFound');
 
     return item;
   }

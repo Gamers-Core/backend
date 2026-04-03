@@ -11,9 +11,12 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+import { Localized } from 'src/i18n';
+import { parse } from 'src/common';
+
 import { Product } from './product.entity';
 
-@Entity()
+@Entity('product_variant_entity')
 @Check('CHK_variant_compareAt_gt_price', '"compare_at" IS NULL OR "compare_at" > "price"')
 export class ProductVariant {
   @PrimaryGeneratedColumn()
@@ -22,8 +25,8 @@ export class ProductVariant {
   @Column({ unique: true, length: 36 })
   externalId: string;
 
-  @Column({ nullable: true, type: 'varchar', length: 255 })
-  name: string | null;
+  @Column('jsonb', { nullable: true, transformer: parse })
+  name: Localized | null;
 
   @Column({ default: false })
   isDefault: boolean;
@@ -31,16 +34,16 @@ export class ProductVariant {
   @Column({ default: true })
   isActive: boolean;
 
-  @Column({ type: 'int' })
+  @Column('int')
   stock: number;
 
-  @Column({ type: 'int' })
+  @Column('int')
   price: number;
 
-  @Column({ type: 'int' })
+  @Column('int')
   costPerItem: number;
 
-  @Column({ name: 'compare_at', nullable: true, type: 'int', default: null })
+  @Column('int', { name: 'compare_at', nullable: true, default: null })
   compareAt: number | null;
 
   @ManyToOne(() => Product, (product) => product.variants, {

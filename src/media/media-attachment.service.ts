@@ -149,7 +149,7 @@ export class MediaAttachmentService {
 
     mediaIds.forEach((mediaId, index) => {
       const attachment = map.get(mediaId);
-      if (!attachment) throw new BadRequestException('Invalid media in reorder.');
+      if (!attachment) throw new BadRequestException('media.invalid');
 
       attachment.order = index + 1;
       mediaAttachments.push(attachment);
@@ -167,7 +167,7 @@ export class MediaAttachmentService {
       id: In(uniqueIds),
     });
 
-    if (media.length !== uniqueIds.length) throw new BadRequestException('Some media items are invalid.');
+    if (media.length !== uniqueIds.length) throw new BadRequestException('media.invalid');
   }
 
   async getMediaAttachments(where: EntityAttachmentDTO, attachmentRepo = this.attachmentRepo) {

@@ -1,4 +1,6 @@
-import { IsArray, IsBoolean, IsInt, IsOptional, IsString, IsUUID, MaxLength, Min, MinLength } from 'class-validator';
+import { IsArray, IsBoolean, IsInt, IsOptional, IsUUID, Min } from 'class-validator';
+
+import { IsLocalized, type Localized } from 'src/i18n';
 
 export class ProductVariantDTO {
   @IsOptional()
@@ -6,10 +8,8 @@ export class ProductVariantDTO {
   externalId?: string;
 
   @IsOptional()
-  @IsString()
-  @MinLength(1)
-  @MaxLength(255)
-  name?: string;
+  @IsLocalized()
+  name?: Localized;
 
   @IsOptional()
   @IsBoolean()

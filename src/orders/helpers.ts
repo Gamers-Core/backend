@@ -1,18 +1,18 @@
 import { BadRequestException } from 'src/common';
-
 import { Order, type OrderStatus, type PaymentStatus } from 'src/entity';
+
 import { orderStatusGuards, orderTransitions, paymentStatusGuards, paymentTransitions } from './statuses';
 
 export const assertValidOrderTransition = (current: OrderStatus, next: OrderStatus) => {
   const allowed = orderTransitions[current] ?? [];
 
-  if (!allowed.includes(next)) throw new BadRequestException(`Invalid transition: ${current} → ${next}`);
+  if (!allowed.includes(next)) throw new BadRequestException(['orders.invalidTransition', { current, next }]);
 };
 
 export const assertValidPaymentTransition = (current: PaymentStatus, next: PaymentStatus) => {
   const allowed = paymentTransitions[current] ?? [];
 
-  if (!allowed.includes(next)) throw new BadRequestException(`Invalid payment transition: ${current} → ${next}`);
+  if (!allowed.includes(next)) throw new BadRequestException(['orders.invalidPaymentTransition', { current, next }]);
 };
 
 export const assertStatusGuards = (order: Order, nextStatus: OrderStatus) => {

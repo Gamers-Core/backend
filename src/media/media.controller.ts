@@ -16,7 +16,7 @@ export class MediaController {
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   async upload(@Body() body: UploadMediaDTO, @UploadedFile() file: UploadedMediaFile | undefined) {
-    if (!file) throw new BadRequestException('File is required');
+    if (!file) throw new BadRequestException('media.required');
 
     return this.mediaService.create(file, body);
   }
