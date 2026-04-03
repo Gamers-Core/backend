@@ -1,6 +1,10 @@
 import { MailTemplateFn } from '../types';
 
-export const renderOrderReminderHtml: MailTemplateFn<'order_reminder'> = (t, { orderNumber, items, currency, total }) =>
+export const renderOrderReminderHtml: MailTemplateFn<'order_reminder'> = (
+  t,
+  { orderNumber, items, currency, total },
+  isRtl,
+) =>
   `
   <h2 style="margin-bottom: 0;">🎮 Gamers Core</h2>
   <p style="margin-top: 4px; color: #555;">${t('mail.orderReminder.header')}</p>
@@ -15,7 +19,7 @@ export const renderOrderReminderHtml: MailTemplateFn<'order_reminder'> = (t, { o
 
     <table width="100%" cellspacing="0" cellpadding="8" style="border-collapse: collapse;">
       <thead>
-        <tr style="background: #eee; text-align: left;">
+        <tr style="background: #eee; text-align: ${isRtl ? 'right' : 'left'};">
           <th>${t('mail.common.item')}</th>
           <th>${t('mail.common.variant')}</th>
           <th>${t('mail.common.qty')}</th>

@@ -28,4 +28,8 @@ export type MailOptionsFn<T extends MailOptionsType> = (
   values: MailOptions[T],
 ) => MailOptionsMap<T>;
 export type MailTemplatesMap = { [K in MailOptionsType]: MailOptionsFn<K> };
-export type MailTemplateFn<T extends MailOptionsType> = (t: TranslateFnWithoutLocale, values: MailOptions[T]) => string;
+export type MailTemplateFn<T extends MailOptionsType> = (
+  t: TranslateFnWithoutLocale,
+  values: MailOptions[T],
+  isRtl: boolean,
+) => string;

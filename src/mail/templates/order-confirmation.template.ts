@@ -3,6 +3,7 @@ import { MailTemplateFn } from '../types';
 export const renderOrderConfirmationHtml: MailTemplateFn<'order_confirmation'> = (
   t,
   { orderNumber, currency, total, items },
+  isRtl,
 ) =>
   `
   <h2 style="margin-bottom: 0;">🎮 Gamers Core</h2>
@@ -22,7 +23,7 @@ export const renderOrderConfirmationHtml: MailTemplateFn<'order_confirmation'> =
 
   <table width="100%" cellspacing="0" cellpadding="8" style="border-collapse: collapse;">
     <thead>
-      <tr style="background: #eee; text-align: left;">
+      <tr style="background: #eee; text-align: ${isRtl ? 'right' : 'left'};">
         <th>${t('mail.common.item')}</th>
         <th>${t('mail.common.qty')}</th>
         <th>${t('mail.common.price')}</th>

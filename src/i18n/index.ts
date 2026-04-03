@@ -1,5 +1,4 @@
 export * from './i18n.module';
-export * from './i18n.service';
 export * from './locale-context.service';
 export * from './locale-context.middleware';
 export * from './const';

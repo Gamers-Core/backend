@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
 import { withEnvironment, withOptionalManager, BadRequestException, NotFoundException } from 'src/common';
+import { Locale, LocaleContextService } from 'src/i18n';
 import { CartService } from 'src/cart';
 import { BostaService } from 'src/bosta';
 import { getEmail, MailService } from 'src/mail';
@@ -41,6 +42,7 @@ export class OrdersService {
     private readonly bostaService: BostaService,
     private readonly orderItemsService: OrderItemsService,
     private readonly mailService: MailService,
+    private readonly LocaleContextService: LocaleContextService,
   ) {}
 
   getOrders(userId: number) {
@@ -253,8 +255,11 @@ export class OrdersService {
     };
   }
 
-  private mapToDTO(order: Order): OrderDTO {
-    return plainToInstance(OrderDTO, this.serializeOrder(order), { excludeExtraneousValues: true });
+  private mapToDTO(order: Order, locale: Locale = this.LocaleContextService.locale): OrderDTO {
+    return plainToInstance(OrderDTO, this.serializeOrder(order), {
+      excludeExtraneousValues: true,
+      context: { locale, userId: order.user.id },
+    });
   }
 
   private readonly statusHandlers = {
@@ -279,7 +284,7 @@ export class OrdersService {
             cod: order.total,
             note: order.note ?? undefined,
           }),
-          this.mailService.sendTypedMail(getEmail('admin'), 'order_reminder', this.mapToDTO(order)),
+          this.mailService.sendTypedMail(getEmail('admin'), 'order_reminder', this.mapToDTO(order, 'en'), 'en'),
         ]);
       });
 
