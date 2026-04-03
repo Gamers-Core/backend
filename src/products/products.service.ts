@@ -6,7 +6,8 @@ import { MediaAttachmentDTO, MediaAttachmentService } from 'src/media';
 import { Brand, Product } from 'src/entity';
 import { NotFoundException } from 'src/common';
 
-import { CreateProductDTO, ProductDTO, UpdateProductDTO } from './dtos';
+import { ProductDTO } from './dtos/user';
+import { CreateProductDTO, UpdateProductDTO } from './dtos/admin';
 import { VariantsService } from './variants.service';
 
 @Injectable()

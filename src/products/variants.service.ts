@@ -7,9 +7,9 @@ import { MediaAttachmentService } from 'src/media';
 import { isLocalized } from 'src/i18n';
 import { withOptionalManager, NotFoundException, BadRequestException } from 'src/common';
 
-import { ProductVariantDTO } from './dtos';
+import { CreateProductVariantDTO } from './dtos/admin';
 
-type SyncedPair = { dto: ProductVariantDTO; variant: ProductVariant };
+type SyncedPair = { dto: CreateProductVariantDTO; variant: ProductVariant };
 
 @Injectable()
 export class VariantsService {
@@ -30,7 +30,7 @@ export class VariantsService {
     return variant;
   }
 
-  sync(product: Product, variantDTOs: ProductVariantDTO[], manager?: EntityManager) {
+  sync(product: Product, variantDTOs: CreateProductVariantDTO[], manager?: EntityManager) {
     if (!variantDTOs) return product;
 
     const normalizedVariantDTOs = this.normalizeVariantDTOs(variantDTOs);
@@ -90,7 +90,7 @@ export class VariantsService {
 
   private async upsert(
     product: Product,
-    variantDTOs: ProductVariantDTO[],
+    variantDTOs: CreateProductVariantDTO[],
     variantsByExternalId: Map<string, ProductVariant>,
     repo: Repository<ProductVariant>,
   ): Promise<SyncedPair[]> {
@@ -137,7 +137,7 @@ export class VariantsService {
     await Promise.all(mediaAttachmentTasks);
   }
 
-  private normalizeVariantDTOs(variantDTOs: ProductVariantDTO[]) {
+  private normalizeVariantDTOs(variantDTOs: CreateProductVariantDTO[]) {
     const normalized = variantDTOs.map((variantDTO) => ({
       ...variantDTO,
       isActive: variantDTO.isActive ?? true,
@@ -157,7 +157,7 @@ export class VariantsService {
 
   private mapEntity(
     product: Product,
-    dto: ProductVariantDTO,
+    dto: CreateProductVariantDTO,
     variant: ProductVariant = new ProductVariant(),
   ): ProductVariant {
     variant.name = dto.name ?? null;
@@ -172,7 +172,7 @@ export class VariantsService {
     return variant;
   }
 
-  private assertVariantValidity(variantDTOs: ProductVariantDTO[]) {
+  private assertVariantValidity(variantDTOs: CreateProductVariantDTO[]) {
     if (!variantDTOs?.length) return;
 
     if (variantDTOs.length > 1) {
