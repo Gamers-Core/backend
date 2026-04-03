@@ -2,7 +2,7 @@ import { IsArray, IsBoolean, IsInt, IsOptional, IsUUID, Min } from 'class-valida
 
 import { IsLocalized, type Localized } from 'src/i18n';
 
-export class ProductVariantDTO {
+export class CreateProductVariantDTO {
   @IsOptional()
   @IsUUID('4')
   externalId?: string;
