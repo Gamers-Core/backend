@@ -29,11 +29,11 @@ export class AddLocalizationToEntities1775136833070 implements MigrationInterfac
         await queryRunner.query(`ALTER TABLE "item_snapshot" ALTER COLUMN "product_title" TYPE jsonb USING jsonb_build_object('en', COALESCE("product_title", ''))`);
         await queryRunner.query(`ALTER TABLE "item_snapshot" ALTER COLUMN "variant_name" TYPE jsonb USING jsonb_build_object('en', COALESCE("variant_name", ''))`);
 
-        await queryRunner.query(`ALTER TABLE "order" ALTER COLUMN "shipping_address" TYPE jsonb USING jsonb_build_object('en', COALESCE("shipping_address", ''))`);
+        await queryRunner.query(`ALTER TABLE "order" ALTER COLUMN "shipping_address" TYPE jsonb USING CASE WHEN "shipping_address" IS NULL OR btrim("shipping_address") = '' THEN '{}'::jsonb ELSE "shipping_address"::jsonb END`);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "order" ALTER COLUMN "shipping_address" TYPE text USING COALESCE("shipping_address"->>'en', '')`);
+        await queryRunner.query(`ALTER TABLE "order" ALTER COLUMN "shipping_address" TYPE text USING COALESCE("shipping_address"::text, '{}')`);
 
         await queryRunner.query(`ALTER TABLE "item_snapshot" ALTER COLUMN "variant_name" TYPE character varying(255) USING COALESCE("variant_name"->>'en', '')`);
         await queryRunner.query(`ALTER TABLE "item_snapshot" ALTER COLUMN "product_title" TYPE character varying(255) USING COALESCE("product_title"->>'en', '')`);

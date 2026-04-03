@@ -34,6 +34,7 @@ export class BostaService {
 
     api.interceptors.request.use((config) => {
       const token = this.configService.get<string>('BOSTA_TOKEN');
+      // Using ServiceUnavailableException here because the absence of the token is a configuration issue that prevents the service from functioning, rather than a client error.
       if (!token) throw new ServiceUnavailableException('BOSTA_TOKEN is not configured');
 
       config.headers.Authorization = token;

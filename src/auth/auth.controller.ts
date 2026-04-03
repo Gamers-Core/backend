@@ -70,7 +70,7 @@ export class AuthController {
   }
 
   @Post('resend-otp')
-  resendOtp(@CurrentUser() user: User, @Body() body: ResendOTPDTO) {
+  resendOtp(@CurrentUser() user: User | undefined, @Body() body: ResendOTPDTO) {
     return this.authService.resendOTP(body, user?.locale);
   }
 }
