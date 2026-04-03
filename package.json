@@ -16,7 +16,8 @@
     "migration:generate": "cross-env NODE_ENV=local ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d datasource.ts migration:generate",
     "migration:run": "cross-env NODE_ENV=production ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d datasource.ts migration:run",
     "test": "tsc && eslint && prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "generate-secret": "node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.1",

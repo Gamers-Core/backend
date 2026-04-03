@@ -6,10 +6,11 @@ import { AddressesModule } from 'src/addresses';
 
 import { BostaService } from './bosta.service';
 import { BostaController } from './bosta.controller';
+import { BostaWebhookAuthGuard } from './bosta-webhook-auth.guard';
 
 @Module({
   imports: [HttpModule, OrdersModule, forwardRef(() => AddressesModule)],
-  providers: [BostaService],
+  providers: [BostaService, BostaWebhookAuthGuard],
   controllers: [BostaController],
   exports: [BostaService],
 })

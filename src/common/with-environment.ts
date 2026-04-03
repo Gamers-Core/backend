@@ -1,4 +1,4 @@
-type Environment = 'local' | 'development' | 'staging' | 'production';
+export type Environment = 'local' | 'development' | 'staging' | 'production';
 
 export const withEnvironment = <T>(
   envs: Environment[],
