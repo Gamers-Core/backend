@@ -1,19 +1,21 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { Request } from 'express';
 
-import { translate } from 'src/i18n';
+import { LocaleContextService, translate } from 'src/i18n';
 
 import { AppException, ValidationException } from '../exceptions';
 import { formatErrors } from './helpers';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
+  constructor(private readonly localeContext: LocaleContextService) {}
+
   private readonly logger = new Logger(GlobalExceptionFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
-    const request = ctx.getRequest<Request>();
+    const locale = this.localeContext.locale;
 
     if (!(exception instanceof HttpException)) {
       this.logger.error(exception);
@@ -29,7 +31,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (isValidationException) payload.errors = formatErrors(exception.errors);
 
     const isAppException = exception instanceof AppException;
-    if (isAppException) payload.message = translate(exception.translate, request.locale);
+    if (isAppException) payload.message = translate(exception.translate, locale);
 
     if (!isValidationException && !isAppException) payload.message = exception.message;
 

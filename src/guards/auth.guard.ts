@@ -37,8 +37,7 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('unauthorized');
     }
 
-    this.localeContextService.setCurrentUserLocale(user.locale);
-    req.locale = this.localeContextService.locale;
+    this.localeContextService.locale = user.locale;
     req.user = user;
 
     return true;
