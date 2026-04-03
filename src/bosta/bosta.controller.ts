@@ -10,6 +10,8 @@ import { deliveryStates } from './const';
 @Controller('bosta')
 export class BostaController {
   constructor(private readonly ordersService: OrdersService) {}
+
+  // TODO: add auth guard to ensure only bosta can access this endpoint
   @Post('webhook')
   async handleWebhook(@CurrentUser() user: User, @Body() webhookData: WebhookDTO) {
     const state = deliveryStates[webhookData.state];
