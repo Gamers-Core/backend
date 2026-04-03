@@ -1,14 +1,26 @@
-import { Body, Controller, Delete, Param, ParseIntPipe, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Param,
+  ParseIntPipe,
+  Post,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 import { Serialize } from 'src/interceptors';
 import { BadRequestException } from 'src/common';
+import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
 
 import { MediaService } from './media.service';
 import { MediaDTO, UploadMediaDTO } from './dtos';
 import { UploadedMediaFile } from './types';
 
 @Controller('media')
+@UseGuards(IsAdminAuthGuard)
 export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
 
