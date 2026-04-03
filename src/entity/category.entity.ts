@@ -11,7 +11,7 @@ export class Category {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('jsonb', { unique: true, transformer: parse })
+  @Column('jsonb', { transformer: parse })
   name: Localized;
 
   @ManyToMany(() => Product, (product) => product.categories)
