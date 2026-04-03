@@ -5,7 +5,7 @@ import { type PaymentStatus } from 'src/entity';
 
 import { OrderDTO } from '../user';
 import { OrderAllowedActionsDTO } from './order-allowed-actions.dto';
-import { OrderItemDTO } from '../OrderItemDTO.dto';
+import { OrderItemDTO } from '../order-item.dto';
 
 class AdminOrderItemDTO extends OrderItemDTO {
   @Expose()

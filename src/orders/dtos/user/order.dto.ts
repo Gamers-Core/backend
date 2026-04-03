@@ -2,7 +2,7 @@ import { Expose, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 
 import { type OrderStatus, type PaymentMethod } from 'src/entity';
-import { OrderItemDTO } from '../OrderItemDTO.dto';
+import { OrderItemDTO } from '../order-item.dto';
 
 class OrderAddressDTO {
   @Expose()
