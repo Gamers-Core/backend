@@ -1,5 +1,4 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
-import { Request } from 'express';
 
 import { LocaleContextService, translate } from 'src/i18n';
 
@@ -33,7 +32,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const isAppException = exception instanceof AppException;
     if (isAppException) payload.message = translate(exception.translate, locale);
 
-    if (!isValidationException && !isAppException) payload.message = exception.message;
+    if (!isValidationException && !isAppException) {
+      const body = exception.getResponse();
+
+      if (typeof body === 'string') payload.message = body;
+      else if ('message' in body && typeof body.message === 'string') payload.message = body.message;
+    }
 
     const status = exception.getStatus();
     return response.status(status).json({ status, ...payload });
