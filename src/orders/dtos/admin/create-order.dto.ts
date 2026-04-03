@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import { ArrayNotEmpty, IsInt, IsUUID, Min, ValidateNested } from 'class-validator';
 
-import { CheckoutOrderDTO } from './checkout-order.dto';
+import { CheckoutOrderDTO } from '../user';
 
 class VariantDTO {
   @IsUUID()
@@ -17,4 +17,8 @@ export class CreateOrderDTO extends CheckoutOrderDTO {
   @ValidateNested({ each: true })
   @Type(() => VariantDTO)
   variants: VariantDTO[];
+
+  @IsInt()
+  @Min(1)
+  userId: number;
 }

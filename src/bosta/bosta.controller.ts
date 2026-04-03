@@ -1,7 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
 
-import { User } from 'src/entity';
-import { CurrentUser } from 'src/users/decorators';
 import { OrdersService } from 'src/orders';
 
 import { WebhookDTO } from './dtos';
@@ -13,11 +11,11 @@ export class BostaController {
 
   // TODO: add auth guard to ensure only bosta can access this endpoint
   @Post('webhook')
-  async handleWebhook(@CurrentUser() user: User, @Body() webhookData: WebhookDTO) {
+  async handleWebhook(@Body() webhookData: WebhookDTO) {
     const state = deliveryStates[webhookData.state];
     if (!state) return;
     if (state === 'delivered' && !webhookData.isConfirmedDelivery) return;
 
-    return await this.ordersService.updateStatus({ trackingNumber: webhookData.trackingNumber }, user.id, state);
+    return await this.ordersService.updateStatus({ trackingNumber: webhookData.trackingNumber }, state);
   }
 }

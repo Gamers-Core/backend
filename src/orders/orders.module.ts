@@ -8,7 +8,8 @@ import { CartModule } from 'src/cart';
 import { ProductsModule } from 'src/products';
 import { MailService } from 'src/mail';
 
-import { OrdersController } from './orders.controller';
+import { OrdersAdminController } from './orders-admin.controller';
+import { OrdersUserController } from './orders-user.controller';
 import { OrderItemsService } from './order-items.service';
 import { OrdersService } from './orders.service';
 
@@ -20,7 +21,7 @@ import { OrdersService } from './orders.service';
     CartModule,
     ProductsModule,
   ],
-  controllers: [OrdersController],
+  controllers: [OrdersUserController, OrdersAdminController],
   providers: [OrdersService, OrderItemsService, MailService],
   exports: [OrdersService],
 })
