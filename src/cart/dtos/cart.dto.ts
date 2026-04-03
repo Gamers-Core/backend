@@ -1,15 +1,19 @@
 import { Expose, Transform, Type } from 'class-transformer';
 
+import { Localize } from 'src/i18n';
+
 class CartProductDTO {
   @Expose()
   id: number;
 
   @Expose()
+  @Localize()
   title: string;
 }
 
 class CartProductVariantDTO {
   @Expose()
+  @Localize()
   name: string | null;
 
   @Expose()

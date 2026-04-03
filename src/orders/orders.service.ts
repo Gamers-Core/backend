@@ -69,7 +69,7 @@ export class OrdersService {
     return this.ordersRepo.manager.transaction(async (manager) => {
       const order = await this.createOrderInternal(userId, body, manager);
 
-      return this.mapToDTO(order);
+      return this.serializeOrder(order);
     });
   }
 
@@ -206,7 +206,7 @@ export class OrdersService {
 
     const updatedOrder = await this.getOrderOrFail({ orderNumber }, userId, manager, true);
 
-    return this.mapToDTO(updatedOrder);
+    return this.serializeOrder(updatedOrder);
   }
 
   private updateOrder(
@@ -220,7 +220,7 @@ export class OrdersService {
 
       const updatedOrder = await manager.getRepository(Order).save(order);
 
-      return this.mapToDTO(updatedOrder);
+      return this.serializeOrder(updatedOrder);
     });
   }
 
@@ -243,14 +243,18 @@ export class OrdersService {
     return order;
   }
 
-  mapToDTO(order: Order): OrderDTO {
-    return plainToInstance(OrderDTO, {
+  serializeOrder(order: Order) {
+    return {
       ...order,
       allowedActions: {
         statuses: getAllowedStatuses(order),
         paymentStatuses: getAllowedPaymentStatuses(order),
       },
-    });
+    };
+  }
+
+  private mapToDTO(order: Order): OrderDTO {
+    return plainToInstance(OrderDTO, this.serializeOrder(order), { excludeExtraneousValues: true });
   }
 
   private readonly statusHandlers = {

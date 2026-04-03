@@ -5,11 +5,9 @@ import { Repository } from 'typeorm';
 import { MediaAttachmentDTO, MediaAttachmentService } from 'src/media';
 import { Brand, Product } from 'src/entity';
 import { NotFoundException } from 'src/common';
-import { I18nService } from 'src/i18n';
 
 import { CreateProductDTO, ProductDTO, UpdateProductDTO } from './dtos';
 import { VariantsService } from './variants.service';
-import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class ProductsService {
@@ -18,7 +16,6 @@ export class ProductsService {
     private readonly productsRepository: Repository<Product>,
     private readonly mediaAttachmentService: MediaAttachmentService,
     private readonly variantsService: VariantsService,
-    private readonly i18nService: I18nService,
   ) {}
 
   async create(createProductDTO: CreateProductDTO) {
@@ -59,7 +56,7 @@ export class ProductsService {
     });
   }
 
-  async findAll(): Promise<ProductDTO[]> {
+  async findAll() {
     const products = await this.productsRepository.find({
       order: { createdAt: 'DESC' },
       relations: { variants: true, brand: true },
@@ -85,7 +82,7 @@ export class ProductsService {
     return this.findOneWithMediaOrFail(id);
   }
 
-  async update(id: number, updateProductDTO: UpdateProductDTO): Promise<ProductDTO> {
+  async update(id: number, updateProductDTO: UpdateProductDTO) {
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepository = manager.getRepository(Product);
       const brandRepository = manager.getRepository(Brand);
@@ -139,10 +136,7 @@ export class ProductsService {
     });
   }
 
-  private async findOneWithMediaOrFail(
-    id: number,
-    productRepository: Repository<Product> = this.productsRepository,
-  ): Promise<ProductDTO> {
+  private async findOneWithMediaOrFail(id: number, productRepository: Repository<Product> = this.productsRepository) {
     const product = await this.findOneOrFail(id, productRepository);
 
     const media = await this.mediaAttachmentService.getMedia({
@@ -162,27 +156,10 @@ export class ProductsService {
     product: Product,
     media: ProductDTO['media'],
     variantMediaMap: Record<number, MediaAttachmentDTO[]>,
-  ): ProductDTO {
-    const variants = product.variants.map((variant) => ({
-      ...variant,
-      name: this.i18nService.localize(variant.name),
-      media: variantMediaMap[variant.id] ?? [],
-    }));
-    const brand = product.brand
-      ? {
-          id: product.brand?.id,
-          name: this.i18nService.localize(product.brand.name),
-        }
-      : null;
+  ) {
+    const variants = product.variants.map((variant) => ({ ...variant, media: variantMediaMap[variant.id] ?? [] }));
 
-    return plainToInstance(ProductDTO, {
-      ...product,
-      title: this.i18nService.localize(product.title),
-      description: this.i18nService.localize(product.description),
-      variants,
-      media,
-      brand,
-    });
+    return { ...product, variants, media };
   }
 
   private async findOneOrFail(

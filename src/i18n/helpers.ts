@@ -32,7 +32,8 @@ export const translateWithoutLocale =
   (options) =>
     translate(options, locale);
 
-export const localize = (value: Localized, locale: Locale): string => value[locale] ?? value[defaultLocale];
+export const localize = (value: Localized, locale: Locale = defaultLocale): string =>
+  value[locale] ?? value[defaultLocale];
 
 export const isLocaleKey = (key: string): key is Locale => locales.includes(key as Locale);
 
