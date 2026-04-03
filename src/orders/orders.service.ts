@@ -47,7 +47,7 @@ export class OrdersService {
   getOrders(userId?: number) {
     return this.ordersRepo.find({
       where: userId ? { user: { id: userId } } : undefined,
-      relations: { items: true, user: true },
+      relations: { items: true, user: !!userId },
       order: { createdAt: 'DESC' },
     });
   }
