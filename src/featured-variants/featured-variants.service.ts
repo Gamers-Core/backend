@@ -4,6 +4,7 @@ import { In, IsNull, Repository } from 'typeorm';
 
 import { FeaturedVariant, Variant } from 'src/entity';
 import { BadRequestException, ConflictException, NotFoundException } from 'src/common';
+import { MediaAttachmentService } from 'src/media';
 
 import { AddFeaturedVariantDTO, UpdateFeaturedVariantDTO } from './dtos';
 
@@ -14,14 +15,23 @@ export class FeaturedVariantsService {
     private readonly repo: Repository<FeaturedVariant>,
     @InjectRepository(Variant)
     private readonly variantRepo: Repository<Variant>,
+    private readonly attachmentService: MediaAttachmentService,
   ) {}
 
-  getAll() {
-    return this.repo.find({
+  async getAll() {
+    const featuredVariants = await this.repo.find({
       order: { position: 'ASC' },
       relations: { variant: { product: true } },
       where: { variant: { deletedAt: IsNull() } },
     });
+
+    const variantIds = featuredVariants.map(({ variant }) => variant.id);
+    const media = await this.attachmentService.getBulkMedia(variantIds, 'variant');
+
+    return featuredVariants.map((featured) => ({
+      ...featured,
+      variant: { ...featured.variant, media: media[featured.variant.id] ?? [] },
+    }));
   }
 
   async add(dto: AddFeaturedVariantDTO) {
@@ -102,6 +112,8 @@ export class FeaturedVariantsService {
 
     if (!featured) throw new NotFoundException('featuredVariants.notFound');
 
-    return featured;
+    const media = await this.attachmentService.getMedia({ entityId: featured.variant.id, entityType: 'variant' });
+
+    return { ...featured, variant: { ...featured.variant, media } };
   }
 }
