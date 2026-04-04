@@ -38,7 +38,6 @@ export default {
   'products.defaultVariantRequired': 'يلزم وجود متغير افتراضي واحد على الأقل',
   'products.activeVariantRequired': 'يلزم وجود متغير نشط واحد على الأقل',
   'products.cannotRemoveLastVariant': 'لا يمكن حذف آخر متغير',
-  'products.cannotRemoveDefaultVariant': 'لا يمكن حذف المتغير الافتراضي',
 
   'orders.invalidTransition': 'انتقال حالة الطلب غير صالح: {current} → {next}',
   'orders.invalidPaymentTransition': 'انتقال حالة الدفع غير صالح: {current} → {next}',

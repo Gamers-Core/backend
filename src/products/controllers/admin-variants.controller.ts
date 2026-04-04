@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Param, ParseArrayPipe, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 
 import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
 import { Serialize } from 'src/interceptors';
@@ -13,7 +13,10 @@ export class AdminVariantsController {
 
   @Post()
   @Serialize(AdminVariantDTO)
-  add(@Param('productId', ParseIntPipe) productId: number, @Body() dtos: CreateVariantDTO[]) {
+  add(
+    @Param('productId', ParseIntPipe) productId: number,
+    @Body(new ParseArrayPipe({ items: CreateVariantDTO })) dtos: CreateVariantDTO[],
+  ) {
     return this.variantsService.add(productId, dtos);
   }
 

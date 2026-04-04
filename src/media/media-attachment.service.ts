@@ -25,7 +25,10 @@ export class MediaAttachmentService {
       const attachmentRepo = manager.getRepository(MediaAttachment);
       const mediaRepo = manager.getRepository(Media);
 
-      if (!mediaIds.length) return await this.detachAll(entity, attachmentRepo, mediaRepo);
+      if (!mediaIds.length) {
+        await this.detachAll(entity, attachmentRepo, mediaRepo);
+        return [];
+      }
 
       const existingAttachments = await attachmentRepo.find({
         where: entity,
@@ -198,7 +201,11 @@ export class MediaAttachmentService {
       const key = attachment.entityId;
       if (!acc[key]) acc[key] = [];
 
-      acc[key].push(plainToInstance(MediaAttachmentDTO, attachment));
+      acc[key].push(
+        plainToInstance(MediaAttachmentDTO, attachment, {
+          excludeExtraneousValues: true,
+        }),
+      );
 
       return acc;
     }, {});

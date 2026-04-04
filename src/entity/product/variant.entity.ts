@@ -34,13 +34,13 @@ export class Variant {
   @Column('int')
   stock: number;
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column('int')
   price: number;
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column('int')
   costPerItem: number;
 
-  @Column('decimal', { name: 'compare_at', precision: 10, scale: 2, nullable: true, default: null })
+  @Column('int', { name: 'compare_at', nullable: true, default: null })
   compareAt: number | null;
 
   @ManyToOne(() => Product, (product) => product.variants, {

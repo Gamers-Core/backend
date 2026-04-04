@@ -54,7 +54,7 @@ export class ProductsService {
     const productsWithMedia = products.map((product) => {
       const variants = product.variants.map((variant) => ({ ...variant, media: variantMediaMap[variant.id] ?? [] }));
 
-      return { ...product, variants, media: mediaMap[product.id] };
+      return { ...product, variants, media: mediaMap[product.id] ?? [] };
     });
 
     return productsWithMedia;
@@ -133,7 +133,7 @@ export class ProductsService {
   }
 
   private async resolveBrand(brandId: number | undefined, brandRepo: Repository<Brand>) {
-    if (brandId === null) return null;
+    if (!brandId) return null;
 
     const brand = await brandRepo.findOne({ where: { id: brandId } });
     if (!brand) throw new NotFoundException('products.brandNotFound');

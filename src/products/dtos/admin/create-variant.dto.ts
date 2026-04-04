@@ -30,6 +30,6 @@ export class CreateVariantDTO {
 
   @IsArray()
   @IsInt({ each: true })
-  @Min(0, { each: true })
+  @Min(1, { each: true })
   mediaIds: number[];
 }

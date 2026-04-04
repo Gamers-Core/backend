@@ -54,6 +54,9 @@ export class VariantsService {
 
       Object.assign(variant, dto);
 
+      if (variant.compareAt && variant.compareAt <= variant.price)
+        throw new BadRequestException('products.compareAtMustBeGreaterThanPrice');
+
       const normalized = this.normalize([variant, ...remainingVariants]);
       const savedVariants = await variantRepository.save(normalized);
 

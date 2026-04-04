@@ -38,7 +38,6 @@ export default {
   'products.defaultVariantRequired': 'At least one default variant is required',
   'products.activeVariantRequired': 'At least one active variant is required',
   'products.cannotRemoveLastVariant': 'Cannot remove the last variant',
-  'products.cannotRemoveDefaultVariant': 'Cannot remove the default variant',
 
   'orders.invalidTransition': 'Invalid order status transition: {current} → {next}',
   'orders.invalidPaymentTransition': 'Invalid payment status transition: {current} → {next}',
