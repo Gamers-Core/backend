@@ -20,6 +20,7 @@ import { ProductsModule } from './products';
 import { MediaModule } from './media';
 import { OrdersModule } from './orders';
 import { CartModule } from './cart';
+import { FeaturedVariantsModule } from './featured-variants';
 import { GlobalExceptionFilter, ValidationException } from './common';
 import { I18nModule, LocaleContextMiddleware } from './i18n';
 
@@ -34,6 +35,7 @@ import { I18nModule, LocaleContextMiddleware } from './i18n';
     MediaModule,
     OrdersModule,
     CartModule,
+    FeaturedVariantsModule,
     RedisModule,
     CloudinaryModule,
     I18nModule,
