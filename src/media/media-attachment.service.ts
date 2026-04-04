@@ -6,8 +6,7 @@ import { Media, MediaAttachment, MediaEntityType } from 'src/entity';
 import { withOptionalManager, BadRequestException } from 'src/common';
 
 import { MediaService } from './media.service';
-import { MediaAttachmentOptionsDTO, EntityAttachmentDTO, MediaAttachmentDTO } from './dtos';
-import { plainToInstance } from 'class-transformer';
+import { MediaAttachmentOptionsDTO, EntityAttachmentDTO } from './dtos';
 
 @Injectable()
 export class MediaAttachmentService {
@@ -104,13 +103,7 @@ export class MediaAttachmentService {
     const mediaIdsToReset = attachments.map(({ media }) => media.id);
 
     await attachmentRepo.remove(attachments);
-
-    const media = await mediaRepo.update(
-      { id: In(mediaIdsToReset) },
-      { expiresAt: this.mediaService.getDraftExpiryDate() },
-    );
-
-    return media.raw as Media[];
+    await mediaRepo.update({ id: In(mediaIdsToReset) }, { expiresAt: this.mediaService.getDraftExpiryDate() });
   }
 
   private async detachAll(
@@ -177,16 +170,10 @@ export class MediaAttachmentService {
 
     const validAttachments = attachments.filter(({ media }) => Boolean(media));
 
-    return plainToInstance(MediaAttachmentDTO, validAttachments, {
-      excludeExtraneousValues: true,
-    });
+    return validAttachments;
   }
 
-  async getBulkMedia(
-    entityIds: number[],
-    entityType: MediaEntityType,
-    attachmentRepo = this.attachmentRepo,
-  ): Promise<Record<number, MediaAttachmentDTO[]>> {
+  async getBulkMedia(entityIds: number[], entityType: MediaEntityType, attachmentRepo = this.attachmentRepo) {
     if (!entityIds.length) return {};
 
     const attachments = await attachmentRepo.find({
@@ -195,17 +182,13 @@ export class MediaAttachmentService {
       order: { order: 'ASC' },
     });
 
-    return attachments.reduce<Record<number, MediaAttachmentDTO[]>>((acc, attachment) => {
+    return attachments.reduce((acc, attachment) => {
       if (!attachment.media) return acc;
 
       const key = attachment.entityId;
       if (!acc[key]) acc[key] = [];
 
-      acc[key].push(
-        plainToInstance(MediaAttachmentDTO, attachment, {
-          excludeExtraneousValues: true,
-        }),
-      );
+      acc[key].push(attachment);
 
       return acc;
     }, {});
