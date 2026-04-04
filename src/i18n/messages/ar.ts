@@ -39,6 +39,10 @@ export default {
   'products.activeVariantRequired': 'يلزم وجود متغير نشط واحد على الأقل',
   'products.cannotRemoveLastVariant': 'لا يمكن حذف آخر متغير',
 
+  'featuredVariants.notFound': 'العنصر المميز غير موجود',
+  'featuredVariants.alreadyFeatured': 'المتغير مميز بالفعل',
+  'featuredVariants.invalidIds': 'معرّفات العناصر المميزة غير صالحة',
+
   'orders.invalidTransition': 'انتقال حالة الطلب غير صالح: {current} → {next}',
   'orders.invalidPaymentTransition': 'انتقال حالة الدفع غير صالح: {current} → {next}',
   'orders.shipped.mustBePaidBeforeCOD': 'يجب دفع الطلبات قبل الشحن',

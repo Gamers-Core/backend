@@ -39,6 +39,10 @@ export default {
   'products.activeVariantRequired': 'At least one active variant is required',
   'products.cannotRemoveLastVariant': 'Cannot remove the last variant',
 
+  'featuredVariants.notFound': 'Featured variant not found',
+  'featuredVariants.alreadyFeatured': 'Variant is already featured',
+  'featuredVariants.invalidIds': 'Invalid featured variant IDs',
+
   'orders.invalidTransition': 'Invalid order status transition: {current} → {next}',
   'orders.invalidPaymentTransition': 'Invalid payment status transition: {current} → {next}',
   'orders.shipped.mustBePaidBeforeCOD': 'Orders must be paid before shipping if not cash-on-delivery',
