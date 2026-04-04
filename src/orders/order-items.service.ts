@@ -2,14 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 
 import { ItemSnapshot, Order, Variant } from 'src/entity';
-import { VariantsService } from 'src/products';
+import { InventoryService } from 'src/products';
 import { BadRequestException, NotFoundException } from 'src/common';
 
 import { AddOrderItemDTO, UpdateOrderItemDTO } from './dtos';
 
 @Injectable()
 export class OrderItemsService {
-  constructor(private readonly variantsService: VariantsService) {}
+  constructor(private readonly inventoryService: InventoryService) {}
 
   async addItems(order: Order, items: AddOrderItemDTO[], manager: EntityManager) {
     if (!items.length) throw new BadRequestException('orders.itemsRequired');
@@ -18,7 +18,7 @@ export class OrderItemsService {
     const itemSnapshots: Array<Omit<ItemSnapshot, 'id'> & { order: Order }> = [];
 
     for (const { externalId, quantity } of items) {
-      const variant = await this.variantsService.reserveStock(externalId, quantity, manager);
+      const variant = await this.inventoryService.reserveStock(externalId, quantity, manager);
       const snapshot = this.snapshot(variant, quantity);
 
       itemSnapshots.push({ ...snapshot, order });
@@ -40,9 +40,9 @@ export class OrderItemsService {
     const quantityDifference = itemDTO.quantity - item.quantity;
 
     if (quantityDifference > 0)
-      await this.variantsService.reserveStock(item.variantExternalId, quantityDifference, manager);
+      await this.inventoryService.reserveStock(item.variantExternalId, quantityDifference, manager);
     else if (quantityDifference < 0)
-      await this.variantsService.syncStock(item.variantExternalId, -quantityDifference, manager);
+      await this.inventoryService.restoreStock(item.variantExternalId, -quantityDifference, manager);
 
     item.quantity = itemDTO.quantity;
     item.lineTotal = item.quantity * item.unitPrice;
@@ -58,7 +58,7 @@ export class OrderItemsService {
     const item = this.getItemOrFail(order, itemId);
     const totalDifference = -item.lineTotal;
 
-    await this.variantsService.syncStock(item.variantExternalId, item.quantity, manager);
+    await this.inventoryService.restoreStock(item.variantExternalId, item.quantity, manager);
     await manager.getRepository(ItemSnapshot).delete(item.id);
 
     return totalDifference;

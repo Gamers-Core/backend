@@ -4,7 +4,7 @@ import type { Localized } from 'src/i18n';
 
 import { AdminMediaAttachmentDTO } from 'src/media';
 
-export class AdminProductVariantDTO {
+export class AdminVariantDTO {
   @Expose()
   id: number;
 
@@ -13,9 +13,6 @@ export class AdminProductVariantDTO {
 
   @Expose()
   name: Localized | null;
-
-  @Expose()
-  isDefault: boolean;
 
   @Expose()
   isActive: boolean;

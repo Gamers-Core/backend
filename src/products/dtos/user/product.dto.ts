@@ -3,8 +3,8 @@ import { Expose, Type } from 'class-transformer';
 import { Localize } from 'src/i18n';
 import { MediaAttachmentDTO } from 'src/media';
 
-import { ProductBrandDTO } from './product-brand.dto';
-import { ProductVariantDTO } from './product-variant.dto';
+import { BrandDTO } from './brand.dto';
+import { VariantDTO } from './variant.dto';
 
 export class ProductDTO {
   @Expose()
@@ -19,14 +19,14 @@ export class ProductDTO {
   description: string;
 
   @Expose()
-  @Type(() => ProductVariantDTO)
-  variants: ProductVariantDTO[];
+  @Type(() => VariantDTO)
+  variants: VariantDTO[];
 
   @Expose()
   @Type(() => MediaAttachmentDTO)
   media: MediaAttachmentDTO[];
 
   @Expose()
-  @Type(() => ProductBrandDTO)
-  brand: ProductBrandDTO | null;
+  @Type(() => BrandDTO)
+  brand: BrandDTO | null;
 }
