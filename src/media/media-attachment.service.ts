@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { plainToInstance } from 'class-transformer';
 import { EntityManager, In, Repository } from 'typeorm';
 
 import { Media, MediaAttachment, MediaEntityType } from 'src/entity';
 import { withOptionalManager, BadRequestException } from 'src/common';
 
 import { MediaService } from './media.service';
-import { MediaAttachmentDTO, MediaAttachmentOptionsDTO, EntityAttachmentDTO } from './dtos';
+import { MediaAttachmentOptionsDTO, EntityAttachmentDTO, MediaAttachmentDTO } from './dtos';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class MediaAttachmentService {
@@ -54,7 +54,7 @@ export class MediaAttachmentService {
     attachmentRepo = this.attachmentRepo,
     mediaRepo = this.mediaRepo,
   ) {
-    if (!mediaIds.length) return [];
+    if (!mediaIds.length) return;
 
     const uniqueIds = [...new Set(mediaIds)];
 
@@ -66,21 +66,20 @@ export class MediaAttachmentService {
     });
 
     const existingIds = new Set(existing.map((a) => a.media.id));
-
     const newIds = uniqueIds.filter((id) => !existingIds.has(id));
 
-    const attachments = newIds.map((mediaId) => ({
+    const currentAttachments = await attachmentRepo.find({ where: { entityId, entityType } });
+    const maxOrder = currentAttachments.reduce((max, a) => Math.max(max, a.order), 0);
+
+    const attachments = newIds.map((mediaId, index) => ({
       media: { id: mediaId },
       entityId,
       entityType,
-      order: 0,
+      order: maxOrder + index + 1,
     }));
 
     await attachmentRepo.save(attachments);
-
-    const media = await mediaRepo.update({ id: In(newIds) }, { expiresAt: null });
-
-    return media.raw as Media[];
+    await mediaRepo.update({ id: In(newIds) }, { expiresAt: null });
   }
 
   private async detach(
@@ -121,15 +120,12 @@ export class MediaAttachmentService {
       relations: ['media'],
     });
 
-    if (!attachments.length) return [];
+    if (!attachments.length) return;
 
     const mediaIdsToReset = attachments.map(({ media }) => media.id);
 
     await attachmentRepo.remove(attachments);
-
     await mediaRepo.update({ id: In(mediaIdsToReset) }, { expiresAt: this.mediaService.getDraftExpiryDate() });
-
-    return [];
   }
 
   private async reorder(
@@ -145,27 +141,22 @@ export class MediaAttachmentService {
 
     const map = new Map(attachments.map((attachment) => [attachment.media.id, attachment]));
 
-    const mediaAttachments: MediaAttachment[] = [];
-
-    mediaIds.forEach((mediaId, index) => {
+    const toSave = mediaIds.map((mediaId, index) => {
       const attachment = map.get(mediaId);
       if (!attachment) throw new BadRequestException('media.invalid');
 
       attachment.order = index + 1;
-      mediaAttachments.push(attachment);
+      return attachment;
     });
 
-    return await repository.save(mediaAttachments);
+    await repository.save(toSave);
   }
 
   async assertDraftMedia(mediaIds: number[], repo: Repository<Media> = this.mediaRepo) {
     if (!mediaIds.length) return;
 
     const uniqueIds = [...new Set(mediaIds)];
-
-    const media = await repo.findBy({
-      id: In(uniqueIds),
-    });
+    const media = await repo.findBy({ id: In(uniqueIds) });
 
     if (media.length !== uniqueIds.length) throw new BadRequestException('media.invalid');
   }
@@ -180,6 +171,7 @@ export class MediaAttachmentService {
 
   async getMedia(where: EntityAttachmentDTO, attachmentRepo = this.attachmentRepo) {
     const attachments = await this.getMediaAttachments(where, attachmentRepo);
+
     const validAttachments = attachments.filter(({ media }) => Boolean(media));
 
     return plainToInstance(MediaAttachmentDTO, validAttachments, {
@@ -195,34 +187,20 @@ export class MediaAttachmentService {
     if (!entityIds.length) return {};
 
     const attachments = await attachmentRepo.find({
-      where: {
-        entityId: In(entityIds),
-        entityType,
-      },
+      where: { entityId: In(entityIds), entityType },
       relations: ['media'],
       order: { order: 'ASC' },
     });
 
-    const grouped = attachments.reduce(
-      (acc, attachment) => {
-        if (!attachment.media) return acc;
+    return attachments.reduce<Record<number, MediaAttachmentDTO[]>>((acc, attachment) => {
+      if (!attachment.media) return acc;
 
-        const key = attachment.entityId;
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(attachment);
+      const key = attachment.entityId;
+      if (!acc[key]) acc[key] = [];
 
-        return acc;
-      },
-      {} as Record<number, MediaAttachment[]>,
-    );
+      acc[key].push(plainToInstance(MediaAttachmentDTO, attachment));
 
-    const result: Record<number, MediaAttachmentDTO[]> = {};
-    for (const key in grouped) {
-      result[key] = plainToInstance(MediaAttachmentDTO, grouped[key], {
-        excludeExtraneousValues: true,
-      });
-    }
-
-    return result;
+      return acc;
+    }, {});
   }
 }

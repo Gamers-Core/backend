@@ -7,8 +7,4 @@ export class MediaAttachmentDTO {
 
   @Expose()
   order: number;
-
-  @Expose()
-  @Transform(({ obj }) => obj.order === 1)
-  isPrimary: boolean;
 }
