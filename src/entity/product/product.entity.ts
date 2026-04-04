@@ -16,7 +16,7 @@ import { parse } from 'src/common';
 
 import { Category } from '../category.entity';
 import { Brand } from '../brand.entity';
-import { ProductVariant } from './product-variant.entity';
+import { Variant } from './variant.entity';
 import { productStatuses } from './const';
 import type { ProductStatus } from './types';
 
@@ -34,10 +34,10 @@ export class Product {
   @Column('enum', { default: 'unlisted', enum: productStatuses })
   status: ProductStatus;
 
-  @OneToMany(() => ProductVariant, (variant) => variant.product, {
+  @OneToMany(() => Variant, (variant) => variant.product, {
     cascade: true,
   })
-  variants: ProductVariant[];
+  variants: Variant[];
 
   @ManyToMany(() => Category, (category) => category.products)
   @JoinTable()

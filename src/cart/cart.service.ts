@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, QueryFailedError, Repository } from 'typeorm';
 
-import { Cart, CartItem, ProductVariant } from 'src/entity';
+import { Cart, CartItem, Variant } from 'src/entity';
 import { VariantsService } from 'src/products';
 import { withOptionalManager, BadRequestException, NotFoundException } from 'src/common';
 
@@ -116,7 +116,7 @@ export class CartService {
     });
   }
 
-  private assertVariantStock(variant: ProductVariant, requestedQuantity: number) {
+  private assertVariantStock(variant: Variant, requestedQuantity: number) {
     if (requestedQuantity > variant.stock)
       throw new BadRequestException(['cart.insufficientStock', { externalId: variant.externalId }]);
   }

@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, Index, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-import { ProductVariant } from '../product';
+import { Variant } from '../product';
 import { Cart } from './cart.entity';
 
 @Entity()
@@ -17,11 +17,11 @@ export class CartItem {
   })
   cart: Cart;
 
-  @ManyToOne(() => ProductVariant, {
+  @ManyToOne(() => Variant, {
     onDelete: 'RESTRICT',
     nullable: false,
   })
-  variant: ProductVariant;
+  variant: Variant;
 
   @Column('int')
   quantity: number;

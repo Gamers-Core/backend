@@ -11,14 +11,14 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Localized } from 'src/i18n';
+import { type Localized } from 'src/i18n';
 import { parse } from 'src/common';
 
 import { Product } from './product.entity';
 
 @Entity('product_variant_entity')
 @Check('CHK_variant_compareAt_gt_price', '"compare_at" IS NULL OR "compare_at" > "price"')
-export class ProductVariant {
+export class Variant {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -26,10 +26,7 @@ export class ProductVariant {
   externalId: string;
 
   @Column('jsonb', { nullable: true, transformer: parse })
-  name: Localized | null;
-
-  @Column({ default: false })
-  isDefault: boolean;
+  name: Localized;
 
   @Column({ default: true })
   isActive: boolean;
