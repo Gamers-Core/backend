@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, Repository } from 'typeorm';
+import { EntityManager, IsNull, Repository } from 'typeorm';
 
-import { FeaturedVariant, Variant } from 'src/entity';
-import { BadRequestException, ConflictException, NotFoundException } from 'src/common';
+import { FeaturedVariant, MediaAttachment, Variant } from 'src/entity';
+import { BadRequestException, ConflictException, NotFoundException, withOptionalManager } from 'src/common';
 import { MediaAttachmentService } from 'src/media';
 
 import { AddFeaturedVariantDTO, UpdateFeaturedVariantDTO } from './dtos';
@@ -35,27 +35,34 @@ export class FeaturedVariantsService {
   }
 
   async add(dto: AddFeaturedVariantDTO) {
-    const variant = await this.variantRepo.findOne({ where: { id: dto.variantId, isActive: true } });
-    if (!variant) throw new NotFoundException('products.variantNotFound');
+    return this.repo.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(FeaturedVariant);
+      const variantRepo = manager.getRepository(Variant);
 
-    const existing = await this.repo.findOne({ where: { variant: { id: dto.variantId } } });
-    if (existing) throw new ConflictException('featuredVariants.alreadyFeatured');
+      const variant = await variantRepo.findOne({
+        where: { id: dto.variantId, isActive: true, deletedAt: IsNull() },
+      });
+      if (!variant) throw new NotFoundException('products.variantNotFound');
 
-    const maxRaw = await this.repo
-      .createQueryBuilder('featuredVariant')
-      .select('MAX(featuredVariant.position)', 'max')
-      .getRawOne<{ max: string | null }>();
-    const maxPosition = Number(maxRaw?.max) || 0;
+      const existing = await repo.findOne({ where: { variant: { id: dto.variantId } } });
+      if (existing) throw new ConflictException('featuredVariants.alreadyFeatured');
 
-    const saved = await this.repo.save(
-      this.repo.create({
-        ...dto,
-        variant: { id: dto.variantId },
-        position: maxPosition + 1,
-      }),
-    );
+      const maxRaw = await repo
+        .createQueryBuilder('featuredVariant')
+        .select('MAX(featuredVariant.position)', 'max')
+        .getRawOne<{ max: string | null }>();
+      const maxPosition = Number(maxRaw?.max) || 0;
 
-    return this.findOneWithRelationsOrFail(saved.id);
+      const saved = await repo.save(
+        repo.create({
+          ...dto,
+          variant: { id: dto.variantId },
+          position: maxPosition + 1,
+        }),
+      );
+
+      return this.findOneWithRelationsOrFail(saved.id);
+    });
   }
 
   async update(id: number, { variantId, ...dto }: UpdateFeaturedVariantDTO) {
@@ -88,13 +95,24 @@ export class FeaturedVariantsService {
   }
 
   async reorder(orderedIds: number[]) {
-    const featured = await this.repo.find({ where: { id: In(orderedIds) } });
+    const featured = await this.repo.find({
+      relations: { variant: { product: true } },
+      where: { variant: { deletedAt: IsNull() } },
+      order: { position: 'ASC' },
+    });
 
     if (featured.length !== orderedIds.length) throw new BadRequestException('featuredVariants.invalidIds');
 
+    const orderedIdsSet = new Set(orderedIds);
+    if (orderedIdsSet.size !== orderedIds.length) throw new BadRequestException('featuredVariants.invalidIds');
+
+    const featuredById = new Map(featured.map((item) => [item.id, item]));
+    const hasUnknownId = orderedIds.some((id) => !featuredById.has(id));
+    if (hasUnknownId) throw new BadRequestException('featuredVariants.invalidIds');
+
     await this.repo.save(
       orderedIds.map((id, index) => {
-        const item = featured.find((entry) => entry.id === id)!;
+        const item = featuredById.get(id)!;
         item.position = index + 1;
 
         return item;
@@ -104,16 +122,24 @@ export class FeaturedVariantsService {
     return { updated: true };
   }
 
-  private async findOneWithRelationsOrFail(id: number) {
-    const featured = await this.repo.findOne({
-      where: { id, variant: { deletedAt: IsNull() } },
-      relations: { variant: { product: true } },
+  private async findOneWithRelationsOrFail(id: number, manager?: EntityManager) {
+    return withOptionalManager(manager, this.repo.manager, async (manager) => {
+      const repo = manager.getRepository(FeaturedVariant);
+      const attachmentRepo = manager.getRepository(MediaAttachment);
+
+      const featured = await repo.findOne({
+        where: { id, variant: { deletedAt: IsNull() } },
+        relations: { variant: { product: true } },
+      });
+
+      if (!featured) throw new NotFoundException('featuredVariants.notFound');
+
+      const media = await this.attachmentService.getMedia(
+        { entityId: featured.variant.id, entityType: 'variant' },
+        attachmentRepo,
+      );
+
+      return { ...featured, variant: { ...featured.variant, media } };
     });
-
-    if (!featured) throw new NotFoundException('featuredVariants.notFound');
-
-    const media = await this.attachmentService.getMedia({ entityId: featured.variant.id, entityType: 'variant' });
-
-    return { ...featured, variant: { ...featured.variant, media } };
   }
 }
