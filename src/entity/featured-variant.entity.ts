@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -14,6 +15,7 @@ import { type Localized } from 'src/i18n';
 import { Variant } from './product';
 
 @Entity()
+@Index('UQ_featured_variant_variantId', ['variant'], { unique: true })
 export class FeaturedVariant {
   @PrimaryGeneratedColumn()
   id: number;
