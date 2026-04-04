@@ -8,6 +8,9 @@ export class AdminMediaAttachmentDTO extends MediaAttachmentDTO {
   id: number;
 
   @Expose()
+  order: number;
+
+  @Expose()
   createdAt: Date;
 
   @Expose()
