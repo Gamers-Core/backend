@@ -1,19 +1,11 @@
-import { IsArray, IsBoolean, IsInt, IsOptional, IsUUID, Min } from 'class-validator';
+import { IsArray, IsBoolean, IsInt, IsOptional, Min } from 'class-validator';
+import { IsGreaterThan } from 'src/common';
 
 import { IsLocalized, type Localized } from 'src/i18n';
 
-export class CreateProductVariantDTO {
-  @IsOptional()
-  @IsUUID('4')
-  externalId?: string;
-
-  @IsOptional()
+export class CreateVariantDTO {
   @IsLocalized()
-  name?: Localized;
-
-  @IsOptional()
-  @IsBoolean()
-  isDefault?: boolean;
+  name: Localized;
 
   @IsOptional()
   @IsBoolean()
@@ -33,12 +25,11 @@ export class CreateProductVariantDTO {
 
   @IsOptional()
   @IsInt()
-  @Min(0)
-  compareAt?: number;
+  @IsGreaterThan('price')
+  compareAt: number | null;
 
-  @IsOptional()
   @IsArray()
   @IsInt({ each: true })
   @Min(1, { each: true })
-  mediaIds?: number[];
+  mediaIds: number[];
 }

@@ -11,7 +11,7 @@ export class Brand {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('jsonb', { unique: true, transformer: parse })
+  @Column('jsonb', { transformer: parse })
   name: Localized;
 
   @OneToMany(() => Product, (product) => product.brand)

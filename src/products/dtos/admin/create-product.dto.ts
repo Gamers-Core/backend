@@ -5,7 +5,7 @@ import { productStatuses } from 'src/entity';
 import { type ProductStatus } from 'src/entity';
 import { IsLocalized, type Localized } from 'src/i18n';
 
-import { CreateProductVariantDTO } from './create-product-variant.dto';
+import { CreateVariantDTO } from './create-variant.dto';
 
 export class CreateProductDTO {
   @IsOptional()
@@ -15,8 +15,8 @@ export class CreateProductDTO {
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
-  @Type(() => CreateProductVariantDTO)
-  variants: CreateProductVariantDTO[];
+  @Type(() => CreateVariantDTO)
+  variants: CreateVariantDTO[];
 
   @IsOptional()
   @IsArray()

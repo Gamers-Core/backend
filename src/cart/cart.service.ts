@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, QueryFailedError, Repository } from 'typeorm';
 
-import { Cart, CartItem, ProductVariant } from 'src/entity';
-import { VariantsService } from 'src/products';
+import { Cart, CartItem, Variant } from 'src/entity';
+import { InventoryService } from 'src/products';
 import { withOptionalManager, BadRequestException, NotFoundException } from 'src/common';
 
 import { CreateCartItemDTO, UpdateCartItemDTO } from './dtos';
@@ -12,7 +12,7 @@ import { CreateCartItemDTO, UpdateCartItemDTO } from './dtos';
 export class CartService {
   constructor(
     @InjectRepository(Cart) private readonly cartRepo: Repository<Cart>,
-    private readonly variantService: VariantsService,
+    private readonly inventoryService: InventoryService,
   ) {}
 
   async getCart(userId: number, manager?: EntityManager) {
@@ -36,7 +36,7 @@ export class CartService {
     return this.cartRepo.manager.transaction(async (manager) => {
       const cart = await this.getCart(userId, manager);
       const cartItemRepo = manager.getRepository(CartItem);
-      const variant = await this.variantService.getVariant(item.variantExternalId, true, manager);
+      const variant = await this.inventoryService.findByExternalId(item.variantExternalId, manager);
 
       const existingItem = await cartItemRepo.findOne({
         where: {
@@ -116,7 +116,7 @@ export class CartService {
     });
   }
 
-  private assertVariantStock(variant: ProductVariant, requestedQuantity: number) {
+  private assertVariantStock(variant: Variant, requestedQuantity: number) {
     if (requestedQuantity > variant.stock)
       throw new BadRequestException(['cart.insufficientStock', { externalId: variant.externalId }]);
   }
