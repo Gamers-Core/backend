@@ -1,7 +1,7 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddUserReviewsEntity1775414694306 implements MigrationInterface {
-    name = 'AddUserReviewsEntity1775414694306'
+    name = 'AddUserReviewsEntity1775414694306';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         const hasUserReviewTable = await queryRunner.hasTable('user_review');
@@ -82,5 +82,4 @@ export class AddUserReviewsEntity1775414694306 implements MigrationInterface {
         if (hasSnakeCaseFacebookColumn && !hasLegacyFacebookColumn)
             await queryRunner.query(`ALTER TABLE "user_review" RENAME COLUMN "facebook_url" TO "facebookURL"`);
     }
-
 }
