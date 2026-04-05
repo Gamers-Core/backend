@@ -88,6 +88,10 @@ export default {
   'mail.common.price': 'السعر',
   'mail.common.automatedEmail': 'Gamers Core • هذه رسالة بريد إلكتروني آلية',
 
+  'userReviews.notFound': 'مراجعة المستخدم غير موجودة',
+  'userReviews.maxCount': 'الحد الأقصى للمراجعات هو 3',
+  'userReviews.invalidIds': 'ترتيب مراجعات المستخدم غير صالح',
+
   unauthorized: 'غير مصرح',
   unauthenticated: 'غير مصادق',
 } as const satisfies Record<string, string>;

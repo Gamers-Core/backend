@@ -88,6 +88,10 @@ export default {
   'mail.common.price': 'Price',
   'mail.common.automatedEmail': 'Gamers Core • This is an automated email',
 
+  'userReviews.notFound': 'User review not found',
+  'userReviews.maxCount': 'Maximum of 3 user reviews allowed',
+  'userReviews.invalidIds': 'Invalid user review order',
+
   unauthorized: 'Unauthorized',
   unauthenticated: 'Unauthenticated',
 } as const satisfies Record<string, string>;

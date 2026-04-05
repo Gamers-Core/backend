@@ -7,3 +7,4 @@ export * from './product';
 export * from './media';
 export * from './order';
 export * from './cart';
+export * from './user-review.entity';
