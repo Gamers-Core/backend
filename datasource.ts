@@ -2,8 +2,8 @@ import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { DataSourceOptions, DataSource } from 'typeorm';
 import { join } from 'path';
 import { config } from 'dotenv';
-import 'src/types';
 
+import 'src/types';
 import {
   Address,
   Cart,
@@ -18,6 +18,7 @@ import {
   Variant,
   FeaturedVariant,
   User,
+  UserReview,
 } from 'src/entity';
 import { UserSubscriber } from 'src/subscribers/user.subscriber';
 
@@ -41,6 +42,7 @@ export const getDataSourceOptions = (): DataSourceOptions => {
       Product,
       Variant,
       FeaturedVariant,
+      UserReview,
       Category,
       Brand,
       Media,
