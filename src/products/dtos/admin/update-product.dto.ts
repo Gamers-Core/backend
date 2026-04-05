@@ -21,6 +21,10 @@ export class UpdateProductDTO {
 
   @IsOptional()
   @IsLocalized()
+  name?: Localized;
+
+  @IsOptional()
+  @IsLocalized()
   description?: Localized;
 
   @IsOptional()

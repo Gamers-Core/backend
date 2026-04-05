@@ -11,6 +11,9 @@ export class AdminProductDTO {
   id: number;
 
   @Expose()
+  name: Localized;
+
+  @Expose()
   title: Localized;
 
   @Expose()

@@ -12,6 +12,10 @@ export class ProductDTO {
 
   @Expose()
   @Localize()
+  name: string;
+
+  @Expose()
+  @Localize()
   title: string;
 
   @Expose()

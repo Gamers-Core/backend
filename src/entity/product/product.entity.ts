@@ -26,6 +26,9 @@ export class Product {
   id: number;
 
   @Column('jsonb', { transformer: parse })
+  name: Localized;
+
+  @Column('jsonb', { transformer: parse })
   title: Localized;
 
   @Column('jsonb', { transformer: parse })

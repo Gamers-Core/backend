@@ -11,7 +11,11 @@ export class EnforceFeaturedVariantUniqueness1775602100000 implements MigrationI
       (unique) => unique.columnNames.length === 1 && unique.columnNames[0] === 'variantId',
     );
 
-    if (hasUniqueOnVariantId) return;
+    const hasUniqueIndexOnVariantId = table.indices.some(
+      (index) => index.isUnique && index.columnNames.length === 1 && index.columnNames[0] === 'variantId',
+    );
+
+    if (hasUniqueOnVariantId || hasUniqueIndexOnVariantId) return;
 
     await queryRunner.query(`
       DELETE FROM "featured_variant" current

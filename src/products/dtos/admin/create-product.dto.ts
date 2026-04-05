@@ -25,6 +25,9 @@ export class CreateProductDTO {
   mediaIds?: number[];
 
   @IsLocalized()
+  name: Localized;
+
+  @IsLocalized()
   title: Localized;
 
   @IsLocalized()
