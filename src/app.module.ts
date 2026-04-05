@@ -23,7 +23,7 @@ import { CartModule } from './cart';
 import { FeaturedVariantsModule } from './featured-variants';
 import { GlobalExceptionFilter, ValidationException } from './common';
 import { I18nModule, LocaleContextMiddleware } from './i18n';
-import { UserReviewsModule } from './user-reviews/user-reviews.module';
+import { UserReviewsModule } from './user-reviews';
 
 @Module({
   imports: [

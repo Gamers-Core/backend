@@ -1,9 +1,10 @@
-import { IsArray, IsInt, Max, Min } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsInt, Min } from 'class-validator';
 
 export class ReorderUserReviewsDTO {
   @IsArray()
   @IsInt({ each: true })
   @Min(1, { each: true })
-  @Max(3)
+  @ArrayMaxSize(3)
+  @ArrayMinSize(3)
   ids: number[];
 }
