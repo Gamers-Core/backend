@@ -1,7 +1,13 @@
 import { Expose, Type } from 'class-transformer';
 import { Localize } from 'src/i18n';
 
-import { VariantDTO } from 'src/products/dtos/user';
+import { ProductDTO, VariantDTO } from 'src/products';
+
+class VariantWithProductDTO extends VariantDTO {
+  @Expose()
+  @Type(() => ProductDTO)
+  product: ProductDTO;
+}
 
 export class FeaturedVariantDTO {
   @Expose()
@@ -9,6 +15,6 @@ export class FeaturedVariantDTO {
   title: string;
 
   @Expose()
-  @Type(() => VariantDTO)
-  variant: VariantDTO;
+  @Type(() => VariantWithProductDTO)
+  variant: VariantWithProductDTO;
 }

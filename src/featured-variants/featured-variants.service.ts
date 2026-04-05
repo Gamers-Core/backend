@@ -26,11 +26,18 @@ export class FeaturedVariantsService {
     });
 
     const variantIds = featuredVariants.map(({ variant }) => variant.id);
-    const media = await this.attachmentService.getBulkMedia(variantIds, 'variant');
+    const variantMedia = await this.attachmentService.getBulkMedia(variantIds, 'variant');
+
+    const variantProductIds = featuredVariants.map(({ variant }) => variant.product.id);
+    const variantProductMedia = await this.attachmentService.getBulkMedia(variantProductIds, 'product');
 
     return featuredVariants.map((featured) => ({
       ...featured,
-      variant: { ...featured.variant, media: media[featured.variant.id] ?? [] },
+      variant: {
+        ...featured.variant,
+        media: variantMedia[featured.variant.id] ?? [],
+        product: { ...featured.variant.product, media: variantProductMedia[featured.variant.product.id] ?? [] },
+      },
     }));
   }
 
@@ -138,8 +145,15 @@ export class FeaturedVariantsService {
         { entityId: featured.variant.id, entityType: 'variant' },
         attachmentRepo,
       );
+      const productMedia = await this.attachmentService.getMedia(
+        { entityId: featured.variant.product.id, entityType: 'product' },
+        attachmentRepo,
+      );
 
-      return { ...featured, variant: { ...featured.variant, media } };
+      return {
+        ...featured,
+        variant: { ...featured.variant, media, product: { ...featured.variant.product, media: productMedia } },
+      };
     });
   }
 }

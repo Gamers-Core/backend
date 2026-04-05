@@ -60,7 +60,7 @@ export class VariantsService {
       const normalized = this.normalize([variant, ...remainingVariants]);
       const savedVariants = await variantRepository.save(normalized);
 
-      if (mediaIds != null)
+      if (mediaIds)
         await this.attachmentService.sync({ entityId: variantId, entityType: 'variant', mediaIds }, manager);
 
       return savedVariants.find(({ id }) => id === variantId)!;

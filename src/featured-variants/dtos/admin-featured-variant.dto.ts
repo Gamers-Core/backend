@@ -1,8 +1,13 @@
 import { Expose, Type } from 'class-transformer';
 
-import { AdminVariantDTO } from 'src/products';
-
+import { AdminProductDTO, AdminVariantDTO } from 'src/products';
 import { type Localized } from 'src/i18n';
+
+class AdminVariantWithProductDTO extends AdminVariantDTO {
+  @Expose()
+  @Type(() => AdminProductDTO)
+  product: AdminProductDTO;
+}
 
 export class AdminFeaturedVariantDTO {
   @Expose()
@@ -15,6 +20,6 @@ export class AdminFeaturedVariantDTO {
   title: Localized;
 
   @Expose()
-  @Type(() => AdminVariantDTO)
-  variant: AdminVariantDTO;
+  @Type(() => AdminVariantWithProductDTO)
+  variant: AdminVariantWithProductDTO;
 }
