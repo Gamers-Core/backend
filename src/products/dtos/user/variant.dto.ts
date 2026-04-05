@@ -15,9 +15,6 @@ export class VariantDTO {
   price: number;
 
   @Expose()
-  costPerItem: number;
-
-  @Expose()
   compareAt: number | null;
 
   @Expose()
