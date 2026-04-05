@@ -68,7 +68,7 @@ export class FeaturedVariantsService {
         }),
       );
 
-      return this.findOneWithRelationsOrFail(saved.id);
+      return this.findOneWithRelationsOrFail(saved.id, manager);
     });
   }
 
