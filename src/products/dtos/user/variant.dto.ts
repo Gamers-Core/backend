@@ -18,6 +18,9 @@ export class VariantDTO {
   compareAt: number | null;
 
   @Expose()
+  stock: number;
+
+  @Expose()
   @Type(() => MediaAttachmentDTO)
   media: MediaAttachmentDTO[];
 }
