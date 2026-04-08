@@ -40,11 +40,11 @@ export class Product {
   })
   variants: Variant[];
 
-  @ManyToOne(() => Category, (category) => category.products)
+  @ManyToOne(() => Category, (c) => c.products, { nullable: false, onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'categoryId' })
   category: Category;
 
-  @ManyToOne(() => Brand, (brand) => brand.products)
+  @ManyToOne(() => Brand, (brand) => brand.products, { nullable: false, onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'brandId' })
   brand: Brand;
 
