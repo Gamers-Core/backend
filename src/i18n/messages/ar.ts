@@ -26,6 +26,9 @@ export default {
   'media.saveFailed': 'فشل في حفظ سجل الوسائط',
 
   'products.brandNotFound': 'العلامة التجارية غير موجودة',
+  'products.categoryNotFound': 'الفئة غير موجودة',
+  'products.categoryHasProducts': 'لا يمكن حذف الفئة التي تحتوي على منتجات مرتبطة',
+  'products.brandHasProducts': 'لا يمكن حذف العلامة التجارية التي تحتوي على منتجات مرتبطة',
   'products.productNotFound': 'المنتج غير موجود',
   'products.variantNotFound': 'المتغير غير موجود',
   'products.requiredAmountMin': 'الكمية المطلوبة يجب أن تكون 1 على الأقل',

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Brand } from 'src/entity';
-import { NotFoundException } from 'src/common';
+import { BadRequestException, NotFoundException } from 'src/common';
 
 import { AddBrandDTO, UpdateBrandDTO } from './dtos';
 
@@ -37,9 +37,19 @@ export class BrandsService {
   }
 
   async delete(id: number) {
-    const brand = await this.getOne(id);
+    const brand = await this.findOneWithProductsOrFail(id);
+
+    if (brand.products.length) throw new BadRequestException('products.brandHasProducts');
+
     await this.repo.remove(brand);
 
     return { deleted: true };
+  }
+
+  async findOneWithProductsOrFail(id: number, repo = this.repo) {
+    const brand = await repo.findOne({ where: { id }, relations: { products: true } });
+    if (!brand) throw new NotFoundException('products.brandNotFound');
+
+    return brand;
   }
 }
