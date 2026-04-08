@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, In, Repository } from 'typeorm';
 
 import { Brand, Category, Product, Variant } from 'src/entity';
 import { MediaAttachmentService } from 'src/media';
 import { NotFoundException } from 'src/common';
 
 import { CreateProductDTO, UpdateProductDTO } from '../dtos/admin';
-import { productFullRelations } from '../relations';
+import { productBrandCategoryRelations, productFullRelations } from '../relations';
 import { VariantsService } from './variants.service';
 
 @Injectable()
@@ -47,23 +47,7 @@ export class ProductsService {
       relations: productFullRelations,
     });
 
-    const variantIds = products.flatMap((product) => product.variants.map((variant) => variant.id));
-
-    const [mediaMap, variantMediaMap] = await Promise.all([
-      this.mediaAttachmentService.getBulkMedia(
-        products.map(({ id }) => id),
-        'product',
-      ),
-      this.mediaAttachmentService.getBulkMedia(variantIds, 'variant'),
-    ]);
-
-    const productsWithMedia = products.map((product) => {
-      const variants = product.variants.map((variant) => ({ ...variant, media: variantMediaMap[variant.id] ?? [] }));
-
-      return { ...product, variants, media: mediaMap[product.id] ?? [] };
-    });
-
-    return productsWithMedia;
+    return this.attachMediaToProducts(products);
   }
 
   async findOne(id: number) {
@@ -114,14 +98,14 @@ export class ProductsService {
     });
   }
 
-  async getRecommendations(productId: number): Promise<Product[]> {
-    const product = await this.findOneOrFail(productId);
+  async getRecommendations(productId: number) {
+    const product = await this.findOneForRecommendationsOrFail(productId);
 
-    const recommendations = await this.productsRepository
+    const recommendationRows = await this.productsRepository
       .createQueryBuilder('product')
-      .leftJoinAndSelect('product.variants', 'variant')
-      .leftJoinAndSelect('product.brand', 'brand')
-      .leftJoinAndSelect('product.category', 'category')
+      .select('product.id', 'id')
+      .leftJoin('product.brand', 'brand')
+      .leftJoin('product.category', 'category')
       .where('product.id != :productId', { productId })
       .andWhere('product.status = :status', { status: 'active' })
       .andWhere(
@@ -136,10 +120,10 @@ export class ProductsService {
           .subQuery()
           .select('1')
           .from(Variant, 'v')
-          .where('"v"."product_id" = "product"."id"')
-          .andWhere('"v"."is_active" = :active', { active: true })
-          .andWhere('"v"."stock" > 0')
-          .andWhere('"v"."deleted_at" IS NULL')
+          .where('v.product = product.id')
+          .andWhere('v.isActive = :active', { active: true })
+          .andWhere('v.stock > 0')
+          .andWhere('v.deletedAt IS NULL')
           .getQuery();
         return `EXISTS ${sub}`;
       })
@@ -153,32 +137,67 @@ export class ProductsService {
     `,
         'ASC',
       )
-      .addOrderBy('RANDOM()')
-      .limit(4)
-      .getMany();
+      .addOrderBy('product.updatedAt', 'DESC')
+      .limit(10)
+      .getRawMany<{ id: string }>();
 
-    const media = await this.mediaAttachmentService.getBulkMedia(
-      recommendations.map(({ id }) => id),
-      'product',
+    const recommendationIds = this.pickRandom(
+      recommendationRows.map(({ id }) => Number(id)),
+      4,
     );
 
-    return recommendations.map((recommendation) => ({ ...recommendation, media: media[recommendation.id] ?? [] }));
+    if (!recommendationIds.length) return [];
+
+    const recommendations = await this.productsRepository.find({
+      where: { id: In(recommendationIds) },
+      relations: productFullRelations,
+    });
+
+    const recommendationsById = new Map(recommendations.map((item) => [item.id, item]));
+    const orderedRecommendations = recommendationIds
+      .map((id) => recommendationsById.get(id))
+      .filter((item): item is Product => !!item);
+
+    return this.attachMediaToProducts(orderedRecommendations);
+  }
+
+  private pickRandom<T>(items: T[], count: number): T[] {
+    const shuffled = [...items];
+
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    return shuffled.slice(0, count);
   }
 
   private async findOneWithMediaOrFail(id: number, productRepository: Repository<Product> = this.productsRepository) {
     const product = await this.findOneOrFail(id, productRepository);
 
-    const [media, variantMediaMap] = await Promise.all([
-      this.mediaAttachmentService.getMedia({ entityId: product.id, entityType: 'product' }),
+    const [productWithMedia] = await this.attachMediaToProducts([product]);
+
+    return productWithMedia;
+  }
+
+  private async attachMediaToProducts(products: Product[]) {
+    if (!products.length) return [];
+
+    const variantIds = products.flatMap((product) => product.variants.map((variant) => variant.id));
+
+    const [mediaMap, variantMediaMap] = await Promise.all([
       this.mediaAttachmentService.getBulkMedia(
-        product.variants.map(({ id }) => id),
-        'variant',
+        products.map(({ id }) => id),
+        'product',
       ),
+      this.mediaAttachmentService.getBulkMedia(variantIds, 'variant'),
     ]);
 
-    const variants = product.variants.map((variant) => ({ ...variant, media: variantMediaMap[variant.id] ?? [] }));
+    return products.map((product) => {
+      const variants = product.variants.map((variant) => ({ ...variant, media: variantMediaMap[variant.id] ?? [] }));
 
-    return { ...product, variants, media };
+      return { ...product, variants, media: mediaMap[product.id] ?? [] };
+    });
   }
 
   private async findOneOrFail(
@@ -188,6 +207,17 @@ export class ProductsService {
     const product = await productRepository.findOne({
       where: { id },
       relations: productFullRelations,
+    });
+
+    if (!product) throw new NotFoundException('products.productNotFound');
+
+    return product;
+  }
+
+  private async findOneForRecommendationsOrFail(id: number): Promise<Product> {
+    const product = await this.productsRepository.findOne({
+      where: { id },
+      relations: productBrandCategoryRelations,
     });
 
     if (!product) throw new NotFoundException('products.productNotFound');
