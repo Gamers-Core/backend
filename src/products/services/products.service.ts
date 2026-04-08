@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 
 import { Brand, Category, Product, Variant } from 'src/entity';
 import { MediaAttachmentService } from 'src/media';
@@ -112,6 +112,57 @@ export class ProductsService {
 
       await productRepo.delete(id);
     });
+  }
+
+  async getRecommendations(productId: number): Promise<Product[]> {
+    const product = await this.findOneOrFail(productId);
+
+    const recommendations = await this.productsRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.variants', 'variant')
+      .leftJoinAndSelect('product.brand', 'brand')
+      .leftJoinAndSelect('product.category', 'category')
+      .where('product.id != :productId', { productId })
+      .andWhere('product.status = :status', { status: 'active' })
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('brand.id = :brandId', { brandId: product.brand.id }).orWhere('category.id = :categoryId', {
+            categoryId: product.category.id,
+          });
+        }),
+      )
+      .andWhere((qb) => {
+        const sub = qb
+          .subQuery()
+          .select('1')
+          .from(Variant, 'v')
+          .where('"v"."product_id" = "product"."id"')
+          .andWhere('"v"."is_active" = :active', { active: true })
+          .andWhere('"v"."stock" > 0')
+          .andWhere('"v"."deleted_at" IS NULL')
+          .getQuery();
+        return `EXISTS ${sub}`;
+      })
+      .orderBy(
+        `
+      CASE
+        WHEN brand.id = :brandId AND category.id = :categoryId THEN 0
+        WHEN brand.id = :brandId OR category.id = :categoryId THEN 1
+        ELSE 2
+      END
+    `,
+        'ASC',
+      )
+      .addOrderBy('RANDOM()')
+      .limit(4)
+      .getMany();
+
+    const media = await this.mediaAttachmentService.getBulkMedia(
+      recommendations.map(({ id }) => id),
+      'product',
+    );
+
+    return recommendations.map((recommendation) => ({ ...recommendation, media: media[recommendation.id] ?? [] }));
   }
 
   private async findOneWithMediaOrFail(id: number, productRepository: Repository<Product> = this.productsRepository) {
