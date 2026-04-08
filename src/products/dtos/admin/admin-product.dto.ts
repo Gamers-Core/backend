@@ -2,8 +2,9 @@ import { Expose, Type } from 'class-transformer';
 
 import { AdminMediaAttachmentDTO } from 'src/media';
 import type { Localized } from 'src/i18n';
+import { AdminBrandDTO } from 'src/brands';
+import { AdminCategoryDTO } from 'src/categories';
 
-import { AdminBrandDTO } from './admin-brand.dto';
 import { AdminVariantDTO } from './admin-variant.dto';
 
 export class AdminProductDTO {
@@ -32,7 +33,11 @@ export class AdminProductDTO {
 
   @Expose()
   @Type(() => AdminBrandDTO)
-  brand: AdminBrandDTO | null;
+  brand: AdminBrandDTO;
+
+  @Expose()
+  @Type(() => AdminCategoryDTO)
+  category: AdminCategoryDTO;
 
   @Expose()
   createdAt: Date;

@@ -3,8 +3,6 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  JoinTable,
-  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -42,16 +40,13 @@ export class Product {
   })
   variants: Variant[];
 
-  @ManyToMany(() => Category, (category) => category.products)
-  @JoinTable()
-  categories: Category[];
+  @ManyToOne(() => Category, (category) => category.products)
+  @JoinColumn({ name: 'categoryId' })
+  category: Category;
 
-  @ManyToOne(() => Brand, (brand) => brand.products, {
-    nullable: true,
-    onDelete: 'SET NULL',
-  })
+  @ManyToOne(() => Brand, (brand) => brand.products)
   @JoinColumn({ name: 'brandId' })
-  brand: Brand | null;
+  brand: Brand;
 
   @CreateDateColumn()
   createdAt: Date;

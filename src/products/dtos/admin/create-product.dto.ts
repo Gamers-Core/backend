@@ -33,8 +33,11 @@ export class CreateProductDTO {
   @IsLocalized()
   description: Localized;
 
-  @IsOptional()
   @IsInt()
   @Min(1)
-  brandId?: number;
+  brandId: number;
+
+  @IsInt()
+  @Min(1)
+  categoryId: number;
 }

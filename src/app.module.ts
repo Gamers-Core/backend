@@ -25,6 +25,7 @@ import { CartModule } from './cart';
 import { FeaturedVariantsModule } from './featured-variants';
 import { UserReviewsModule } from './user-reviews';
 import { BrandsModule } from './brands';
+import { CategoriesModule } from './categories';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { BrandsModule } from './brands';
     FeaturedVariantsModule,
     UserReviewsModule,
     BrandsModule,
+    CategoriesModule,
     RedisModule,
     CloudinaryModule,
     I18nModule,

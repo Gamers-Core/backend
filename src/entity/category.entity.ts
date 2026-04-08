@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 import { type Localized } from 'src/i18n';
 import { parse } from 'src/common';
@@ -14,6 +14,6 @@ export class Category {
   @Column('jsonb', { transformer: parse })
   name: Localized;
 
-  @ManyToMany(() => Product, (product) => product.categories)
+  @OneToMany(() => Product, (product) => product.category)
   products: Product[];
 }
