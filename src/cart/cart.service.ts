@@ -4,6 +4,7 @@ import { EntityManager, QueryFailedError, Repository } from 'typeorm';
 
 import { Cart, CartItem, Variant } from 'src/entity';
 import { InventoryService } from 'src/products';
+import { cartItemRelations, cartRelations } from 'src/products';
 import { withOptionalManager, BadRequestException, NotFoundException } from 'src/common';
 
 import { CreateCartItemDTO, UpdateCartItemDTO } from './dtos';
@@ -21,7 +22,7 @@ export class CartService {
 
       const cart = await cartRepo.findOne({
         where: { user: { id: userId } },
-        relations: { items: { variant: { product: true } } },
+        relations: cartRelations,
       });
       if (!cart) {
         const newCart = cartRepo.create({ user: { id: userId }, items: [] });
@@ -89,7 +90,7 @@ export class CartService {
 
       const cartItem = await cartItemRepo.findOne({
         where: { id, cart: { id: cart.id } },
-        relations: { variant: { product: true } },
+        relations: cartItemRelations,
       });
       if (!cartItem) throw new NotFoundException('cart.itemNotFound');
 

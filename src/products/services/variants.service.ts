@@ -7,6 +7,7 @@ import { MediaAttachmentService } from 'src/media';
 import { BadRequestException, NotFoundException, withOptionalManager } from 'src/common';
 
 import { CreateVariantDTO, UpdateVariantDTO } from '../dtos/admin';
+import { variantWithProductFullRelations } from '../relations';
 
 @Injectable()
 export class VariantsService {
@@ -89,7 +90,7 @@ export class VariantsService {
 
     const variant = await variantRepository.findOne({
       where: { id: variantId, product: { id: productId } },
-      relations: { product: { variants: true } },
+      relations: variantWithProductFullRelations,
     });
     if (!variant) throw new NotFoundException('products.variantNotFound');
 

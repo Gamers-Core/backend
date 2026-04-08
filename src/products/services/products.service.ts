@@ -7,6 +7,7 @@ import { MediaAttachmentService } from 'src/media';
 import { NotFoundException } from 'src/common';
 
 import { CreateProductDTO, UpdateProductDTO } from '../dtos/admin';
+import { productFullRelations } from '../relations';
 import { VariantsService } from './variants.service';
 
 @Injectable()
@@ -43,7 +44,7 @@ export class ProductsService {
   async findAll() {
     const products = await this.productsRepository.find({
       order: { createdAt: 'DESC' },
-      relations: { variants: true, brand: true, category: true },
+      relations: productFullRelations,
     });
 
     const variantIds = products.flatMap((product) => product.variants.map((variant) => variant.id));
@@ -135,7 +136,7 @@ export class ProductsService {
   ): Promise<Product> {
     const product = await productRepository.findOne({
       where: { id },
-      relations: { variants: true, brand: true, category: true },
+      relations: productFullRelations,
     });
 
     if (!product) throw new NotFoundException('products.productNotFound');
