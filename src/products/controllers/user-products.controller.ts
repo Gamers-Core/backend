@@ -8,18 +8,22 @@ import { ProductsService } from '../services';
 
 @Controller('products')
 @Serialize(ProductDTO)
+@Public()
 export class UserProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
-  @Public()
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.productsService.findOne(id);
   }
 
-  @Public()
   @Get()
   findAll() {
     return this.productsService.findAll();
+  }
+
+  @Get(':id/recommendations')
+  getRecommendations(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.getRecommendations(id);
   }
 }

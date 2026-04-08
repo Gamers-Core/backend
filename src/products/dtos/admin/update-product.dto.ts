@@ -31,4 +31,9 @@ export class UpdateProductDTO {
   @IsInt()
   @Min(1)
   brandId?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  categoryId?: number;
 }

@@ -2,8 +2,9 @@ import { Expose, Type } from 'class-transformer';
 
 import { Localize } from 'src/i18n';
 import { MediaAttachmentDTO } from 'src/media';
+import { BrandDTO } from 'src/brands';
+import { CategoryDTO } from 'src/categories';
 
-import { BrandDTO } from './brand.dto';
 import { VariantDTO } from './variant.dto';
 
 export class ProductDTO {
@@ -32,5 +33,9 @@ export class ProductDTO {
 
   @Expose()
   @Type(() => BrandDTO)
-  brand: BrandDTO | null;
+  brand: BrandDTO;
+
+  @Expose()
+  @Type(() => CategoryDTO)
+  category: CategoryDTO;
 }

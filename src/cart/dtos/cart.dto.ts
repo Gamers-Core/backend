@@ -1,6 +1,8 @@
 import { Expose, Transform, Type } from 'class-transformer';
 
 import { Localize } from 'src/i18n';
+import { BrandDTO } from 'src/brands';
+import { CategoryDTO } from 'src/categories';
 
 class CartProductDTO {
   @Expose()
@@ -8,7 +10,19 @@ class CartProductDTO {
 
   @Expose()
   @Localize()
+  name: string;
+
+  @Expose()
+  @Localize()
   title: string;
+
+  @Expose()
+  @Type(() => BrandDTO)
+  brand: BrandDTO;
+
+  @Expose()
+  @Type(() => CategoryDTO)
+  category: CategoryDTO;
 }
 
 class CartProductVariantDTO {

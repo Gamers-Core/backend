@@ -173,7 +173,11 @@ export class MediaAttachmentService {
     return validAttachments;
   }
 
-  async getBulkMedia(entityIds: number[], entityType: MediaEntityType, attachmentRepo = this.attachmentRepo) {
+  async getBulkMedia(
+    entityIds: number[],
+    entityType: MediaEntityType,
+    attachmentRepo = this.attachmentRepo,
+  ): Promise<Record<number, MediaAttachment[]>> {
     if (!entityIds.length) return {};
 
     const attachments = await attachmentRepo.find({

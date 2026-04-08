@@ -26,6 +26,9 @@ export default {
   'media.saveFailed': 'Failed to save media record',
 
   'products.brandNotFound': 'Brand not found',
+  'products.categoryNotFound': 'Category not found',
+  'products.categoryHasProducts': 'Cannot delete category with associated products',
+  'products.brandHasProducts': 'Cannot delete brand with associated products',
   'products.productNotFound': 'Product not found',
   'products.variantNotFound': 'Variant not found',
   'products.requiredAmountMin': 'requiredAmount must be at least 1',

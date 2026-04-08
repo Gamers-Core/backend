@@ -5,6 +5,7 @@ import { EntityManager, IsNull, Repository } from 'typeorm';
 import { FeaturedVariant, MediaAttachment, Variant } from 'src/entity';
 import { BadRequestException, ConflictException, NotFoundException, withOptionalManager } from 'src/common';
 import { MediaAttachmentService } from 'src/media';
+import { featuredVariantRelations } from 'src/products';
 
 import { AddFeaturedVariantDTO, UpdateFeaturedVariantDTO } from './dtos';
 
@@ -21,7 +22,7 @@ export class FeaturedVariantsService {
   async getAll() {
     const featuredVariants = await this.repo.find({
       order: { position: 'ASC' },
-      relations: { variant: { product: true } },
+      relations: featuredVariantRelations,
       where: { variant: { deletedAt: IsNull() } },
     });
 
@@ -103,7 +104,7 @@ export class FeaturedVariantsService {
 
   async reorder(orderedIds: number[]) {
     const featured = await this.repo.find({
-      relations: { variant: { product: true } },
+      relations: featuredVariantRelations,
       where: { variant: { deletedAt: IsNull() } },
       order: { position: 'ASC' },
     });
@@ -136,7 +137,7 @@ export class FeaturedVariantsService {
 
       const featured = await repo.findOne({
         where: { id, variant: { deletedAt: IsNull() } },
-        relations: { variant: { product: true } },
+        relations: featuredVariantRelations,
       });
 
       if (!featured) throw new NotFoundException('featuredVariants.notFound');
