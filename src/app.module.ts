@@ -6,6 +6,8 @@ import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 
 import { getDataSourceOptions } from 'datasource';
 
+import { GlobalExceptionFilter, ValidationException } from './common';
+import { I18nModule, LocaleContextMiddleware } from './i18n';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthGuard } from './guards';
@@ -21,9 +23,8 @@ import { MediaModule } from './media';
 import { OrdersModule } from './orders';
 import { CartModule } from './cart';
 import { FeaturedVariantsModule } from './featured-variants';
-import { GlobalExceptionFilter, ValidationException } from './common';
-import { I18nModule, LocaleContextMiddleware } from './i18n';
 import { UserReviewsModule } from './user-reviews';
+import { BrandsModule } from './brands';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { UserReviewsModule } from './user-reviews';
     CartModule,
     FeaturedVariantsModule,
     UserReviewsModule,
+    BrandsModule,
     RedisModule,
     CloudinaryModule,
     I18nModule,
