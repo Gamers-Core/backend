@@ -7,7 +7,7 @@ export class BasicUserDTO {
   id: number;
 
   @Expose()
-  name: string;
+  name: string | null;
 
   @Expose()
   email: string;
