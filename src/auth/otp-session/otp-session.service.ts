@@ -4,7 +4,7 @@ import Redis from 'ioredis';
 
 import { REDIS_CLIENT } from 'src/redis';
 import { MailService } from 'src/mail';
-import { BadRequestException } from 'src/common';
+import { BadRequestException, withEnvironment } from 'src/common';
 
 import {
   OTP_DEFAULT_MAX_ATTEMPTS,
@@ -76,7 +76,9 @@ export class OtpSessionService {
       .expire(key, ttlSeconds)
       .exec();
 
-    await this.mailService.sendTypedMail(email, purpose, { otp }, locale);
+    await withEnvironment(['production'], async (isValid) => {
+      if (isValid) await this.mailService.sendTypedMail(email, purpose, { otp }, locale);
+    });
 
     return { sessionId };
   }
@@ -94,11 +96,14 @@ export class OtpSessionService {
       throw new BadRequestException('auth.otp.tooManyAttempts');
     }
 
-    const isValid = await compareHashedOtp(otp, session.otp);
-    if (!isValid) {
-      await this.redis.hincrby(key, 'otp_attempts', 1);
-      throw new BadRequestException('auth.otp.invalid');
-    }
+    await withEnvironment(['production'], async (isValid) => {
+      if (!isValid) return;
+
+      if (!(await compareHashedOtp(otp, session.otp))) {
+        await this.redis.hincrby(key, 'otp_attempts', 1);
+        throw new BadRequestException('auth.otp.invalid');
+      }
+    });
 
     await this.redis.del(key);
 

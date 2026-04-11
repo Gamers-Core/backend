@@ -1,4 +1,4 @@
-import { IsNumberString, IsString } from 'class-validator';
+import { IsNumberString, IsString, MaxLength, MinLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class VerifyOTPDTO {
@@ -7,5 +7,7 @@ export class VerifyOTPDTO {
 
   @Transform(({ value }) => `${value}`)
   @IsNumberString({ no_symbols: true })
+  @MinLength(6)
+  @MaxLength(6)
   otp: string;
 }

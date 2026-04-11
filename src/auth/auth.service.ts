@@ -18,40 +18,35 @@ export class AuthService {
 
   private readonly otpVerifyHandlers: OtpVerifyHandlers = {
     signin: async (email) => {
-      const [user] = await this.usersService.find(email);
+      let [user] = await this.usersService.find(email);
+      let isNewUser = false;
 
       if (!user) {
-        const newUser = await this.usersService.create(email);
-        return { user: newUser, isNewUser: true };
+        user = await this.usersService.create(email);
+
+        isNewUser = true;
       }
 
-      return { user, isNewUser: false };
+      return { user, isNewUser };
     },
   };
 
   async signin({ email }: SigninDTO) {
     return await this.otpSessionService.createSession(
-      {
-        purpose: 'signin',
-        email,
-        data: undefined,
-      },
+      { purpose: 'signin', email, data: undefined },
       this.localeContext.locale,
     );
   }
 
   async verifyOTP<P extends AuthPurpose>({ sessionId, otp }: VerifyOTPDTO): Promise<OtpVerifyResultByPurpose<P>> {
-    const [email, purpose, data] = await this.otpSessionService.verifySession<P>({
-      sessionId,
-      otp,
-    });
+    const [email, purpose, data] = await this.otpSessionService.verifySession<P>({ sessionId, otp });
 
     return this.otpVerifyHandlers[purpose](email, data);
   }
 
   async resendOTP({ sessionId }: ResendOTPDTO, locale?: Locale) {
-    return withEnvironment(['local', 'development', 'staging'], async (isValid) => {
-      if (isValid) return;
+    return withEnvironment(['production'], async (isValid) => {
+      if (!isValid) return;
 
       return this.otpSessionService.resendSession({ sessionId }, locale);
     });
