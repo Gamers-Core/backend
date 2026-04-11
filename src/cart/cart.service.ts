@@ -32,7 +32,10 @@ export class CartService {
           .catch(async (error) => {
             if (!isUniqueViolation(error)) throw error;
 
-            return cartRepo.findOneOrFail({ where: { user: { id: userId } } });
+            return cartRepo.findOneOrFail({
+              where: { user: { id: userId } },
+              relations: cartRelations,
+            });
           });
 
         return newCart;
