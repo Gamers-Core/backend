@@ -10,22 +10,19 @@ export interface OTPAuthSession<P extends AuthPurpose> {
   otpLastSentAt: number;
 }
 
-export interface CreateSessionOptions<P extends AuthPurpose> {
+export type CreateSessionOptions<P extends AuthPurpose> = {
   purpose: P;
   email: string;
-  data: OtpDataByPurpose<P>;
   ttlSeconds?: number;
-}
+} & (OtpDataByPurpose<P> extends undefined ? { data?: never } : { data: OtpDataByPurpose<P> });
 
-export interface VerifySessionOptions<P extends AuthPurpose> {
-  purpose: P;
+export interface VerifySessionOptions {
   sessionId: string;
   otp: string;
   maxAttempts?: number;
 }
 
-export interface ResendSessionOptions<P extends AuthPurpose> {
-  purpose: P;
+export interface ResendSessionOptions {
   sessionId: string;
   maxResends?: number;
   minResendIntervalMs?: number;

@@ -19,14 +19,11 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  name: string;
+  @Column('varchar', { nullable: true })
+  name: string | null;
 
   @Column({ unique: true })
   email: string;
-
-  @Column()
-  password: string;
 
   @Column({ default: false })
   isAdmin: boolean;

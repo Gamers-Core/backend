@@ -1,17 +1,13 @@
-import { IsIn, IsNumberString, IsString } from 'class-validator';
+import { IsNumberString, IsString, MaxLength, MinLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 
-import { authPurposes } from '../const';
-import type { AuthPurpose } from '../types';
-
-export class VerifyOTPDTO<T extends AuthPurpose = AuthPurpose> {
-  @IsIn(authPurposes)
-  purpose: T;
-
+export class VerifyOTPDTO {
   @IsString()
   sessionId: string;
 
   @Transform(({ value }) => `${value}`)
   @IsNumberString({ no_symbols: true })
+  @MinLength(6)
+  @MaxLength(6)
   otp: string;
 }

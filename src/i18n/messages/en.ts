@@ -67,10 +67,8 @@ export default {
   'bosta.unavailable': 'Shipping service is temporarily unavailable',
 
   'mail.supportTitle': 'Gamers Core Support',
-  'mail.resetPassword.subject': 'Password Reset Code',
-  'mail.resetPassword.body': 'Your password reset code is',
-  'mail.signup.subject': 'Account Verification Code',
-  'mail.signup.body': 'Your account verification code is',
+  'mail.signin.subject': 'Account Verification Code',
+  'mail.signin.body': 'Your account verification code is',
   'mail.orderConfirmation.subject': 'Order Confirmation - {orderNumber}',
   'mail.orderConfirmation.header': 'Order Confirmation',
   'mail.orderConfirmation.thanksReceipt': "Thanks for your order! Here's your receipt:",

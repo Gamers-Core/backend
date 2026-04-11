@@ -1,19 +1,10 @@
-import { Body, Controller, Get, Post, Session } from '@nestjs/common';
+import { Body, Controller, Post, Session } from '@nestjs/common';
 
 import { Serialize } from 'src/interceptors';
 import { CurrentUser } from 'src/users';
 import { User } from 'src/entity';
 
-import {
-  AuthUserDTO,
-  CreateUserDTO,
-  ForgotPasswordDTO,
-  IsLoggedInDTO,
-  LoginUserDTO,
-  OtpDTO,
-  ResendOTPDTO,
-  VerifyOTPDTO,
-} from './dtos';
+import { OtpDTO, ResendOTPDTO, SigninDTO, VerifyOTPDTO, VerifyOtpResponseDTO } from './dtos';
 import { AuthService } from './auth.service';
 import { Public } from './decorators';
 import type { AuthSession } from './types';
@@ -23,13 +14,6 @@ import type { AuthSession } from './types';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Serialize(IsLoggedInDTO)
-  @Get()
-  isLoggedIn(@CurrentUser() user: User) {
-    return { isLoggedIn: !!user };
-  }
-
-  @Serialize(IsLoggedInDTO)
   @Post('logout')
   logout(@Session() session: AuthSession) {
     session.userId = null;
@@ -38,33 +22,19 @@ export class AuthController {
   }
 
   @Serialize(OtpDTO)
-  @Post('signup')
-  async signup(@Body() body: CreateUserDTO) {
-    return await this.authService.signup(body);
+  @Post('signin')
+  async signin(@Session() session: AuthSession, @Body() body: SigninDTO) {
+    if (session.userId) this.logout(session);
+
+    return await this.authService.signin(body);
   }
 
-  @Serialize(AuthUserDTO)
-  @Post('login')
-  async login(@Body() body: LoginUserDTO, @Session() session: AuthSession) {
-    const user = await this.authService.login(body);
-
-    session.userId = user.id;
-
-    return user;
-  }
-
-  @Serialize(OtpDTO)
-  @Post('forgot-password')
-  async forgotPassword(@Body() body: ForgotPasswordDTO) {
-    return await this.authService.forgotPassword(body);
-  }
-
-  @Serialize(AuthUserDTO)
+  @Serialize(VerifyOtpResponseDTO)
   @Post('verify-otp')
   async verifyOTP(@Body() body: VerifyOTPDTO, @Session() session: AuthSession) {
     const result = await this.authService.verifyOTP(body);
 
-    if (result instanceof User) session.userId = result.id;
+    if ('user' in result) session.userId = result.user.id;
 
     return result;
   }
