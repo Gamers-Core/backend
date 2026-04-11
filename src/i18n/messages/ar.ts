@@ -67,10 +67,8 @@ export default {
   'bosta.unavailable': 'خدمة الشحن غير متاحة مؤقتاً',
 
   'mail.supportTitle': 'دعم Gamers Core',
-  'mail.resetPassword.subject': 'رمز إعادة تعيين كلمة المرور',
-  'mail.resetPassword.body': 'رمز إعادة تعيين كلمة المرور الخاص بك هو',
-  'mail.signup.subject': 'رمز تفعيل الحساب',
-  'mail.signup.body': 'رمز تفعيل حسابك هو',
+  'mail.signin.subject': 'رمز تفعيل الحساب',
+  'mail.signin.body': 'رمز تفعيل حسابك هو',
   'mail.orderConfirmation.subject': 'تأكيد الطلب - {orderNumber}',
   'mail.orderConfirmation.header': 'تأكيد الطلب',
   'mail.orderConfirmation.thanksReceipt': 'شكراً لطلبك! إليك تفاصيل الإيصال:',

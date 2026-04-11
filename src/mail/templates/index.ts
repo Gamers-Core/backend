@@ -7,7 +7,7 @@ export const mailTemplates: MailTemplatesMap = {
   signin: (t) => ({
     type: 'no-reply',
     title: t('mail.supportTitle'),
-    subject: t('mail.signup.subject'),
+    subject: t('mail.signin.subject'),
     html: renderSigninHtml,
   }),
   order_confirmation: (t, { orderNumber }) => ({
