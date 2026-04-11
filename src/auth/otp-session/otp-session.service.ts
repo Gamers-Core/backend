@@ -62,12 +62,14 @@ export class OtpSessionService {
     const hashedOtp = await generateHashedOtp(otp);
     const now = Date.now();
 
+    const sessionData = data ? { data: JSON.stringify(data) } : {};
+
     await this.redis
       .multi()
       .hset(key, {
         purpose,
         email,
-        data: JSON.stringify(data),
+        ...sessionData,
         otp: hashedOtp,
         otp_attempts: '0',
         otp_resend_count: '0',

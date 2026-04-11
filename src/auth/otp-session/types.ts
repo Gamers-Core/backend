@@ -10,12 +10,11 @@ export interface OTPAuthSession<P extends AuthPurpose> {
   otpLastSentAt: number;
 }
 
-export interface CreateSessionOptions<P extends AuthPurpose> {
+export type CreateSessionOptions<P extends AuthPurpose> = {
   purpose: P;
   email: string;
-  data: OtpDataByPurpose<P>;
   ttlSeconds?: number;
-}
+} & (OtpDataByPurpose<P> extends undefined ? { data?: never } : { data: OtpDataByPurpose<P> });
 
 export interface VerifySessionOptions {
   sessionId: string;

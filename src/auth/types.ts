@@ -14,7 +14,7 @@ export type OtpVerifyHandlers = {
 };
 
 export interface OtpDataMap {
-  signin?: never;
+  signin: undefined;
 }
 
 export interface OtpVerifyResultMap {
