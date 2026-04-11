@@ -1,21 +1,14 @@
 import { MailTemplatesMap } from '../types';
 import { renderOrderConfirmationHtml } from './order-confirmation.template';
 import { renderOrderReminderHtml } from './order-reminder.template';
-import { renderResetPasswordHtml } from './reset-password.template';
-import { renderSignupHtml } from './signup.template';
+import { renderSigninHtml } from './signin.template';
 
 export const mailTemplates: MailTemplatesMap = {
-  reset_password: (t) => ({
-    type: 'no-reply',
-    title: t('mail.supportTitle'),
-    subject: t('mail.resetPassword.subject'),
-    html: renderResetPasswordHtml,
-  }),
-  signup: (t) => ({
+  signin: (t) => ({
     type: 'no-reply',
     title: t('mail.supportTitle'),
     subject: t('mail.signup.subject'),
-    html: renderSignupHtml,
+    html: renderSigninHtml,
   }),
   order_confirmation: (t, { orderNumber }) => ({
     type: 'no-reply',
