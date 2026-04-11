@@ -23,13 +23,6 @@ import type { AuthSession } from './types';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Serialize(IsLoggedInDTO)
-  @Get()
-  isLoggedIn(@CurrentUser() user: User) {
-    return { isLoggedIn: !!user };
-  }
-
-  @Serialize(IsLoggedInDTO)
   @Post('logout')
   logout(@Session() session: AuthSession) {
     session.userId = null;
