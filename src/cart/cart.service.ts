@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, QueryFailedError, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 
 import { Cart, CartItem, Variant } from 'src/entity';
 import { InventoryService } from 'src/products';
@@ -8,6 +8,7 @@ import { cartItemRelations, cartRelations } from 'src/products';
 import { withOptionalManager, BadRequestException, NotFoundException } from 'src/common';
 
 import { CreateCartItemDTO, UpdateCartItemDTO } from './dtos';
+import { isUniqueViolation } from 'src/common/helpers';
 
 @Injectable()
 export class CartService {
@@ -24,9 +25,17 @@ export class CartService {
         where: { user: { id: userId } },
         relations: cartRelations,
       });
+
       if (!cart) {
-        const newCart = cartRepo.create({ user: { id: userId }, items: [] });
-        return await cartRepo.save(newCart);
+        const newCart = await cartRepo
+          .save(cartRepo.create({ user: { id: userId }, items: [] }))
+          .catch(async (error) => {
+            if (!isUniqueViolation(error)) throw error;
+
+            return cartRepo.findOneOrFail({ where: { user: { id: userId } } });
+          });
+
+        return newCart;
       }
 
       return cart;
@@ -59,8 +68,8 @@ export class CartService {
           quantity: item.quantity,
         });
 
-        await cartItemRepo.save(cartItem).catch(async (error: unknown) => {
-          if (!this.isUniqueConstraintError(error)) throw error;
+        await cartItemRepo.save(cartItem).catch(async (error) => {
+          if (!isUniqueViolation(error)) throw error;
 
           const concurrentItem = await cartItemRepo.findOne({
             where: {
@@ -120,17 +129,5 @@ export class CartService {
   private assertVariantStock(variant: Variant, requestedQuantity: number) {
     if (requestedQuantity > variant.stock)
       throw new BadRequestException(['cart.insufficientStock', { externalId: variant.externalId }]);
-  }
-
-  private isUniqueConstraintError(error: unknown) {
-    if (!(error instanceof QueryFailedError)) return false;
-
-    const driverError = error.driverError as { code?: string; message?: string } | undefined;
-
-    return (
-      driverError?.code === '23505' ||
-      driverError?.code === 'SQLITE_CONSTRAINT' ||
-      !!driverError?.message?.toLowerCase().includes('unique')
-    );
   }
 }

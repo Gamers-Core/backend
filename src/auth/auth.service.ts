@@ -17,18 +17,7 @@ export class AuthService {
   ) {}
 
   private readonly otpVerifyHandlers: OtpVerifyHandlers = {
-    signin: async (email) => {
-      let [user] = await this.usersService.find(email);
-      let isNewUser = false;
-
-      if (!user) {
-        user = await this.usersService.create(email);
-
-        isNewUser = true;
-      }
-
-      return { user, isNewUser };
-    },
+    signin: (email) => this.usersService.findOrCreate(email),
   };
 
   async signin({ email }: SigninDTO) {
