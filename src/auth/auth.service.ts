@@ -32,10 +32,7 @@ export class AuthService {
   };
 
   async signin({ email }: SigninDTO) {
-    return await this.otpSessionService.createSession(
-      { purpose: 'signin', email, data: undefined },
-      this.localeContext.locale,
-    );
+    return await this.otpSessionService.createSession({ purpose: 'signin', email }, this.localeContext.locale);
   }
 
   async verifyOTP<P extends AuthPurpose>({ sessionId, otp }: VerifyOTPDTO): Promise<OtpVerifyResultByPurpose<P>> {
@@ -45,7 +42,7 @@ export class AuthService {
   }
 
   async resendOTP({ sessionId }: ResendOTPDTO, locale?: Locale) {
-    return withEnvironment(['production'], async (isValid) => {
+    return withEnvironment(['staging', 'production'], async (isValid) => {
       if (!isValid) return;
 
       return this.otpSessionService.resendSession({ sessionId }, locale);

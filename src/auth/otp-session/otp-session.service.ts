@@ -76,8 +76,10 @@ export class OtpSessionService {
       .expire(key, ttlSeconds)
       .exec();
 
-    await withEnvironment(['production'], async (isValid) => {
-      if (isValid) await this.mailService.sendTypedMail(email, purpose, { otp }, locale);
+    await withEnvironment(['staging', 'production'], async (isValid) => {
+      if (!isValid) return;
+
+      await this.mailService.sendTypedMail(email, purpose, { otp }, locale);
     });
 
     return { sessionId };
@@ -96,7 +98,7 @@ export class OtpSessionService {
       throw new BadRequestException('auth.otp.tooManyAttempts');
     }
 
-    await withEnvironment(['production'], async (isValid) => {
+    await withEnvironment(['staging', 'production'], async (isValid) => {
       if (!isValid) return;
 
       if (!(await compareHashedOtp(otp, session.otp))) {
