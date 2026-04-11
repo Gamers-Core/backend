@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { compare } from 'bcrypt';
 import { randomBytes } from 'crypto';
 import Redis from 'ioredis';
 
@@ -13,7 +12,7 @@ import {
   OTP_DEFAULT_MIN_RESEND_INTERVAL_MS,
   OTP_DEFAULT_TTL_SECONDS,
 } from './const';
-import { generateHashedOtp, generateOtp, getSessionKey } from './helpers';
+import { compareHashedOtp, generateHashedOtp, generateOtp, getSessionKey } from './helpers';
 import { CreateSessionOptions, ResendSessionOptions, OTPAuthSession, VerifySessionOptions } from './types';
 import { AuthPurpose, OtpDataByPurpose } from '../types';
 import { Locale } from 'src/i18n';
@@ -25,23 +24,24 @@ export class OtpSessionService {
     private readonly mailService: MailService,
   ) {}
 
-  private async readSession<P extends AuthPurpose>(sessionId: string, expectedPurpose: P): Promise<OTPAuthSession<P>> {
+  private async readSession<P extends AuthPurpose>(sessionId: string): Promise<OTPAuthSession<P>> {
     const session = await this.redis.hgetall(getSessionKey(sessionId));
 
-    if (!session || !session.purpose || !session.email || !session.otp || !session.data)
+    if (!session || !session.purpose || !session.email || !session.otp)
       throw new BadRequestException('auth.otp.expired');
 
-    let parsedData: OtpDataByPurpose<P>;
-    try {
-      parsedData = JSON.parse(session.data) as OtpDataByPurpose<P>;
-    } catch {
-      throw new BadRequestException('auth.otp.expired');
+    let parsedData: OtpDataByPurpose<P> = undefined;
+
+    if (session.data) {
+      try {
+        parsedData = JSON.parse(session.data) as OtpDataByPurpose<P>;
+      } catch {
+        throw new BadRequestException('auth.otp.expired');
+      }
     }
 
-    if (session.purpose !== expectedPurpose) throw new BadRequestException('auth.otp.expired');
-
     return {
-      purpose: expectedPurpose,
+      purpose: session.purpose as P,
       email: session.email,
       data: parsedData,
       otp: session.otp,
@@ -78,24 +78,23 @@ export class OtpSessionService {
 
     await this.mailService.sendTypedMail(email, purpose, { otp }, locale);
 
-    return { purpose, sessionId };
+    return { sessionId };
   }
 
   async verifySession<P extends AuthPurpose>({
-    purpose,
     sessionId,
     otp,
     maxAttempts = OTP_DEFAULT_MAX_ATTEMPTS,
-  }: VerifySessionOptions<P>): Promise<[string, OtpDataByPurpose<P>]> {
+  }: VerifySessionOptions): Promise<[string, P, OtpDataByPurpose<P>]> {
     const key = getSessionKey(sessionId);
-    const session = await this.readSession<P>(sessionId, purpose);
+    const session = await this.readSession<P>(sessionId);
 
     if (session.otpAttempts >= maxAttempts) {
       await this.redis.del(key);
       throw new BadRequestException('auth.otp.tooManyAttempts');
     }
 
-    const isValid = await compare(otp, session.otp);
+    const isValid = await compareHashedOtp(otp, session.otp);
     if (!isValid) {
       await this.redis.hincrby(key, 'otp_attempts', 1);
       throw new BadRequestException('auth.otp.invalid');
@@ -103,20 +102,19 @@ export class OtpSessionService {
 
     await this.redis.del(key);
 
-    return [session.email, session.data];
+    return [session.email, session.purpose, session.data];
   }
 
-  async resendSession<P extends AuthPurpose>(
+  async resendSession(
     {
-      purpose,
       sessionId,
       maxResends = OTP_DEFAULT_MAX_RESENDS,
       minResendIntervalMs = OTP_DEFAULT_MIN_RESEND_INTERVAL_MS,
-    }: ResendSessionOptions<P>,
+    }: ResendSessionOptions,
     locale?: Locale,
   ) {
     const key = getSessionKey(sessionId);
-    const session = await this.readSession<P>(sessionId, purpose);
+    const session = await this.readSession(sessionId);
 
     if (session.otpResendCount >= maxResends) throw new BadRequestException('auth.otp.resendLimitExceeded');
 
@@ -137,6 +135,6 @@ export class OtpSessionService {
     const ttl = await this.redis.ttl(key);
     if (ttl > 0) await this.redis.expire(key, ttl);
 
-    await this.mailService.sendTypedMail(session.email, purpose, { otp }, locale);
+    await this.mailService.sendTypedMail(session.email, session.purpose, { otp }, locale);
   }
 }

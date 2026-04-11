@@ -1,13 +1,7 @@
-import { IsIn, IsNumberString, IsString } from 'class-validator';
+import { IsNumberString, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 
-import { authPurposes } from '../const';
-import type { AuthPurpose } from '../types';
-
-export class VerifyOTPDTO<T extends AuthPurpose = AuthPurpose> {
-  @IsIn(authPurposes)
-  purpose: T;
-
+export class VerifyOTPDTO {
   @IsString()
   sessionId: string;
 

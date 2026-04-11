@@ -17,15 +17,13 @@ export interface CreateSessionOptions<P extends AuthPurpose> {
   ttlSeconds?: number;
 }
 
-export interface VerifySessionOptions<P extends AuthPurpose> {
-  purpose: P;
+export interface VerifySessionOptions {
   sessionId: string;
   otp: string;
   maxAttempts?: number;
 }
 
-export interface ResendSessionOptions<P extends AuthPurpose> {
-  purpose: P;
+export interface ResendSessionOptions {
   sessionId: string;
   maxResends?: number;
   minResendIntervalMs?: number;

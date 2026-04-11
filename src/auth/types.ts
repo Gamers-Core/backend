@@ -14,18 +14,14 @@ export type OtpVerifyHandlers = {
 };
 
 export interface OtpDataMap {
-  reset_password: {
-    password: string;
-  };
-  signup: {
-    name: string;
-    password: string;
-  };
+  signin?: never;
 }
 
 export interface OtpVerifyResultMap {
-  reset_password: void;
-  signup: User;
+  signin: {
+    user: User;
+    isNewUser: boolean;
+  };
 }
 
 export type OtpDataByPurpose<P extends AuthPurpose> = OtpDataMap[P];
