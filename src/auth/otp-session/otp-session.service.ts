@@ -41,7 +41,7 @@ export class OtpSessionService {
       }
     }
 
-    if (!(session.purpose in authPurposes)) throw new BadRequestException('auth.otp.expired');
+    if (!authPurposes.includes(session.purpose as AuthPurpose)) throw new BadRequestException('auth.otp.expired');
 
     return {
       purpose: session.purpose as P,
