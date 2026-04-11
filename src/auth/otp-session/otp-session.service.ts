@@ -5,6 +5,7 @@ import Redis from 'ioredis';
 import { REDIS_CLIENT } from 'src/redis';
 import { MailService } from 'src/mail';
 import { BadRequestException, withEnvironment } from 'src/common';
+import { Locale } from 'src/i18n';
 
 import {
   OTP_DEFAULT_MAX_ATTEMPTS,
@@ -15,7 +16,7 @@ import {
 import { compareHashedOtp, generateHashedOtp, generateOtp, getSessionKey } from './helpers';
 import { CreateSessionOptions, ResendSessionOptions, OTPAuthSession, VerifySessionOptions } from './types';
 import { AuthPurpose, OtpDataByPurpose } from '../types';
-import { Locale } from 'src/i18n';
+import { authPurposes } from '../const';
 
 @Injectable()
 export class OtpSessionService {
@@ -39,6 +40,8 @@ export class OtpSessionService {
         throw new BadRequestException('auth.otp.expired');
       }
     }
+
+    if (!(session.purpose in authPurposes)) throw new BadRequestException('auth.otp.expired');
 
     return {
       purpose: session.purpose as P,
