@@ -9,9 +9,11 @@ import type { Locale } from './types';
 export class LocaleContextMiddleware implements NestMiddleware {
   constructor(private readonly localeContextService: LocaleContextService) {}
 
-  use(request: Request, _response: Response, next: NextFunction) {
+  use(request: Request, response: Response, next: NextFunction) {
     const localeHeader = request.headers['x-locale'] as Locale;
     const headerLocale = locales.includes(localeHeader) ? localeHeader : undefined;
+
+    response.setHeader('x-locale', headerLocale ?? this.localeContextService.locale);
 
     this.localeContextService.run(next, headerLocale);
   }
