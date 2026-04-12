@@ -3,41 +3,41 @@ import { IsArray, IsIn, IsInt, ArrayMinSize, IsOptional, Min, ValidateNested } f
 
 import { productStatuses } from 'src/entity';
 import { type ProductStatus } from 'src/entity';
-import { IsLocalized, type Localized } from 'src/i18n';
+import { IsLocalized, i18nKeyValidator, type Localized } from 'src/i18n';
 
 import { CreateVariantDTO } from './create-variant.dto';
 
 export class CreateProductDTO {
-  @IsOptional()
-  @IsIn(productStatuses)
+  @IsOptional({ message: i18nKeyValidator('conditionalValidation') })
+  @IsIn(productStatuses, { message: i18nKeyValidator('isIn') })
   status?: ProductStatus;
 
-  @IsArray()
-  @ArrayMinSize(1)
-  @ValidateNested({ each: true })
+  @IsArray({ message: i18nKeyValidator('isArray') })
+  @ArrayMinSize(1, { message: i18nKeyValidator('arrayMinSize') })
+  @ValidateNested({ each: true, message: i18nKeyValidator('nestedValidation') })
   @Type(() => CreateVariantDTO)
   variants: CreateVariantDTO[];
 
-  @IsOptional()
-  @IsArray()
-  @IsInt({ each: true })
-  @Min(1, { each: true })
+  @IsOptional({ message: i18nKeyValidator('conditionalValidation') })
+  @IsArray({ message: i18nKeyValidator('isArray') })
+  @IsInt({ each: true, message: i18nKeyValidator('isInt') })
+  @Min(1, { each: true, message: i18nKeyValidator('min') })
   mediaIds?: number[];
 
-  @IsLocalized()
+  @IsLocalized({ message: i18nKeyValidator('isLocalized') })
   name: Localized;
 
-  @IsLocalized()
+  @IsLocalized({ message: i18nKeyValidator('isLocalized') })
   title: Localized;
 
-  @IsLocalized()
+  @IsLocalized({ message: i18nKeyValidator('isLocalized') })
   description: Localized;
 
-  @IsInt()
-  @Min(1)
+  @IsInt({ message: i18nKeyValidator('isInt') })
+  @Min(1, { message: i18nKeyValidator('min') })
   brandId: number;
 
-  @IsInt()
-  @Min(1)
+  @IsInt({ message: i18nKeyValidator('isInt') })
+  @Min(1, { message: i18nKeyValidator('min') })
   categoryId: number;
 }

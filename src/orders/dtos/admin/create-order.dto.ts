@@ -1,24 +1,25 @@
 import { Type } from 'class-transformer';
 import { ArrayNotEmpty, IsInt, IsUUID, Min, ValidateNested } from 'class-validator';
+import { i18nKeyValidator } from 'src/i18n';
 
 import { CheckoutOrderDTO } from '../user';
 
 class VariantDTO {
-  @IsUUID()
+  @IsUUID(undefined, { message: i18nKeyValidator('isUuid') })
   externalId: string;
 
-  @IsInt()
-  @Min(1)
+  @IsInt({ message: i18nKeyValidator('isInt') })
+  @Min(1, { message: i18nKeyValidator('min') })
   quantity: number;
 }
 
 export class CreateOrderDTO extends CheckoutOrderDTO {
-  @ArrayNotEmpty()
-  @ValidateNested({ each: true })
+  @ArrayNotEmpty({ message: i18nKeyValidator('arrayNotEmpty') })
+  @ValidateNested({ each: true, message: i18nKeyValidator('nestedValidation') })
   @Type(() => VariantDTO)
   variants: VariantDTO[];
 
-  @IsInt()
-  @Min(1)
+  @IsInt({ message: i18nKeyValidator('isInt') })
+  @Min(1, { message: i18nKeyValidator('min') })
   userId: number;
 }

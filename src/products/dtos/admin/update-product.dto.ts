@@ -2,38 +2,38 @@ import { IsArray, IsIn, IsInt, IsOptional, Min } from 'class-validator';
 
 import { productStatuses } from 'src/entity';
 import { type ProductStatus } from 'src/entity';
-import { IsLocalized, type Localized } from 'src/i18n';
+import { IsLocalized, i18nKeyValidator, type Localized } from 'src/i18n';
 
 export class UpdateProductDTO {
-  @IsOptional()
-  @IsIn(productStatuses)
+  @IsOptional({ message: i18nKeyValidator('conditionalValidation') })
+  @IsIn(productStatuses, { message: i18nKeyValidator('isIn') })
   status?: ProductStatus;
 
-  @IsOptional()
-  @IsArray()
-  @IsInt({ each: true })
-  @Min(1, { each: true })
+  @IsOptional({ message: i18nKeyValidator('conditionalValidation') })
+  @IsArray({ message: i18nKeyValidator('isArray') })
+  @IsInt({ each: true, message: i18nKeyValidator('isInt') })
+  @Min(1, { each: true, message: i18nKeyValidator('min') })
   mediaIds?: number[];
 
-  @IsOptional()
-  @IsLocalized()
+  @IsOptional({ message: i18nKeyValidator('conditionalValidation') })
+  @IsLocalized({ message: i18nKeyValidator('isLocalized') })
   title?: Localized;
 
-  @IsOptional()
-  @IsLocalized()
+  @IsOptional({ message: i18nKeyValidator('conditionalValidation') })
+  @IsLocalized({ message: i18nKeyValidator('isLocalized') })
   name?: Localized;
 
-  @IsOptional()
-  @IsLocalized()
+  @IsOptional({ message: i18nKeyValidator('conditionalValidation') })
+  @IsLocalized({ message: i18nKeyValidator('isLocalized') })
   description?: Localized;
 
-  @IsOptional()
-  @IsInt()
-  @Min(1)
+  @IsOptional({ message: i18nKeyValidator('conditionalValidation') })
+  @IsInt({ message: i18nKeyValidator('isInt') })
+  @Min(1, { message: i18nKeyValidator('min') })
   brandId?: number;
 
-  @IsOptional()
-  @IsInt()
-  @Min(1)
+  @IsOptional({ message: i18nKeyValidator('conditionalValidation') })
+  @IsInt({ message: i18nKeyValidator('isInt') })
+  @Min(1, { message: i18nKeyValidator('min') })
   categoryId?: number;
 }

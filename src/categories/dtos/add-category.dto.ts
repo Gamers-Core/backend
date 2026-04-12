@@ -1,6 +1,6 @@
-import { IsLocalized, type Localized } from 'src/i18n';
+import { IsLocalized, i18nKeyValidator, type Localized } from 'src/i18n';
 
 export class AddCategoryDTO {
-  @IsLocalized()
+  @IsLocalized({ message: i18nKeyValidator('isLocalized') })
   name: Localized;
 }

@@ -47,3 +47,5 @@ export const isLocalized = (value: unknown): value is Localized => {
     return typeof text === 'string' && text.trim().length >= 2;
   });
 };
+
+export const i18nKeyValidator = <K extends I18nKey>(value: K) => value as unknown as Messages[Locale][K];

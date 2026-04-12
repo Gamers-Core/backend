@@ -1,10 +1,11 @@
 import { IsInt, IsUrl, Min } from 'class-validator';
+import { i18nKeyValidator } from 'src/i18n';
 
 export class AddUserReviewDTO {
-  @IsInt()
-  @Min(1)
+  @IsInt({ message: i18nKeyValidator('isInt') })
+  @Min(1, { message: i18nKeyValidator('min') })
   imageId: number;
 
-  @IsUrl()
+  @IsUrl({}, { message: i18nKeyValidator('isUrl') })
   facebookURL: string;
 }

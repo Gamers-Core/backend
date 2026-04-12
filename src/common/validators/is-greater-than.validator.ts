@@ -1,4 +1,5 @@
 import { registerDecorator, ValidationOptions, ValidationArguments } from 'class-validator';
+import { i18nKeyValidator } from 'src/i18n';
 
 export function IsGreaterThan(property: string, options?: ValidationOptions) {
   return (object: object, propertyName: string) => {
@@ -7,7 +8,10 @@ export function IsGreaterThan(property: string, options?: ValidationOptions) {
       propertyName,
       target: object.constructor,
       constraints: [property],
-      options,
+      options: {
+        ...options,
+        message: options?.message ?? i18nKeyValidator('isGreaterThan'),
+      },
       validator: {
         validate(value: unknown, args: ValidationArguments) {
           const [relatedPropertyName] = args.constraints;
@@ -19,9 +23,6 @@ export function IsGreaterThan(property: string, options?: ValidationOptions) {
           if (typeof value !== 'number' || typeof relatedValue !== 'number') return true;
 
           return value > relatedValue;
-        },
-        defaultMessage(args: ValidationArguments) {
-          return `${args.property} must be greater than ${args.constraints[0]}`;
         },
       },
     });
