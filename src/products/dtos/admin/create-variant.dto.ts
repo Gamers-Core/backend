@@ -1,35 +1,35 @@
 import { IsArray, IsBoolean, IsInt, IsOptional, Min } from 'class-validator';
 import { IsGreaterThan } from 'src/common';
 
-import { IsLocalized, i18nKeyValidator, type Localized } from 'src/i18n';
+import { IsLocalized, type Localized } from 'src/i18n';
 
 export class CreateVariantDTO {
-  @IsLocalized({ message: i18nKeyValidator('isLocalized') })
+  @IsLocalized()
   name: Localized;
 
-  @IsOptional({ message: i18nKeyValidator('conditionalValidation') })
-  @IsBoolean({ message: i18nKeyValidator('isBoolean') })
+  @IsOptional()
+  @IsBoolean()
   isActive?: boolean;
 
-  @IsInt({ message: i18nKeyValidator('isInt') })
-  @Min(0, { message: i18nKeyValidator('min') })
+  @IsInt()
+  @Min(0)
   stock: number;
 
-  @IsInt({ message: i18nKeyValidator('isInt') })
-  @Min(0, { message: i18nKeyValidator('min') })
+  @IsInt()
+  @Min(0)
   price: number;
 
-  @IsInt({ message: i18nKeyValidator('isInt') })
-  @Min(0, { message: i18nKeyValidator('min') })
+  @IsInt()
+  @Min(0)
   costPerItem: number;
 
-  @IsOptional({ message: i18nKeyValidator('conditionalValidation') })
-  @IsInt({ message: i18nKeyValidator('isInt') })
-  @IsGreaterThan('price', { message: i18nKeyValidator('isGreaterThan') })
+  @IsOptional()
+  @IsInt()
+  @IsGreaterThan('price')
   compareAt: number | null;
 
-  @IsArray({ message: i18nKeyValidator('isArray') })
-  @IsInt({ each: true, message: i18nKeyValidator('isInt') })
-  @Min(1, { each: true, message: i18nKeyValidator('min') })
+  @IsArray()
+  @IsInt({ each: true })
+  @Min(1, { each: true })
   mediaIds: number[];
 }

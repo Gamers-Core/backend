@@ -1,20 +1,19 @@
 import { IsPhoneNumber, IsString } from 'class-validator';
-import { i18nKeyValidator } from 'src/i18n';
 
 export class CreateAddressDTO {
-  @IsString({ message: i18nKeyValidator('isString') })
-  @IsPhoneNumber('EG', { message: i18nKeyValidator('isPhoneNumber') })
+  @IsString()
+  @IsPhoneNumber('EG')
   phoneNumber: string;
 
-  @IsString({ message: i18nKeyValidator('isString') })
+  @IsString()
   detailedAddress: string;
 
-  @IsString({ message: i18nKeyValidator('isString') })
+  @IsString()
   districtId: string;
 
-  @IsString({ message: i18nKeyValidator('isString') })
+  @IsString()
   cityId: string;
 
-  @IsString({ message: i18nKeyValidator('isString') })
+  @IsString()
   nameAr: string;
 }

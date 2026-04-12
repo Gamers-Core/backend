@@ -1,6 +1,5 @@
 import { Expose, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
-import { i18nKeyValidator } from 'src/i18n';
 
 import { type OrderStatus, type PaymentMethod } from 'src/entity';
 import { OrderItemDTO } from '../order-item.dto';
@@ -36,7 +35,7 @@ export class OrderDTO {
   paymentMethod: PaymentMethod;
 
   @Expose()
-  @ValidateNested({ each: true, message: i18nKeyValidator('nestedValidation') })
+  @ValidateNested({ each: true })
   @Type(() => OrderItemDTO)
   items: OrderItemDTO[];
 

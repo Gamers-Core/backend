@@ -1,48 +1,46 @@
 import { IsBoolean, IsDateString, IsIn, IsNumber, IsOptional, IsString } from 'class-validator';
-import { i18nKeyValidator } from 'src/i18n';
 
 import { deliveryTypes } from '../const';
 import type { DeliveryType } from '../types';
 
 export class WebhookDTO {
-  @IsString({ message: i18nKeyValidator('isString') })
+  @IsString()
   _id: string;
 
-  @IsString({ message: i18nKeyValidator('isString') })
-  @IsOptional({ message: i18nKeyValidator('conditionalValidation') })
-  trackingNumber?: string;
+  @IsString()
+  trackingNumber: string;
 
-  @IsNumber({}, { message: i18nKeyValidator('isNumber') })
+  @IsNumber()
   state: number;
 
-  @IsString({ message: i18nKeyValidator('isString') })
-  @IsIn(deliveryTypes, { message: i18nKeyValidator('isIn') })
+  @IsString()
+  @IsIn(deliveryTypes)
   type: DeliveryType;
 
-  @IsNumber({}, { message: i18nKeyValidator('isNumber') })
+  @IsNumber()
   cod: number;
 
-  @IsOptional({ message: i18nKeyValidator('conditionalValidation') })
-  @IsString({ message: i18nKeyValidator('isString') })
+  @IsOptional()
+  @IsString()
   businessReference: string;
 
-  @IsNumber({}, { message: i18nKeyValidator('isNumber') })
+  @IsNumber()
   timeStamp: number;
 
-  @IsBoolean({ message: i18nKeyValidator('isBoolean') })
+  @IsBoolean()
   isConfirmedDelivery: boolean;
 
-  @IsDateString({}, { message: i18nKeyValidator('isDateString') })
+  @IsDateString()
   deliveryPromiseDate: string;
 
-  @IsNumber({}, { message: i18nKeyValidator('isNumber') })
+  @IsNumber()
   numberOfAttempts: number;
 
-  @IsOptional({ message: i18nKeyValidator('conditionalValidation') })
-  @IsNumber({}, { message: i18nKeyValidator('isNumber') })
+  @IsOptional()
+  @IsNumber()
   exceptionCode?: number;
 
-  @IsOptional({ message: i18nKeyValidator('conditionalValidation') })
-  @IsString({ message: i18nKeyValidator('isString') })
+  @IsOptional()
+  @IsString()
   exceptionReason?: string;
 }
