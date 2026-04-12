@@ -1,17 +1,31 @@
 import { ValidationError } from 'class-validator';
 
-import { I18nKey, Translate, translateWithoutLocale, type Locale } from 'src/i18n';
+import { type Locale } from 'src/i18n';
+import messages from 'src/i18n/messages';
+
+const resolveConstraintMessage =
+  (locale: Locale) =>
+  ([key, message]: [string, string]): string => {
+    const dictionary = messages[locale];
+
+    if (dictionary[message]) return dictionary[message];
+    if (dictionary[key]) return dictionary[key];
+
+    return message;
+  };
 
 export const formatErrors = (errors: ValidationError[] | undefined, locale: Locale) => {
   if (!errors?.length) return [];
 
   return errors.map((error) => {
-    const keys = Object.keys(error.constraints ?? {}) as Translate<I18nKey>[];
+    const constraints = error.constraints ?? {};
+    const entries = Object.entries(constraints);
+    const keys = entries.map(([key]) => key);
 
     return {
       property: error.property,
       keys,
-      messages: keys.map(translateWithoutLocale(locale)),
+      messages: entries.map(resolveConstraintMessage(locale)),
       children: formatErrors(error.children, locale),
     };
   });
