@@ -20,9 +20,6 @@ export function IsGreaterThan(property: string, options?: ValidationOptions) {
 
           return value > relatedValue;
         },
-        defaultMessage(args: ValidationArguments) {
-          return `${args.property} must be greater than ${args.constraints[0]}`;
-        },
       },
     });
   };

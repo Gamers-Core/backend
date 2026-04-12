@@ -17,7 +17,7 @@ export class BostaController {
   async handleWebhook(@Body() webhookData: WebhookDTO) {
     const state = deliveryStates[webhookData.state];
 
-    if (!state || (state === 'delivered' && !webhookData.isConfirmedDelivery)) return;
+    if (!state || (state === 'delivered' && !webhookData.isConfirmedDelivery) || !webhookData.trackingNumber) return;
 
     return await this.ordersService.updateStatus({ trackingNumber: webhookData.trackingNumber }, state);
   }

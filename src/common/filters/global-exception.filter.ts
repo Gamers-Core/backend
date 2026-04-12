@@ -27,7 +27,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const payload: Record<string, unknown> = {};
 
     const isValidationException = exception instanceof ValidationException;
-    if (isValidationException) payload.errors = formatErrors(exception.errors);
+    if (isValidationException) payload.errors = formatErrors(exception.errors, locale);
 
     const isAppException = exception instanceof AppException;
     if (isAppException) payload.message = translate(exception.translate, locale);
