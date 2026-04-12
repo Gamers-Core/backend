@@ -27,7 +27,9 @@ export class AuthService {
   async verifyOTP<P extends AuthPurpose>({ sessionId, otp }: VerifyOTPDTO): Promise<OtpVerifyResultByPurpose<P>> {
     const [email, purpose, data] = await this.otpSessionService.verifySession<P>({ sessionId, otp });
 
-    return this.otpVerifyHandlers[purpose](email, data);
+    const res = await this.otpVerifyHandlers[purpose](email, data);
+
+    return { purpose, ...res };
   }
 
   async resendOTP({ sessionId }: ResendOTPDTO, locale?: Locale) {
