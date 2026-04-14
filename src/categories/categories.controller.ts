@@ -1,6 +1,6 @@
 import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 
-import { Public } from 'src/auth';
+import { Public } from 'src/auth/decorators';
 import { Serialize } from 'src/interceptors';
 
 import { CategoriesService } from './categories.service';

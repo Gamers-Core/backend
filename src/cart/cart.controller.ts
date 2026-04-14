@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseArrayPipe, ParseIntPipe, Patch, Post } from '@nestjs/common';
 
 import { User } from 'src/entity';
 import { Serialize } from 'src/interceptors';
@@ -17,9 +17,18 @@ export class CartController {
     return this.cartService.getCart(user.id);
   }
 
+  @Post(':externalId')
+  addItems(
+    @CurrentUser() user: User,
+    @Param('externalId') externalId: string,
+    @Body() body: Pick<CreateCartItemDTO, 'quantity'>,
+  ) {
+    return this.cartService.addItem(user.id, { ...body, externalId: externalId });
+  }
+
   @Post()
-  addItem(@CurrentUser() user: User, @Body() body: CreateCartItemDTO) {
-    return this.cartService.addItem(user.id, body);
+  sync(@CurrentUser() user: User, @Body(new ParseArrayPipe({ items: CreateCartItemDTO })) body: CreateCartItemDTO[]) {
+    return this.cartService.sync(user.id, body);
   }
 
   @Patch(':id')

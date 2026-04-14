@@ -2,7 +2,7 @@ import { IsInt, IsUUID, Min } from 'class-validator';
 
 export class CreateCartItemDTO {
   @IsUUID('4')
-  variantExternalId: string;
+  externalId: string;
 
   @IsInt()
   @Min(1)
