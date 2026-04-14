@@ -4,7 +4,7 @@ import { Brackets, In, Repository } from 'typeorm';
 
 import { Brand, Category, Product, Variant } from 'src/entity';
 import { MediaAttachmentService } from 'src/media';
-import { NotFoundException } from 'src/common';
+import { BadRequestException, NotFoundException } from 'src/common';
 
 import { CreateProductDTO, UpdateProductDTO } from '../dtos/admin';
 import { productBrandCategoryRelations, productFullRelations } from '../relations';
@@ -51,13 +51,19 @@ export class ProductsService {
   }
 
   async findMany(ids: string) {
-    const idArray = ids
-      .split(',')
-      .map((id) => Number(id.trim()))
-      .filter((id) => !isNaN(id));
+    if (!ids?.trim()) throw new BadRequestException('products.invalidIds');
+
+    const idSegments = ids.split(',').map((id) => id.trim());
+
+    if (!idSegments.length || idSegments.some((id) => !id || !/^\d+$/.test(id)))
+      throw new BadRequestException('products.invalidIds');
+
+    const idArray = idSegments.map((id) => Number(id));
+
+    if (idArray.some((id) => !Number.isInteger(id) || id <= 0)) throw new BadRequestException('products.invalidIds');
 
     const uniqueIds = Array.from(new Set(idArray));
-    if (!uniqueIds.length) return [];
+    if (!uniqueIds.length) throw new BadRequestException('products.invalidIds');
 
     const products = await this.productsRepository.find({
       where: { id: In(uniqueIds) },

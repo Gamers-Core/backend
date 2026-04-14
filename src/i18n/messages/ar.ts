@@ -31,6 +31,7 @@ export default {
   'products.brandHasProducts': 'لا يمكن حذف العلامة التجارية التي تحتوي على منتجات مرتبطة',
   'products.productNotFound': 'المنتج غير موجود',
   'products.variantNotFound': 'المتغير غير موجود',
+  'products.invalidIds': 'معرّفات المنتجات غير صالحة',
   'products.requiredAmountMin': 'الكمية المطلوبة يجب أن تكون 1 على الأقل',
   'products.insufficientStock': 'المخزون غير كافٍ للمتغير {externalId}',
   'products.invalidVariantExternalId': 'معرّف المتغير غير صالح: {externalId}',
