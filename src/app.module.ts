@@ -81,15 +81,19 @@ export class AppModule {
     const cookieKey = this.configService.get<string>('COOKIE_KEY');
     if (!cookieKey) throw new Error('COOKIE_KEY is required');
 
-    const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
+    const env = this.configService.get<string>('NODE_ENV');
+    const isLocal = env === 'local';
+    const cookieDomain = this.configService.get<string>('COOKIE_DOMAIN');
 
     consumer
       .apply(
         cookieSession({
           keys: [cookieKey],
           httpOnly: true,
-          sameSite: isProduction ? 'none' : 'lax',
-          secure: isProduction,
+          sameSite: isLocal ? 'lax' : 'none',
+          secure: !isLocal,
+          domain: cookieDomain || undefined,
+          path: '/',
           maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
         }),
         this.localeContextMiddleware.use.bind(this.localeContextMiddleware),
