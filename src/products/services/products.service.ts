@@ -50,6 +50,23 @@ export class ProductsService {
     return this.attachMediaToProducts(products);
   }
 
+  async findMany(ids: string) {
+    const idArray = ids
+      .split(',')
+      .map((id) => Number(id.trim()))
+      .filter((id) => !isNaN(id));
+
+    const uniqueIds = Array.from(new Set(idArray));
+    if (!uniqueIds.length) return [];
+
+    const products = await this.productsRepository.find({
+      where: { id: In(uniqueIds) },
+      relations: productFullRelations,
+    });
+
+    return this.attachMediaToProducts(products);
+  }
+
   async findOne(id: number) {
     return this.findOneWithMediaOrFail(id);
   }
