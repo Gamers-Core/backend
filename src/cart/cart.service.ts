@@ -164,15 +164,24 @@ export class CartService {
     if (!cart.items.length) return cart;
 
     const variantIds = cart.items.map(({ variant }) => variant.id);
+
     const variantMediaMap = await this.mediaAttachmentService.getBulkMedia(
       variantIds,
       'variant',
       manager.getRepository(MediaAttachment),
     );
 
+    const productIds = cart.items.map(({ variant }) => variant.product.id);
+    const productMediaMap = await this.mediaAttachmentService.getBulkMedia(
+      productIds,
+      'product',
+      manager.getRepository(MediaAttachment),
+    );
+
     for (const item of cart.items) {
       const variantWithImage = item.variant;
-      variantWithImage['imageURL'] = variantMediaMap[item.variant.id]?.[0]?.media.url ?? null;
+      variantWithImage['imageURL'] =
+        variantMediaMap[item.variant.id]?.[0]?.media.url ?? productMediaMap[item.variant.product.id][0].media.url;
     }
 
     return cart;

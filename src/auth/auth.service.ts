@@ -35,7 +35,10 @@ export class AuthService {
     return await this.otpSessionService.createSession({ purpose: 'signin', email }, this.localeContext.locale);
   }
 
-  async verifyOTP<P extends AuthPurpose>({ sessionId, otp }: VerifyOTPDTO): Promise<OtpVerifyResultByPurpose<P>> {
+  async verifyOTP<P extends AuthPurpose>({
+    sessionId,
+    otp,
+  }: VerifyOTPDTO): Promise<OtpVerifyResultByPurpose<P> & { purpose: P }> {
     const [email, purpose, data] = await this.otpSessionService.verifySession<P>({ sessionId, otp });
 
     const res = await this.otpVerifyHandlers[purpose](email, data);

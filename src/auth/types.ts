@@ -1,4 +1,5 @@
-import { User } from 'src/entity';
+import { Cart, User } from 'src/entity';
+
 import { authPurposes } from './const';
 
 export type AuthPurpose = (typeof authPurposes)[number];
@@ -20,6 +21,7 @@ export interface OtpDataMap {
 export interface OtpVerifyResultMap {
   signin: {
     user: User;
+    cart: Cart;
     isNewUser: boolean;
   };
 }

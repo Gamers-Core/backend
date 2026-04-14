@@ -1,10 +1,21 @@
-import { Body, Controller, Delete, Get, Param, ParseArrayPipe, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseArrayPipe,
+  ParseIntPipe,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
 
 import { User } from 'src/entity';
 import { Serialize } from 'src/interceptors';
 import { CurrentUser } from 'src/users/decorators/current-user.decorator';
 
-import { CartDTO, CreateCartItemDTO, UpdateCartItemDTO } from './dtos';
+import { AddCartItemDTO, CartDTO, CreateCartItemDTO, UpdateCartItemDTO } from './dtos';
 import { CartService } from './cart.service';
 
 @Serialize(CartDTO)
@@ -20,10 +31,10 @@ export class CartController {
   @Post(':externalId')
   addItems(
     @CurrentUser() user: User,
-    @Param('externalId') externalId: string,
-    @Body() body: Pick<CreateCartItemDTO, 'quantity'>,
+    @Param('externalId', new ParseUUIDPipe({ version: '4' })) externalId: string,
+    @Body() body: AddCartItemDTO,
   ) {
-    return this.cartService.addItem(user.id, { ...body, externalId: externalId });
+    return this.cartService.addItem(user.id, { ...body, externalId });
   }
 
   @Post()
