@@ -1,10 +1,21 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseArrayPipe,
+  ParseIntPipe,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
 
 import { User } from 'src/entity';
 import { Serialize } from 'src/interceptors';
 import { CurrentUser } from 'src/users/decorators/current-user.decorator';
 
-import { CartDTO, CreateCartItemDTO, UpdateCartItemDTO } from './dtos';
+import { AddCartItemDTO, CartDTO, CreateCartItemDTO, UpdateCartItemDTO } from './dtos';
 import { CartService } from './cart.service';
 
 @Serialize(CartDTO)
@@ -17,9 +28,18 @@ export class CartController {
     return this.cartService.getCart(user.id);
   }
 
+  @Post(':externalId')
+  addItems(
+    @CurrentUser() user: User,
+    @Param('externalId', new ParseUUIDPipe({ version: '4' })) externalId: string,
+    @Body() body: AddCartItemDTO,
+  ) {
+    return this.cartService.addItem(user.id, { ...body, externalId });
+  }
+
   @Post()
-  addItem(@CurrentUser() user: User, @Body() body: CreateCartItemDTO) {
-    return this.cartService.addItem(user.id, body);
+  sync(@CurrentUser() user: User, @Body(new ParseArrayPipe({ items: CreateCartItemDTO })) body: CreateCartItemDTO[]) {
+    return this.cartService.sync(user.id, body);
   }
 
   @Patch(':id')

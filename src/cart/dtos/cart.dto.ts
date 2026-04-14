@@ -31,7 +31,13 @@ class CartProductVariantDTO {
   name: string | null;
 
   @Expose()
+  imageURL: string;
+
+  @Expose()
   externalId: string;
+
+  @Expose()
+  stock: number;
 
   @Expose()
   @Type(() => CartProductDTO)

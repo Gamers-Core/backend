@@ -31,6 +31,7 @@ export default {
   'products.brandHasProducts': 'Cannot delete brand with associated products',
   'products.productNotFound': 'Product not found',
   'products.variantNotFound': 'Variant not found',
+  'products.invalidIds': 'Invalid product IDs',
   'products.requiredAmountMin': 'requiredAmount must be at least 1',
   'products.insufficientStock': 'Insufficient stock for variant {externalId}',
   'products.invalidVariantExternalId': 'Invalid variant externalId: {externalId}',

@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
-import { Cart, CartItem, Variant } from 'src/entity';
+import { Cart, CartItem, MediaAttachment, Variant } from 'src/entity';
+import { MediaAttachmentService } from 'src/media';
 import { InventoryService } from 'src/products';
 import { cartItemRelations, cartRelations } from 'src/products';
 import { withOptionalManager, BadRequestException, NotFoundException } from 'src/common';
@@ -15,6 +16,7 @@ export class CartService {
   constructor(
     @InjectRepository(Cart) private readonly cartRepo: Repository<Cart>,
     private readonly inventoryService: InventoryService,
+    private readonly mediaAttachmentService: MediaAttachmentService,
   ) {}
 
   async getCart(userId: number, manager?: EntityManager) {
@@ -38,10 +40,34 @@ export class CartService {
             });
           });
 
-        return newCart;
+        return this.withVariantImageURLs(newCart, manager);
       }
 
-      return cart;
+      return this.withVariantImageURLs(cart, manager);
+    });
+  }
+
+  async sync(userId: number, items: CreateCartItemDTO[]) {
+    return this.cartRepo.manager.transaction(async (manager) => {
+      const cart = await this.getCart(userId, manager);
+      const cartItemRepo = manager.getRepository(CartItem);
+
+      await cartItemRepo.delete({ cart: { id: cart.id } });
+
+      for (const item of items) {
+        const variant = await this.inventoryService.findByExternalId(item.externalId, manager);
+        this.assertVariantStock(variant, item.quantity);
+
+        const cartItem = cartItemRepo.create({
+          cart: { id: cart.id },
+          variant,
+          quantity: item.quantity,
+        });
+
+        await cartItemRepo.save(cartItem);
+      }
+
+      return this.getCart(userId, manager);
     });
   }
 
@@ -49,7 +75,7 @@ export class CartService {
     return this.cartRepo.manager.transaction(async (manager) => {
       const cart = await this.getCart(userId, manager);
       const cartItemRepo = manager.getRepository(CartItem);
-      const variant = await this.inventoryService.findByExternalId(item.variantExternalId, manager);
+      const variant = await this.inventoryService.findByExternalId(item.externalId, manager);
 
       const existingItem = await cartItemRepo.findOne({
         where: {
@@ -132,5 +158,32 @@ export class CartService {
   private assertVariantStock(variant: Variant, requestedQuantity: number) {
     if (requestedQuantity > variant.stock)
       throw new BadRequestException(['cart.insufficientStock', { externalId: variant.externalId }]);
+  }
+
+  private async withVariantImageURLs(cart: Cart, manager: EntityManager) {
+    if (!cart.items.length) return cart;
+
+    const variantIds = cart.items.map(({ variant }) => variant.id);
+
+    const variantMediaMap = await this.mediaAttachmentService.getBulkMedia(
+      variantIds,
+      'variant',
+      manager.getRepository(MediaAttachment),
+    );
+
+    const productIds = cart.items.map(({ variant }) => variant.product.id);
+    const productMediaMap = await this.mediaAttachmentService.getBulkMedia(
+      productIds,
+      'product',
+      manager.getRepository(MediaAttachment),
+    );
+
+    for (const item of cart.items) {
+      const variantWithImage = item.variant;
+      variantWithImage['imageURL'] =
+        variantMediaMap[item.variant.id]?.[0]?.media.url ?? productMediaMap[item.variant.product.id][0].media.url;
+    }
+
+    return cart;
   }
 }

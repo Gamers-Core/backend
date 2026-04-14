@@ -38,6 +38,7 @@ export class AuthGuard implements CanActivate {
     }
 
     this.localeContextService.locale = user.locale;
+    req.res?.setHeader('x-locale', user.locale);
     req.user = user;
 
     return true;
