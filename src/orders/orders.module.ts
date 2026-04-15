@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AddressesModule } from 'src/addresses';
@@ -15,6 +16,7 @@ import { OrdersService } from './orders.service';
 
 @Module({
   imports: [
+    HttpModule,
     TypeOrmModule.forFeature([Order]),
     forwardRef(() => AddressesModule),
     forwardRef(() => BostaModule),

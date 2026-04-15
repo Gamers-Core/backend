@@ -1,9 +1,10 @@
-import SMTPTransport from 'nodemailer/lib/smtp-transport';
-import * as nodemailer from 'nodemailer';
-import { Injectable } from '@nestjs/common';
+import { AxiosError, AxiosInstance } from 'axios';
+import { HttpService } from '@nestjs/axios';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { Locale, LocaleContextService, translateWithoutLocale } from 'src/i18n';
+import { ServiceUnavailableException } from 'src/common';
 
 import { mailTemplates } from './templates';
 import { getEmail, renderMailWrapper } from './helpers';
@@ -11,34 +12,49 @@ import { MailOptions, MailOptionsType, MailType, SendMailOptions } from './types
 
 @Injectable()
 export class MailService {
-  private transporter?: nodemailer.Transporter<SMTPTransport.SentMessageInfo, SMTPTransport.Options>;
+  private readonly logger = new Logger('MailErrorHandler');
+  private readonly brevo: AxiosInstance;
 
   constructor(
+    private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly LocaleContextService: LocaleContextService,
-  ) {}
+  ) {
+    this.brevo = this.httpService.axiosRef.create({
+      baseURL: this.configService.get<string>('BREVO_API_BASE_URL') || 'https://api.brevo.com/v3',
+      timeout: Number(this.configService.get<string>('BREVO_API_TIMEOUT_MS') ?? 10_000),
+    });
 
-  private getTransporter() {
-    if (!this.transporter) {
-      const user = this.configService.get<string>('EMAIL_USER');
-      const pass = this.configService.get<string>('EMAIL_PASS');
-      if (!user || !pass) throw new Error('MailService: EMAIL_USER and EMAIL_PASS must be set to send mail.');
+    this.brevo.interceptors.request.use((config) => {
+      const apiKey = this.configService.get<string>('BREVO_API_KEY');
+      if (!apiKey) throw new ServiceUnavailableException('mail.unavailable');
 
-      this.transporter = nodemailer.createTransport({
-        host: 'smtp-relay.brevo.com',
-        port: 587,
-        secure: false,
-        auth: { user, pass },
-      });
-    }
+      config.headers['api-key'] = apiKey;
+      config.headers.accept = 'application/json';
+      config.headers['content-type'] = 'application/json';
 
-    return this.transporter;
+      return config;
+    });
+
+    this.brevo.interceptors.response.use(
+      (res) => res,
+      (err: AxiosError<{ message?: string }>) => {
+        const status = err.response?.status ?? err.status;
+        const upstreamMessage = err.response?.data?.message ?? err.message;
+
+        this.logger.error(`Brevo API request failed${status ? ` (status: ${status})` : ''}: ${upstreamMessage}`);
+
+        throw new ServiceUnavailableException('mail.unavailable');
+      },
+    );
   }
 
-  send({ title, ...options }: SendMailOptions, mail: MailType) {
-    return this.getTransporter().sendMail({
-      ...options,
-      from: `"${title}" <${getEmail(mail)}>`,
+  send({ title, to, subject, html }: SendMailOptions, mail: MailType) {
+    return this.brevo.post('/smtp/email', {
+      sender: { name: title, email: getEmail(mail) },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
     });
   }
 

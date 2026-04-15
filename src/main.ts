@@ -9,7 +9,7 @@ async function bootstrap() {
   app.enableCors({
     origin: process.env.FRONTEND_URL,
     credentials: true,
-    exposedHeaders: ['x-locale'],
+    exposedHeaders: ['x-locale', 'x-is-logged-in'],
   });
 
   await app.listen(process.env.PORT ?? 3000);

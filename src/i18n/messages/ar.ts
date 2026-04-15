@@ -68,6 +68,7 @@ export default {
   'bosta.unavailable': 'خدمة الشحن غير متاحة مؤقتاً',
 
   'mail.supportTitle': 'دعم Gamers Core',
+  'mail.unavailable': 'خدمة البريد غير متاحة مؤقتاً',
   'mail.signin.subject': 'رمز تفعيل الحساب',
   'mail.signin.body': 'رمز تفعيل حسابك هو',
   'mail.orderConfirmation.subject': 'تأكيد الطلب - {orderNumber}',
