@@ -68,6 +68,7 @@ export default {
   'bosta.unavailable': 'Shipping service is temporarily unavailable',
 
   'mail.supportTitle': 'Gamers Core Support',
+  'mail.unavailable': 'Mail service is temporarily unavailable',
   'mail.signin.subject': 'Account Verification Code',
   'mail.signin.body': 'Your account verification code is',
   'mail.orderConfirmation.subject': 'Order Confirmation - {orderNumber}',

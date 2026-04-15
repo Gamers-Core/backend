@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 
 import { UsersModule } from 'src/users';
 import { MailService } from 'src/mail';
@@ -9,7 +10,7 @@ import { AuthService } from './auth.service';
 import { OtpSessionService } from './otp-session';
 
 @Module({
-  imports: [UsersModule, CartModule],
+  imports: [HttpModule, UsersModule, CartModule],
   controllers: [AuthController],
   providers: [AuthService, OtpSessionService, MailService],
 })
