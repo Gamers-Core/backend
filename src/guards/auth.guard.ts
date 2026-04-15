@@ -22,6 +22,8 @@ export class AuthGuard implements CanActivate {
     ]);
 
     const req = context.switchToHttp().getRequest<Request>();
+    req.res?.setHeader('x-is-logged-in', 'false');
+
     const userId = req.session?.userId;
 
     if (!userId) {
@@ -39,6 +41,7 @@ export class AuthGuard implements CanActivate {
 
     this.localeContextService.locale = user.locale;
     req.res?.setHeader('x-locale', user.locale);
+    req.res?.setHeader('x-is-logged-in', 'true');
     req.user = user;
 
     return true;
