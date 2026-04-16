@@ -168,7 +168,7 @@ export class OrdersService {
   private async recalculateAndSaveTotals(order: Order, manager: EntityManager) {
     const shippingFee = await this.bostaService.calculateShippingFees(
       order.subtotal,
-      order.shippingAddress.cityName,
+      order.shippingAddress.cityDropOff,
       order.paymentMethod === 'cod',
       order.canOpenPackage,
     );

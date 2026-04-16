@@ -190,6 +190,7 @@ export class AddressesService {
     return {
       cityId: city._id,
       cityName: city.nameAr,
+      cityDropOff: city.name,
       districtId: district.districtId,
       districtName: district.districtOtherName,
     };

@@ -26,4 +26,5 @@ export interface OrderAddressSnapshot {
   districtName: string;
   cityId: string;
   cityName: string;
+  cityDropOff: string;
 }

@@ -1,6 +1,7 @@
 export interface BostaLocation {
   cityId: string;
   cityName: string;
+  cityDropOff: string;
   districtId: string;
   districtName: string;
 }

@@ -30,6 +30,9 @@ export class Address {
   cityName: string;
 
   @Column()
+  cityDropOff: string;
+
+  @Column()
   nameAr: string;
 
   @Column({ name: 'is_default', default: false })
