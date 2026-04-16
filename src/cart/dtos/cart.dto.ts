@@ -68,9 +68,6 @@ class CartItemDTO {
 
 export class CartDTO {
   @Expose()
-  id: number;
-
-  @Expose()
   @Type(() => CartItemDTO)
   items: CartItemDTO[];
 
