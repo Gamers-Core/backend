@@ -1,25 +1,51 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 
-import { ItemSnapshot, Order, Variant } from 'src/entity';
+import { ItemSnapshot, MediaAttachment, Order, Variant } from 'src/entity';
 import { InventoryService } from 'src/products';
 import { BadRequestException, NotFoundException } from 'src/common';
+import { MediaAttachmentService } from 'src/media';
 
 import { AddOrderItemDTO, UpdateOrderItemDTO } from './dtos';
 
 @Injectable()
 export class OrderItemsService {
-  constructor(private readonly inventoryService: InventoryService) {}
+  constructor(
+    private readonly inventoryService: InventoryService,
+    private readonly mediaAttachmentService: MediaAttachmentService,
+  ) {}
 
   async addItems(order: Order, items: AddOrderItemDTO[], manager: EntityManager) {
     if (!items.length) throw new BadRequestException('orders.itemsRequired');
 
     const itemSnapshotRepo = manager.getRepository(ItemSnapshot);
     const itemSnapshots: Array<Omit<ItemSnapshot, 'id'> & { order: Order }> = [];
+    const reservedVariants: Array<{ variant: Variant; quantity: number }> = [];
 
     for (const { externalId, quantity } of items) {
       const variant = await this.inventoryService.reserveStock(externalId, quantity, manager);
-      const snapshot = this.snapshot(variant, quantity);
+
+      reservedVariants.push({ variant, quantity });
+    }
+
+    const variantIds = reservedVariants.map(({ variant }) => variant.id);
+    const variantMediaMap = await this.mediaAttachmentService.getBulkMedia(
+      variantIds,
+      'variant',
+      manager.getRepository(MediaAttachment),
+    );
+
+    const productIds = reservedVariants.map(({ variant }) => variant.product.id);
+    const productMediaMap = await this.mediaAttachmentService.getBulkMedia(
+      productIds,
+      'product',
+      manager.getRepository(MediaAttachment),
+    );
+
+    for (const { variant, quantity } of reservedVariants) {
+      const imageURL =
+        variantMediaMap[variant.id]?.[0]?.media.url ?? productMediaMap[variant.product.id]?.[0]?.media.url ?? null;
+      const snapshot = this.snapshot(variant, quantity, imageURL);
 
       itemSnapshots.push({ ...snapshot, order });
     }
@@ -64,7 +90,7 @@ export class OrderItemsService {
     return totalDifference;
   }
 
-  private snapshot(variant: Variant, quantity: number): Omit<ItemSnapshot, 'id' | 'order'> {
+  private snapshot(variant: Variant, quantity: number, imageURL: string | null): Omit<ItemSnapshot, 'id' | 'order'> {
     const unitPrice = variant.price;
     const lineTotal = unitPrice * quantity;
 
@@ -73,6 +99,7 @@ export class OrderItemsService {
       variantExternalId: variant.externalId,
       productTitle: { ...variant.product.title },
       variantName: { ...(variant.name ?? variant.product.title) },
+      imageURL,
       quantity,
       unitPrice,
       lineTotal,

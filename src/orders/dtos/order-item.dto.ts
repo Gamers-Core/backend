@@ -1,4 +1,5 @@
 import { Expose } from 'class-transformer';
+
 import { Localize } from 'src/i18n';
 
 export class OrderItemDTO {
@@ -15,6 +16,9 @@ export class OrderItemDTO {
   @Expose()
   @Localize()
   variantName: string;
+
+  @Expose()
+  imageURL: string | null;
 
   @Expose()
   quantity: number;

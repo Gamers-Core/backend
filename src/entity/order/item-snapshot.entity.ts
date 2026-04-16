@@ -22,6 +22,9 @@ export class ItemSnapshot {
   @Column('jsonb', { transformer: parse })
   variantName: Localized;
 
+  @Column('varchar', { name: 'image_url', nullable: true, length: 2048 })
+  imageURL: string | null;
+
   @Column('int')
   quantity: number;
 
