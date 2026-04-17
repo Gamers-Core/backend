@@ -28,9 +28,6 @@ export class AdminOrderDTO extends OrderDTO {
   paymentStatus: PaymentStatus;
 
   @Expose()
-  createdAt: Date;
-
-  @Expose()
   updatedAt: Date;
 
   @Expose()
