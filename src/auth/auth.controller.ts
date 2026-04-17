@@ -17,7 +17,7 @@ export class AuthController {
 
   @Post('logout')
   logout(@Req() req: Request) {
-    req.session = undefined;
+    req.session = null;
 
     return { isLoggedIn: false };
   }
@@ -25,7 +25,7 @@ export class AuthController {
   @Serialize(OtpDTO)
   @Post('signin')
   async signin(@Session() session: AuthSession, @Req() req: Request, @Body() body: SigninDTO) {
-    if (session.userId) req.session = undefined;
+    if (session.userId) req.session = null;
 
     return await this.authService.signin(body);
   }
