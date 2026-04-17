@@ -104,6 +104,7 @@ export class OrdersService {
       assertStatusGuards(order, status);
 
       order.status = status;
+      this.markStatusTimestamp(order, status);
       await this.statusHandlers[status]?.(order);
     });
   }
@@ -113,8 +114,26 @@ export class OrdersService {
       assertValidPaymentTransition(order.paymentStatus, body.paymentStatus);
       assertPaymentStatusGuards(order, body.paymentStatus);
       order.paymentStatus = body.paymentStatus;
-      if (body.paymentStatus === 'paid') order.paidAt = new Date();
+      this.markPaymentTimestamp(order, body.paymentStatus);
     });
+  }
+
+  private markStatusTimestamp(order: Order, status: OrderStatus) {
+    const now = new Date();
+
+    if (status === 'confirmed' && !order.confirmedAt) order.confirmedAt = now;
+    if (status === 'shipped' && !order.shippedAt) order.shippedAt = now;
+    if (status === 'delivered' && !order.deliveredAt) order.deliveredAt = now;
+    if (status === 'completed' && !order.completedAt) order.completedAt = now;
+    if (status === 'returned' && !order.returnedAt) order.returnedAt = now;
+    if (status === 'cancelled' && !order.canceledAt) order.canceledAt = now;
+  }
+
+  private markPaymentTimestamp(order: Order, paymentStatus: Order['paymentStatus']) {
+    const now = new Date();
+
+    if (paymentStatus === 'paid' && !order.paidAt) order.paidAt = now;
+    if (paymentStatus === 'refunded' && !order.refundedAt) order.refundedAt = now;
   }
 
   async updateShipping(orderNumber: string, body: UpdateOrderShippingDTO) {
@@ -168,7 +187,7 @@ export class OrdersService {
   private async recalculateAndSaveTotals(order: Order, manager: EntityManager) {
     const shippingFee = await this.bostaService.calculateShippingFees(
       order.subtotal,
-      order.shippingAddress.cityName,
+      order.shippingAddress.cityDropOff,
       order.paymentMethod === 'cod',
       order.canOpenPackage,
     );

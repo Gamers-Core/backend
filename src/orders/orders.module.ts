@@ -8,6 +8,7 @@ import { Order } from 'src/entity';
 import { CartModule } from 'src/cart';
 import { ProductsModule } from 'src/products';
 import { MailService } from 'src/mail';
+import { MediaModule } from 'src/media';
 
 import { OrdersAdminController } from './orders-admin.controller';
 import { OrdersUserController } from './orders-user.controller';
@@ -22,6 +23,7 @@ import { OrdersService } from './orders.service';
     forwardRef(() => BostaModule),
     CartModule,
     ProductsModule,
+    MediaModule,
   ],
   controllers: [OrdersUserController, OrdersAdminController],
   providers: [OrdersService, OrderItemsService, MailService],

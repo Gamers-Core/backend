@@ -72,6 +72,27 @@ export class Order {
   @Column('timestamp', { nullable: true })
   paidAt: Date | null;
 
+  @Column('timestamp', { nullable: true })
+  confirmedAt: Date | null;
+
+  @Column('timestamp', { nullable: true })
+  shippedAt: Date | null;
+
+  @Column('timestamp', { nullable: true })
+  deliveredAt: Date | null;
+
+  @Column('timestamp', { nullable: true })
+  completedAt: Date | null;
+
+  @Column('timestamp', { nullable: true })
+  returnedAt: Date | null;
+
+  @Column('timestamp', { nullable: true })
+  canceledAt: Date | null;
+
+  @Column('timestamp', { nullable: true })
+  refundedAt: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Session } from '@nestjs/common';
+import { Body, Controller, Post, Req, Session } from '@nestjs/common';
 
 import { Serialize } from 'src/interceptors';
 import { CurrentUser } from 'src/users';
@@ -8,6 +8,7 @@ import { OtpDTO, ResendOTPDTO, SigninDTO, VerifyOTPDTO, VerifyOtpResponseDTO } f
 import { AuthService } from './auth.service';
 import { Public } from './decorators';
 import type { AuthSession } from './types';
+import type { Request } from 'express';
 
 @Controller('auth')
 @Public()
@@ -15,16 +16,16 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('logout')
-  logout(@Session() session: AuthSession) {
-    session.userId = null;
+  logout(@Req() req: Request) {
+    req.session = null;
 
     return { isLoggedIn: false };
   }
 
   @Serialize(OtpDTO)
   @Post('signin')
-  async signin(@Session() session: AuthSession, @Body() body: SigninDTO) {
-    if (session.userId) this.logout(session);
+  async signin(@Session() session: AuthSession, @Req() req: Request, @Body() body: SigninDTO) {
+    if (session.userId) req.session = null;
 
     return await this.authService.signin(body);
   }
