@@ -35,6 +35,33 @@ export class OrderDTO {
   paymentMethod: PaymentMethod;
 
   @Expose()
+  createdAt: Date;
+
+  @Expose()
+  confirmedAt: Date | null;
+
+  @Expose()
+  shippedAt: Date | null;
+
+  @Expose()
+  deliveredAt: Date | null;
+
+  @Expose()
+  completedAt: Date | null;
+
+  @Expose()
+  returnedAt: Date | null;
+
+  @Expose()
+  canceledAt: Date | null;
+
+  @Expose()
+  paidAt: Date | null;
+
+  @Expose()
+  refundedAt: Date | null;
+
+  @Expose()
   @ValidateNested({ each: true })
   @Type(() => OrderItemDTO)
   items: OrderItemDTO[];
