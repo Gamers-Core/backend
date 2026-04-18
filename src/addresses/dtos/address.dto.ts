@@ -23,6 +23,9 @@ export class AddressDTO {
   cityName: string;
 
   @Expose()
+  cityDropOff: string;
+
+  @Expose()
   nameAr: string;
 
   @Expose()
