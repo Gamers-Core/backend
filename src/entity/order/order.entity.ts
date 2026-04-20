@@ -16,6 +16,7 @@ import { User } from '../user.entity';
 import { orderStatuses, paymentMethods, paymentStatuses } from './const';
 import type { OrderAddressSnapshot, OrderStatus, PaymentMethod, PaymentStatus } from './types';
 import { ItemSnapshot } from './item-snapshot.entity';
+import { OrderStatusHistory } from './order-status-history.entity';
 
 const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 6);
 
@@ -38,6 +39,9 @@ export class Order {
 
   @OneToMany(() => ItemSnapshot, (item) => item.order, { cascade: true })
   items: ItemSnapshot[];
+
+  @OneToMany(() => OrderStatusHistory, (history) => history.order)
+  history: OrderStatusHistory[];
 
   @Column('jsonb', { transformer: parse })
   shippingAddress: OrderAddressSnapshot;
@@ -68,30 +72,6 @@ export class Order {
     nullable: false,
   })
   user: User;
-
-  @Column('timestamp', { nullable: true })
-  paidAt: Date | null;
-
-  @Column('timestamp', { nullable: true })
-  confirmedAt: Date | null;
-
-  @Column('timestamp', { nullable: true })
-  shippedAt: Date | null;
-
-  @Column('timestamp', { nullable: true })
-  deliveredAt: Date | null;
-
-  @Column('timestamp', { nullable: true })
-  completedAt: Date | null;
-
-  @Column('timestamp', { nullable: true })
-  returnedAt: Date | null;
-
-  @Column('timestamp', { nullable: true })
-  canceledAt: Date | null;
-
-  @Column('timestamp', { nullable: true })
-  refundedAt: Date | null;
 
   @CreateDateColumn()
   createdAt: Date;

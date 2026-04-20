@@ -24,6 +24,14 @@ class OrderAddressDTO {
   cityName: string;
 }
 
+class OrderStatusHistoryDTO {
+  @Expose()
+  status: OrderStatus;
+
+  @Expose()
+  createdAt: Date;
+}
+
 export class OrderDTO {
   @Expose()
   orderNumber: string;
@@ -38,28 +46,9 @@ export class OrderDTO {
   createdAt: Date;
 
   @Expose()
-  confirmedAt: Date | null;
-
-  @Expose()
-  shippedAt: Date | null;
-
-  @Expose()
-  deliveredAt: Date | null;
-
-  @Expose()
-  completedAt: Date | null;
-
-  @Expose()
-  returnedAt: Date | null;
-
-  @Expose()
-  canceledAt: Date | null;
-
-  @Expose()
-  paidAt: Date | null;
-
-  @Expose()
-  refundedAt: Date | null;
+  @ValidateNested({ each: true })
+  @Type(() => OrderStatusHistoryDTO)
+  history: OrderStatusHistoryDTO[];
 
   @Expose()
   @ValidateNested({ each: true })
