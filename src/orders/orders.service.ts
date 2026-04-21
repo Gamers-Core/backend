@@ -283,17 +283,18 @@ export class OrdersService {
       const delivery = await withEnvironment(['production'], async (isValid) => {
         if (!isValid) return { trackingNumber: null };
 
-        const createdDelivery = await this.bostaService.createDelivery({
-          ...order.shippingAddress,
-          ...order,
-          unitPrice,
-          cod: order.total,
-          note: order.note ?? undefined,
-        });
+        const [delivery] = await Promise.all([
+          this.bostaService.createDelivery({
+            ...order.shippingAddress,
+            ...order,
+            unitPrice,
+            cod: order.total,
+            note: order.note ?? undefined,
+          }),
+          this.mailService.sendTypedMail(getEmail('admin'), 'order_reminder', this.mapToDTO(order, 'en'), 'en'),
+        ]);
 
-        await this.mailService.sendTypedMail(getEmail('admin'), 'order_reminder', this.mapToDTO(order, 'en'), 'en');
-
-        return createdDelivery;
+        return delivery;
       });
 
       order.trackingNumber = delivery.trackingNumber;
