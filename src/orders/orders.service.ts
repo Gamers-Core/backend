@@ -214,14 +214,14 @@ export class OrdersService {
       const order = await this.getOrderOrFail(manager, options, true);
       await mutate(order, manager);
 
-      await manager.getRepository(Order).save({
+      const updatedOrder = await manager.getRepository(Order).save({
         id: order.id,
         status: order.status,
         paymentStatus: order.paymentStatus,
         trackingNumber: order.trackingNumber,
       });
 
-      return this.serializeOrder(order);
+      return this.serializeOrder(updatedOrder);
     });
   }
 
