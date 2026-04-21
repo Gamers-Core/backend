@@ -8,7 +8,7 @@ import { Locale, LocaleContextService } from 'src/i18n';
 import { CartService } from 'src/cart';
 import { BostaService } from 'src/bosta';
 import { getEmail, MailService } from 'src/mail';
-import { Order, type OrderStatus } from 'src/entity';
+import { Order, OrderStatusHistory, type OrderStatus } from 'src/entity';
 import { AddressesService } from 'src/addresses/addresses.service';
 
 import { editableStatuses, nonUpdatableShippingStatuses } from './statuses';
@@ -47,8 +47,8 @@ export class OrdersService {
   getOrders(userId?: number) {
     return this.ordersRepo.find({
       where: userId ? { user: { id: userId } } : undefined,
-      relations: { items: true, user: !!userId },
-      order: { createdAt: 'DESC' },
+      relations: { items: true, user: !!userId, history: true },
+      order: { createdAt: 'DESC', history: { createdAt: 'ASC' } },
     });
   }
 
@@ -99,12 +99,12 @@ export class OrdersService {
   }
 
   async updateStatus(options: OrderOptions, status: OrderStatus) {
-    return this.updateOrder(options, async (order) => {
+    return this.updateOrder(options, async (order, manager) => {
       assertValidOrderTransition(order.status, status);
       assertStatusGuards(order, status);
 
       order.status = status;
-      this.markStatusTimestamp(order, status);
+      await this.appendHistory(order, status, manager);
       await this.statusHandlers[status]?.(order);
     });
   }
@@ -114,26 +114,7 @@ export class OrdersService {
       assertValidPaymentTransition(order.paymentStatus, body.paymentStatus);
       assertPaymentStatusGuards(order, body.paymentStatus);
       order.paymentStatus = body.paymentStatus;
-      this.markPaymentTimestamp(order, body.paymentStatus);
     });
-  }
-
-  private markStatusTimestamp(order: Order, status: OrderStatus) {
-    const now = new Date();
-
-    if (status === 'confirmed' && !order.confirmedAt) order.confirmedAt = now;
-    if (status === 'shipped' && !order.shippedAt) order.shippedAt = now;
-    if (status === 'delivered' && !order.deliveredAt) order.deliveredAt = now;
-    if (status === 'completed' && !order.completedAt) order.completedAt = now;
-    if (status === 'returned' && !order.returnedAt) order.returnedAt = now;
-    if (status === 'cancelled' && !order.canceledAt) order.canceledAt = now;
-  }
-
-  private markPaymentTimestamp(order: Order, paymentStatus: Order['paymentStatus']) {
-    const now = new Date();
-
-    if (paymentStatus === 'paid' && !order.paidAt) order.paidAt = now;
-    if (paymentStatus === 'refunded' && !order.refundedAt) order.refundedAt = now;
   }
 
   async updateShipping(orderNumber: string, body: UpdateOrderShippingDTO) {
@@ -170,6 +151,7 @@ export class OrdersService {
     });
 
     await orderRepo.save(order);
+    await this.appendHistory(order, order.status, manager);
 
     const diff = await this.orderItemsService.addItems(order, body.variants, manager);
     order.subtotal += diff;
@@ -227,18 +209,23 @@ export class OrdersService {
     return this.serializeOrder(updatedOrder);
   }
 
-  private updateOrder(options: OrderOptions, mutate: (order: Order) => void | Promise<void>) {
+  private updateOrder(options: OrderOptions, mutate: (order: Order, manager: EntityManager) => void | Promise<void>) {
     return this.ordersRepo.manager.transaction(async (manager) => {
       const order = await this.getOrderOrFail(manager, options, true);
-      await mutate(order);
+      await mutate(order, manager);
 
-      const updatedOrder = await manager.getRepository(Order).save(order);
+      const updatedOrder = await manager.getRepository(Order).save({
+        id: order.id,
+        status: order.status,
+        paymentStatus: order.paymentStatus,
+        trackingNumber: order.trackingNumber,
+      });
 
       return this.serializeOrder(updatedOrder);
     });
   }
 
-  private async getOrderOrFail(manager: EntityManager, options: OrderOptions, withRelation = false) {
+  private async getOrderOrFail(manager: EntityManager, options: OrderOptions, includeRelations = false) {
     const { userId, ...identifier } = options;
 
     const order = await manager.getRepository(Order).findOne({
@@ -246,12 +233,23 @@ export class OrdersService {
         ...identifier,
         ...(userId ? { user: { id: userId } } : {}),
       },
-      relations: withRelation ? { items: true, user: true } : undefined,
+      relations: includeRelations ? { items: true, user: true, history: true } : undefined,
+      order: includeRelations ? { history: { createdAt: 'ASC' } } : undefined,
     });
 
     if (!order) throw new NotFoundException('orders.notFound');
 
     return order;
+  }
+
+  private async appendHistory(order: Order, status: OrderStatus, manager: EntityManager) {
+    const historyRepo = manager.getRepository(OrderStatusHistory);
+
+    const entry = historyRepo.create({ order: { id: order.id }, status });
+
+    await historyRepo.save(entry);
+
+    if (Array.isArray(order.history)) order.history.push(entry);
   }
 
   serializeOrder(order: Order) {
@@ -282,10 +280,10 @@ export class OrdersService {
     confirmed: async (order) => {
       const unitPrice = order.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
 
-      const [delivery] = await withEnvironment(['production'], async (isValid) => {
-        if (!isValid) return [{ trackingNumber: null }];
+      const delivery = await withEnvironment(['production'], async (isValid) => {
+        if (!isValid) return { trackingNumber: null };
 
-        return await Promise.all([
+        const [delivery] = await Promise.all([
           this.bostaService.createDelivery({
             ...order.shippingAddress,
             ...order,
@@ -295,6 +293,8 @@ export class OrdersService {
           }),
           this.mailService.sendTypedMail(getEmail('admin'), 'order_reminder', this.mapToDTO(order, 'en'), 'en'),
         ]);
+
+        return delivery;
       });
 
       order.trackingNumber = delivery.trackingNumber;
