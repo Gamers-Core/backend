@@ -6,10 +6,9 @@ import { Cart, CartItem, MediaAttachment, Variant } from 'src/entity';
 import { MediaAttachmentService } from 'src/media';
 import { InventoryService } from 'src/products';
 import { cartItemRelations, cartRelations } from 'src/products';
-import { withOptionalManager, BadRequestException, NotFoundException } from 'src/common';
+import { withOptionalManager, BadRequestException, NotFoundException, isUniqueViolation } from 'src/common';
 
 import { CreateCartItemDTO, UpdateCartItemDTO } from './dtos';
-import { isUniqueViolation } from 'src/common/helpers';
 
 @Injectable()
 export class CartService {

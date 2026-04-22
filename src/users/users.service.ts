@@ -3,9 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
 
 import { User } from 'src/entity';
-import { NotFoundException } from 'src/common';
+import { NotFoundException, isUniqueViolation } from 'src/common';
 import { type Locale } from 'src/i18n';
-import { isUniqueViolation } from 'src/common/helpers';
 
 @Injectable()
 export class UsersService {
