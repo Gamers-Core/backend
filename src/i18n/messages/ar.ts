@@ -47,6 +47,8 @@ export default {
   'featuredVariants.alreadyFeatured': 'المتغير مميز بالفعل',
   'featuredVariants.invalidIds': 'معرّفات العناصر المميزة غير صالحة',
 
+  'policies.concurrentUpdate': 'تم تحديث السياسة بالتزامن. يرجى إعادة المحاولة.',
+
   'orders.invalidTransition': 'انتقال حالة الطلب غير صالح: {current} → {next}',
   'orders.invalidPaymentTransition': 'انتقال حالة الدفع غير صالح: {current} → {next}',
   'orders.shipped.mustBePaidBeforeCOD': 'يجب دفع الطلبات قبل الشحن',

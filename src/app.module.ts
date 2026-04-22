@@ -26,6 +26,7 @@ import { FeaturedVariantsModule } from './featured-variants';
 import { UserReviewsModule } from './user-reviews';
 import { BrandsModule } from './brands';
 import { CategoriesModule } from './categories';
+import { PoliciesModule } from './policies';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { CategoriesModule } from './categories';
     RedisModule,
     CloudinaryModule,
     I18nModule,
+    PoliciesModule,
     TypeOrmModule.forRoot(getDataSourceOptions()),
     ConfigModule.forRoot({
       isGlobal: true,
