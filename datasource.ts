@@ -20,6 +20,7 @@ import {
   FeaturedVariant,
   User,
   UserReview,
+  Policy,
 } from 'src/entity';
 import { UserSubscriber } from 'src/subscribers/user.subscriber';
 
@@ -53,6 +54,7 @@ export const getDataSourceOptions = (): DataSourceOptions => {
       OrderStatusHistory,
       Cart,
       CartItem,
+      Policy,
     ],
     subscribers: [UserSubscriber],
   };
