@@ -1,4 +1,4 @@
-import { Expose, Type } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 
 import { Localize, type Localized } from 'src/i18n';
 
@@ -8,7 +8,8 @@ export class PolicyDTO {
   value: Localized;
 
   @Expose()
-  createdAt: Date;
+  @Transform(({ obj }) => obj.createdAt)
+  updatedAt: Date;
 }
 
 export class PoliciesDTO {

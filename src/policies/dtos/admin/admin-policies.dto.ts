@@ -5,7 +5,7 @@ import { type Localized } from 'src/i18n';
 
 export class AdminPolicyDTO {
   @Expose()
-  id: string;
+  id: number;
 
   @Expose()
   type: PolicyType;
