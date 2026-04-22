@@ -47,6 +47,8 @@ export default {
   'featuredVariants.alreadyFeatured': 'Variant is already featured',
   'featuredVariants.invalidIds': 'Invalid featured variant IDs',
 
+  'policies.concurrentUpdate': 'Policy was updated concurrently. Please retry.',
+
   'orders.invalidTransition': 'Invalid order status transition: {current} → {next}',
   'orders.invalidPaymentTransition': 'Invalid payment status transition: {current} → {next}',
   'orders.shipped.mustBePaidBeforeCOD': 'Orders must be paid before shipping if not cash-on-delivery',

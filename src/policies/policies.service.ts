@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { ConflictException, isUniqueViolation } from 'src/common';
 import { Policies, Policy, PolicyType } from 'src/entity';
 
 import { UpdatePolicyDTO } from './dtos';
@@ -13,32 +14,38 @@ export class PoliciesService {
   private static readonly POLICY_HISTORY_DEPTH = 2;
 
   async updatePolicy(type: PolicyType, updateDTO: UpdatePolicyDTO): Promise<Policy> {
-    const latest = await this.repo.findOne({
-      where: { type },
-      order: { version: 'DESC' },
-    });
+    try {
+      return await this.repo.manager.transaction(async (manager) => {
+        const policyRepo = manager.getRepository(Policy);
 
-    const newVersion = (latest?.version ?? 0) + 1;
-    const policy = this.repo.create({ type, ...updateDTO, version: newVersion });
-    await this.repo.save(policy);
+        const latest = await policyRepo.findOne({
+          where: { type },
+          order: { version: 'DESC' },
+        });
 
-    await this.repo
-      .createQueryBuilder()
-      .delete()
-      .where(
-        `type = :type AND version <= (
-        SELECT MIN(version) FROM (
-          SELECT version FROM policy
-          WHERE type = :type
-          ORDER BY version DESC
-          LIMIT :depth
-        ) sub
-      ) - 1`,
-        { type, depth: PoliciesService.POLICY_HISTORY_DEPTH },
-      )
-      .execute();
+        const newVersion = (latest?.version ?? 0) + 1;
+        const policy = policyRepo.create({ type, ...updateDTO, version: newVersion });
+        await policyRepo.save(policy);
 
-    return policy;
+        await manager.query(
+          `DELETE FROM policy
+         WHERE type = $1 AND version <= (
+           SELECT MIN(version) FROM (
+             SELECT version FROM policy
+             WHERE type = $1
+             ORDER BY version DESC
+             LIMIT $2
+           ) sub
+         ) - 1`,
+          [type, PoliciesService.POLICY_HISTORY_DEPTH],
+        );
+
+        return policy;
+      });
+    } catch (error) {
+      if (isUniqueViolation(error)) throw new ConflictException('policies.concurrentUpdate');
+      throw error;
+    }
   }
 
   async getLatestAll(): Promise<Policies> {
