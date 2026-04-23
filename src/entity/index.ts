@@ -9,3 +9,4 @@ export * from './order';
 export * from './cart';
 export * from './user-review.entity';
 export * from './policies';
+export * from './faq.entity';

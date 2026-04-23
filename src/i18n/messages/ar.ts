@@ -97,6 +97,9 @@ export default {
   'userReviews.maxCount': 'الحد الأقصى للمراجعات هو 3',
   'userReviews.invalidIds': 'ترتيب مراجعات المستخدم غير صالح',
 
+  'faqs.notFound': 'السؤال غير موجود',
+  'faqs.invalidIds': 'ترتيب الأسئلة غير صالح',
+
   isEmail: 'يجب أن يكون بريدًا إلكترونيًا صالحًا',
   isString: 'يجب أن تكون القيمة نصًا',
   isPhoneNumber: 'يجب أن يكون رقم هاتف صالحًا',

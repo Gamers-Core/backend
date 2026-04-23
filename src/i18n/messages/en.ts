@@ -97,6 +97,9 @@ export default {
   'userReviews.maxCount': 'Maximum of 3 user reviews allowed',
   'userReviews.invalidIds': 'Invalid user review order',
 
+  'faqs.notFound': 'FAQ not found',
+  'faqs.invalidIds': 'Invalid FAQ order',
+
   isEmail: 'Must be a valid email address',
   isString: 'Must be a string',
   isPhoneNumber: 'Must be a valid phone number',
