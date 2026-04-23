@@ -8,50 +8,52 @@ import { getDataSourceOptions } from 'datasource';
 
 import { GlobalExceptionFilter, ValidationException } from './common';
 import { I18nModule, LocaleContextMiddleware } from './i18n';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { AuthGuard } from './guards';
-import { AppCacheModule } from './cache';
-import { RedisModule } from './redis';
-import { CloudinaryModule } from './cloudinary';
-import { UsersModule } from './users';
-import { AuthModule } from './auth';
-import { AddressesModule } from './addresses';
-import { BostaModule } from './bosta';
-import { ProductsModule } from './products';
-import { MediaModule } from './media';
-import { OrdersModule } from './orders';
-import { CartModule } from './cart';
 import { FeaturedVariantsModule } from './featured-variants';
 import { UserReviewsModule } from './user-reviews';
-import { BrandsModule } from './brands';
+import { AppController } from './app.controller';
+import { CloudinaryModule } from './cloudinary';
 import { CategoriesModule } from './categories';
+import { AddressesModule } from './addresses';
+import { ProductsModule } from './products';
 import { PoliciesModule } from './policies';
+import { AppService } from './app.service';
+import { AppCacheModule } from './cache';
+import { BrandsModule } from './brands';
+import { OrdersModule } from './orders';
+import { BostaModule } from './bosta';
+import { RedisModule } from './redis';
+import { UsersModule } from './users';
+import { MediaModule } from './media';
+import { AuthGuard } from './guards';
+import { AuthModule } from './auth';
+import { CartModule } from './cart';
+import { FAQsModule } from './faqs';
 
 @Module({
   imports: [
-    UsersModule,
-    AuthModule,
-    AddressesModule,
-    BostaModule,
-    AppCacheModule,
-    ProductsModule,
-    MediaModule,
-    OrdersModule,
-    CartModule,
-    FeaturedVariantsModule,
-    UserReviewsModule,
-    BrandsModule,
-    CategoriesModule,
-    RedisModule,
-    CloudinaryModule,
-    I18nModule,
-    PoliciesModule,
     TypeOrmModule.forRoot(getDataSourceOptions()),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV ?? 'development'}`,
     }),
+    FeaturedVariantsModule,
+    UserReviewsModule,
+    CloudinaryModule,
+    CategoriesModule,
+    AddressesModule,
+    ProductsModule,
+    AppCacheModule,
+    PoliciesModule,
+    BrandsModule,
+    OrdersModule,
+    RedisModule,
+    UsersModule,
+    BostaModule,
+    MediaModule,
+    AuthModule,
+    CartModule,
+    I18nModule,
+    FAQsModule,
   ],
   controllers: [AppController],
   providers: [
