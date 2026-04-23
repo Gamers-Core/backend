@@ -81,9 +81,7 @@ export class FAQsService {
     });
   }
 
-  private static readonly POSITION_OFFSET = 1000;
-
-  async reorderWithPositions(faqs: FAQ[], manager: EntityManager): Promise<void> {
+  private async reorderWithPositions(faqs: FAQ[], manager: EntityManager): Promise<void> {
     if (!faqs.length) return;
 
     const repo = manager.getRepository(FAQ);
