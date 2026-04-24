@@ -1,0 +1,41 @@
+// dtos/admin/search-products.dto.ts
+import { Type } from 'class-transformer';
+import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
+
+import { type ProductStatus, productStatuses, type StockFilter, stockFilters } from 'src/entity';
+
+export class AdminSearchProductsDTO {
+  @IsOptional()
+  @IsString()
+  q?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  brandId?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  categoryId?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  minPrice?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  maxPrice?: number;
+
+  @IsOptional()
+  @IsIn(stockFilters)
+  stock?: StockFilter;
+
+  @IsOptional()
+  @IsIn(productStatuses)
+  status?: ProductStatus;
+}
