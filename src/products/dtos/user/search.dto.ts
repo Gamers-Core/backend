@@ -1,8 +1,10 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
 
+import { MediaAttachment, Product, Variant } from 'src/entity';
+import { MediaAttachmentDTO } from 'src/media';
+
 import { ProductDTO } from './product.dto';
 import { VariantDTO } from './variant.dto';
-import { Variant } from 'src/entity';
 
 export class SearchDTO extends ProductDTO {
   @Exclude()
@@ -10,6 +12,18 @@ export class SearchDTO extends ProductDTO {
 
   @Exclude()
   declare description: string;
+
+  @Exclude()
+  declare media: MediaAttachmentDTO[];
+
+  @Expose()
+  @Transform(({ obj }) => {
+    const product = obj as Product & { media: MediaAttachment[] };
+    const mainVariant = product.variants[0] as Variant & { media: MediaAttachment[] };
+
+    return mainVariant.media[0].media.url ?? product.media[0].media.url;
+  })
+  imageURL: string;
 
   @Expose()
   @Transform(({ obj }) => {
@@ -23,15 +37,8 @@ export class SearchDTO extends ProductDTO {
   @Transform(({ obj }) => {
     const variants = obj.variants as Variant[];
 
-    return Math.min(...variants.map(({ price }) => price));
+    const prices = variants.map(({ price }) => price);
+    return { min: Math.min(...prices), max: Math.max(...prices), sale: variants.some(({ compareAt }) => !!compareAt) };
   })
-  minPrice: number;
-
-  @Expose()
-  @Transform(({ obj }) => {
-    const variants = obj.variants as Variant[];
-
-    return Math.max(...variants.map(({ price }) => price));
-  })
-  maxPrice: number;
+  price: { min: number; max: number; sale: boolean };
 }
