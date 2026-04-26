@@ -90,7 +90,9 @@ export class ProductsService {
         'product.variants',
         'variant',
         isAdmin ? 'variant.deletedAt IS NULL' : 'variant.deletedAt IS NULL AND variant.isActive = true',
-      );
+      )
+      .orderBy('product.id', 'ASC')
+      .addOrderBy('variant.id', 'ASC');
 
     if (isAdmin) {
       const status = 'status' in rest ? rest.status : undefined;
@@ -167,11 +169,11 @@ export class ProductsService {
         break;
 
       case 'title-ascending':
-        qb.orderBy(`product.name->>'${this.localeContextService.locale}'`, 'ASC');
+        qb.orderBy(`product.title->>'${this.localeContextService.locale}'`, 'ASC');
         break;
 
       case 'title-descending':
-        qb.orderBy(`product.name->>'${this.localeContextService.locale}'`, 'DESC');
+        qb.orderBy(`product.title->>'${this.localeContextService.locale}'`, 'DESC');
         break;
 
       case 'price-ascending':
