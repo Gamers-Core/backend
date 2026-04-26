@@ -11,11 +11,13 @@ export class SearchProductsDTO {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
+  @Min(1)
   brandId?: number;
 
   @IsOptional()
   @Type(() => Number)
   @IsInt()
+  @Min(1)
   categoryId?: number;
 
   @IsOptional()
