@@ -90,9 +90,7 @@ export class ProductsService {
         'product.variants',
         'variant',
         isAdmin ? 'variant.deletedAt IS NULL' : 'variant.deletedAt IS NULL AND variant.isActive = true',
-      )
-      .orderBy('product.id', 'ASC')
-      .addOrderBy('variant.id', 'ASC');
+      );
 
     if (isAdmin) {
       const status = 'status' in rest ? rest.status : undefined;
@@ -203,6 +201,8 @@ export class ProductsService {
         qb.orderBy('product.createdAt', 'DESC');
         break;
     }
+
+    qb.addOrderBy('product.id', 'ASC').addOrderBy('variant.id', 'ASC');
 
     const products = await qb.getMany();
 

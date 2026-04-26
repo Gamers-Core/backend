@@ -21,7 +21,7 @@ export class SearchDTO extends ProductDTO {
     const product = obj as Product & { media: MediaAttachment[] };
     const mainVariant = product.variants[0] as Variant & { media: MediaAttachment[] };
 
-    return mainVariant.media[0].media.url ?? product.media[0].media.url;
+    return mainVariant.media?.[0]?.media?.url ?? product.media?.[0]?.media?.url;
   })
   imageURL: string;
 
