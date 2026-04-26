@@ -1,9 +1,9 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 
 import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
 import { Serialize } from 'src/interceptors';
 
-import { AdminProductDTO, CreateProductDTO, UpdateProductDTO } from '../dtos/admin';
+import { AdminProductDTO, AdminSearchProductsDTO, CreateProductDTO, UpdateProductDTO } from '../dtos/admin';
 import { ProductsService } from '../services';
 
 @Controller('admin/products')
@@ -19,8 +19,8 @@ export class AdminProductsController {
 
   @Get()
   @Serialize(AdminProductDTO)
-  findAll() {
-    return this.productsService.findAll();
+  findAll(@Query() dto: AdminSearchProductsDTO) {
+    return this.productsService.search(dto, true);
   }
 
   @Post()

@@ -5,8 +5,9 @@ import { Brackets, In, Repository } from 'typeorm';
 import { Brand, Category, Product, Variant } from 'src/entity';
 import { MediaAttachmentService } from 'src/media';
 import { BadRequestException, NotFoundException } from 'src/common';
+import { LocaleContextService } from 'src/i18n';
 
-import { CreateProductDTO, UpdateProductDTO } from '../dtos/admin';
+import { AdminSearchProductsDTO, CreateProductDTO, SearchProductsDTO, UpdateProductDTO } from '../dtos';
 import { productBrandCategoryRelations, productFullRelations } from '../relations';
 import { VariantsService } from './variants.service';
 
@@ -17,6 +18,7 @@ export class ProductsService {
     private readonly productsRepository: Repository<Product>,
     private readonly mediaAttachmentService: MediaAttachmentService,
     private readonly variants: VariantsService,
+    private readonly localeContextService: LocaleContextService,
   ) {}
 
   async create({ brandId, categoryId, mediaIds, variants, ...dto }: CreateProductDTO) {
@@ -39,15 +41,6 @@ export class ProductsService {
 
       return this.findOneWithMediaOrFail(product.id, productRepo);
     });
-  }
-
-  async findAll() {
-    const products = await this.productsRepository.find({
-      order: { createdAt: 'DESC' },
-      relations: productFullRelations,
-    });
-
-    return this.attachMediaToProducts(products);
   }
 
   async findMany(ids: string) {
@@ -75,6 +68,145 @@ export class ProductsService {
 
   async findOne(id: number) {
     return this.findOneWithMediaOrFail(id);
+  }
+
+  async search(
+    {
+      q,
+      brandId,
+      categoryId,
+      minPrice,
+      maxPrice,
+      stock = 'all',
+      ...rest
+    }: AdminSearchProductsDTO | SearchProductsDTO = {},
+    isAdmin = false,
+  ) {
+    const qb = this.productsRepository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.brand', 'brand')
+      .leftJoinAndSelect('product.category', 'category')
+      .leftJoinAndSelect(
+        'product.variants',
+        'variant',
+        isAdmin ? 'variant.deletedAt IS NULL' : 'variant.deletedAt IS NULL AND variant.isActive = true',
+      );
+
+    if (isAdmin) {
+      const status = 'status' in rest ? rest.status : undefined;
+      if (status) qb.andWhere('product.status = :status', { status });
+    } else qb.andWhere('product.status = :status', { status: 'active' });
+
+    if (brandId) qb.andWhere('brand.id = :brandId', { brandId });
+
+    if (categoryId) qb.andWhere('category.id = :categoryId', { categoryId });
+
+    if (q?.trim())
+      qb.andWhere(`(product.name::text ILIKE :q OR product.title::text ILIKE :q OR variant.name::text ILIKE :q)`, {
+        q: `%${q.trim()}%`,
+      });
+
+    const variantCondition = isAdmin ? `v."deleted_at" IS NULL` : `v."deleted_at" IS NULL AND v."is_active" = true`;
+
+    if (minPrice !== undefined)
+      qb.andWhere(
+        `EXISTS (
+        SELECT 1 FROM product_variant_entity v
+        WHERE v."product_id" = product.id
+          AND ${variantCondition}
+          AND v.price >= :minPrice
+      )`,
+        { minPrice },
+      );
+
+    if (maxPrice !== undefined)
+      qb.andWhere(
+        `EXISTS (
+        SELECT 1 FROM product_variant_entity v
+        WHERE v."product_id" = product.id
+          AND ${variantCondition}
+          AND v.price <= :maxPrice
+      )`,
+        { maxPrice },
+      );
+
+    if (stock === 'in-stock')
+      qb.andWhere(
+        `EXISTS (
+        SELECT 1 FROM product_variant_entity v
+        WHERE v."product_id" = product.id
+          AND ${variantCondition}
+          AND v.stock > 0
+      )`,
+      );
+    if (stock === 'out-of-stock')
+      qb.andWhere(
+        `NOT EXISTS (
+        SELECT 1 FROM product_variant_entity v
+        WHERE v."product_id" = product.id
+          AND ${variantCondition}
+          AND v.stock > 0
+      )`,
+      );
+
+    const { sort = 'created-descending' } = 'sort' in rest ? rest : {};
+
+    const effectiveSort = sort === 'most-relevant' && !q?.trim() ? 'created-descending' : sort;
+
+    switch (effectiveSort) {
+      case 'most-relevant':
+        qb.orderBy(
+          `CASE
+                    WHEN product.name->>'${this.localeContextService.locale}' ILIKE :exactQ THEN 0
+                    WHEN product.title->>'${this.localeContextService.locale}' ILIKE :exactQ THEN 1
+                    ELSE 2
+                END`,
+          'ASC',
+        ).addOrderBy('product.updatedAt', 'DESC');
+        qb.setParameter('exactQ', q!.trim());
+        break;
+
+      case 'title-ascending':
+        qb.orderBy(`product.title->>'${this.localeContextService.locale}'`, 'ASC');
+        break;
+
+      case 'title-descending':
+        qb.orderBy(`product.title->>'${this.localeContextService.locale}'`, 'DESC');
+        break;
+
+      case 'price-ascending':
+        qb.orderBy(
+          `(SELECT MIN(v.price) FROM product_variant_entity v
+                    WHERE v."product_id" = product.id AND ${variantCondition})`,
+          'ASC',
+          'NULLS LAST',
+        );
+        break;
+
+      case 'price-descending':
+        qb.orderBy(
+          `(SELECT MAX(v.price) FROM product_variant_entity v
+                    WHERE v."product_id" = product.id AND ${variantCondition})`,
+          'DESC',
+          'NULLS LAST',
+        );
+        break;
+
+      case 'created-ascending':
+        qb.orderBy('product.createdAt', 'ASC');
+        break;
+
+      case 'created-descending':
+      default:
+        qb.orderBy('product.createdAt', 'DESC');
+        break;
+    }
+
+    qb.addOrderBy('product.id', 'ASC').addOrderBy('variant.id', 'ASC');
+
+    const products = await qb.getMany();
+
+    return this.attachMediaToProducts(products);
   }
 
   async update(id: number, { mediaIds, brandId, categoryId, ...dto }: UpdateProductDTO) {
