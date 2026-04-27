@@ -163,24 +163,26 @@ export class CartService {
     if (!cart.items.length) return cart;
 
     const variantIds = cart.items.map(({ variant }) => variant.id);
+    const brandIds = Array.from(new Set(cart.items.map(({ variant }) => variant.product.brand.id)));
 
-    const variantMediaMap = await this.mediaAttachmentService.getBulkMedia(
-      variantIds,
-      'variant',
-      manager.getRepository(MediaAttachment),
-    );
-
-    const productIds = cart.items.map(({ variant }) => variant.product.id);
-    const productMediaMap = await this.mediaAttachmentService.getBulkMedia(
-      productIds,
-      'product',
-      manager.getRepository(MediaAttachment),
-    );
+    const attachmentRepo = manager.getRepository(MediaAttachment);
+    const [variantMediaMap, productMediaMap, brandMediaMap] = await Promise.all([
+      this.mediaAttachmentService.getBulkMedia(variantIds, 'variant', attachmentRepo),
+      this.mediaAttachmentService.getBulkMedia(
+        cart.items.map(({ variant }) => variant.product.id),
+        'product',
+        attachmentRepo,
+      ),
+      this.mediaAttachmentService.getBulkMedia(brandIds, 'brand', attachmentRepo),
+    ]);
 
     for (const item of cart.items) {
       const variantWithImage = item.variant;
       variantWithImage['imageURL'] =
         variantMediaMap[item.variant.id]?.[0]?.media.url ?? productMediaMap[item.variant.product.id][0].media.url;
+      Object.assign(item.variant.product.brand, {
+        image: brandMediaMap[item.variant.product.brand.id]?.[0] ?? null,
+      });
     }
 
     return cart;

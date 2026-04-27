@@ -31,13 +31,22 @@ export class FeaturedVariantsService {
 
     const variantProductIds = featuredVariants.map(({ variant }) => variant.product.id);
     const variantProductMedia = await this.attachmentService.getBulkMedia(variantProductIds, 'product');
+    const brandIds = Array.from(new Set(featuredVariants.map(({ variant }) => variant.product.brand.id)));
+    const brandMedia = await this.attachmentService.getBulkMedia(brandIds, 'brand');
 
     return featuredVariants.map((featured) => ({
       ...featured,
       variant: {
         ...featured.variant,
         media: variantMedia[featured.variant.id] ?? [],
-        product: { ...featured.variant.product, media: variantProductMedia[featured.variant.product.id] ?? [] },
+        product: {
+          ...featured.variant.product,
+          media: variantProductMedia[featured.variant.product.id] ?? [],
+          brand: {
+            ...featured.variant.product.brand,
+            image: brandMedia[featured.variant.product.brand.id]?.[0] ?? null,
+          },
+        },
       },
     }));
   }
@@ -150,10 +159,22 @@ export class FeaturedVariantsService {
         { entityId: featured.variant.product.id, entityType: 'product' },
         attachmentRepo,
       );
+      const brandMedia = await this.attachmentService.getMedia(
+        { entityId: featured.variant.product.brand.id, entityType: 'brand' },
+        attachmentRepo,
+      );
 
       return {
         ...featured,
-        variant: { ...featured.variant, media, product: { ...featured.variant.product, media: productMedia } },
+        variant: {
+          ...featured.variant,
+          media,
+          product: {
+            ...featured.variant.product,
+            media: productMedia,
+            brand: { ...featured.variant.product.brand, image: brandMedia[0] ?? null },
+          },
+        },
       };
     });
   }

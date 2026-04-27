@@ -339,19 +339,22 @@ export class ProductsService {
     if (!products.length) return [];
 
     const variantIds = products.flatMap((product) => product.variants.map((variant) => variant.id));
+    const brandIds = Array.from(new Set(products.map((product) => product.brand.id)));
 
-    const [mediaMap, variantMediaMap] = await Promise.all([
+    const [mediaMap, variantMediaMap, brandMediaMap] = await Promise.all([
       this.mediaAttachmentService.getBulkMedia(
         products.map(({ id }) => id),
         'product',
       ),
       this.mediaAttachmentService.getBulkMedia(variantIds, 'variant'),
+      this.mediaAttachmentService.getBulkMedia(brandIds, 'brand'),
     ]);
 
     return products.map((product) => {
       const variants = product.variants.map((variant) => ({ ...variant, media: variantMediaMap[variant.id] ?? [] }));
+      const brand = { ...product.brand, image: brandMediaMap[product.brand.id]?.[0] ?? null };
 
-      return { ...product, variants, media: mediaMap[product.id] ?? [] };
+      return { ...product, variants, media: mediaMap[product.id] ?? [], brand };
     });
   }
 
