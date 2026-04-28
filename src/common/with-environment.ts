@@ -15,7 +15,7 @@ export function withEnvironment<T>(
 export function withEnvironment<T>(
   callback: (isValid: boolean, env: Environment) => T | Promise<T>,
   envs: Environment[],
-  environment: string | undefined = process.env.NODE_ENV,
+  environment?: string,
 ): T | Promise<T> {
   const env = getEnvironment(environment);
 

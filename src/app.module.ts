@@ -31,11 +31,21 @@ import { FAQsModule } from './faqs';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot(getDataSourceOptions()),
     NestConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env.${getEnvironment(process.env.NODE_ENV)}`,
+      envFilePath: `.env.${getEnvironment()}`,
       validate,
+    }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const databaseUrl = configService.get('DATABASE_URL');
+
+        const environment = configService.environment;
+        const isLocal = environment === 'local';
+
+        return getDataSourceOptions(databaseUrl, !isLocal);
+      },
     }),
     FeaturedVariantsModule,
     UserReviewsModule,

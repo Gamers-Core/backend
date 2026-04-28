@@ -1,85 +1,35 @@
+// datasource.ts
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { DataSourceOptions, DataSource } from 'typeorm';
 import { join } from 'path';
 import { config } from 'dotenv';
 
-import 'src/types';
-import {
-  Address,
-  Cart,
-  CartItem,
-  Category,
-  Brand,
-  Media,
-  MediaAttachment,
-  ItemSnapshot,
-  Order,
-  OrderStatusHistory,
-  Product,
-  Variant,
-  FeaturedVariant,
-  User,
-  UserReview,
-  Policy,
-  FAQ,
-} from 'src/entity';
-import { UserSubscriber } from 'src/subscribers/user.subscriber';
 import { getEnvironment } from 'src/config';
+import { withEnvironment } from 'src/common';
+import { UserSubscriber } from 'src/subscribers/user.subscriber';
 
-export const getDataSourceOptions = (): DataSourceOptions => {
-  const environment = getEnvironment(process.env.NODE_ENV);
+export const getDataSourceOptions = (url: string, isSsl: boolean): DataSourceOptions => ({
+  type: 'postgres',
+  url,
+  synchronize: false,
+  migrationsRun: true,
+  namingStrategy: new SnakeNamingStrategy(),
+  migrations: [join(__dirname, 'migrations/*.{ts,js}')],
+  entities: [join(__dirname, 'src/**/*.entity.{ts,js}')],
+  subscribers: [UserSubscriber],
+  ssl: isSsl ? { rejectUnauthorized: false } : false,
+});
 
+const generateDataSourceOptions = () => {
+  const environment = getEnvironment();
   config({ path: join(process.cwd(), `.env.${environment}`) });
 
-  const migrations = [join(__dirname, 'migrations/*.{ts,js}')];
+  const databaseUrl = process.env.DATABASE_URL;
 
-  const dataSourceOptions: Partial<DataSourceOptions> = {
-    synchronize: false,
-    migrations,
-    type: 'postgres',
-    url: process.env.DATABASE_URL,
-    migrationsRun: true,
-    namingStrategy: new SnakeNamingStrategy(),
-    entities: [
-      User,
-      Address,
-      Product,
-      Variant,
-      FeaturedVariant,
-      UserReview,
-      FAQ,
-      Category,
-      Brand,
-      Media,
-      MediaAttachment,
-      ItemSnapshot,
-      Order,
-      OrderStatusHistory,
-      Cart,
-      CartItem,
-      Policy,
-    ],
-    subscribers: [UserSubscriber],
-  };
-  if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
+  if (!databaseUrl) throw new Error(`DATABASE_URL is required (loaded .env.${environment})`);
 
-  switch (environment) {
-    case 'local':
-      break;
-    case 'development':
-    case 'staging':
-    case 'production':
-      Object.assign(dataSourceOptions, {
-        ssl: { rejectUnauthorized: false },
-      });
-      break;
-    default:
-      throw new Error('Unknown environment');
-  }
-
-  return dataSourceOptions as DataSourceOptions;
+  return withEnvironment((isValid) => getDataSourceOptions(databaseUrl, !isValid), ['local'], environment);
 };
 
-const dataSource = new DataSource(getDataSourceOptions());
-
+const dataSource = new DataSource(generateDataSourceOptions());
 export default dataSource;
