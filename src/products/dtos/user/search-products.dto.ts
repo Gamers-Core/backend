@@ -1,7 +1,8 @@
 import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
 
-import { type SortOption, sortOption, type StockFilter, stockFilters } from 'src/entity';
+import { sortOption, stockFilters } from '../../const';
+import type { SortOption, StockFilter } from '../../types';
 
 export class SearchProductsDTO {
   @IsOptional()

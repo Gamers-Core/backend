@@ -1,7 +1,9 @@
 import { Exclude, Expose, Transform } from 'class-transformer';
 
-import { MediaAttachment, Product, Variant } from 'src/entity';
-import { MediaAttachmentDTO } from 'src/media';
+import { MediaAttachmentDTO } from 'src/media/dtos/media-attachment.dto';
+import { MediaAttachment } from 'src/media/entities/media-attachment.entity';
+import { Product } from 'src/products/entities/product.entity';
+import { Variant } from 'src/products/entities/variant.entity';
 
 import { ProductDTO } from './product.dto';
 import { VariantDTO } from './variant.dto';

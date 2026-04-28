@@ -1,10 +1,11 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 
-import { User } from 'src/entity';
-import { Serialize } from 'src/interceptors';
-import { CurrentUser } from 'src/users/decorators';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
+import { CurrentUser } from 'src/users/decorators/current-user.decorator';
+import { User } from 'src/users/entities/user.entity';
 
-import { CheckoutOrderDTO, OrderDTO } from './dtos/user';
+import { CheckoutOrderDTO } from './dtos/user/checkout-order.dto';
+import { OrderDTO } from './dtos/user/order.dto';
 import { OrdersService } from './orders.service';
 
 @Controller('orders')

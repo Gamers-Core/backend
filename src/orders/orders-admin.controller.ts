@@ -1,17 +1,15 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 
 import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
-import { Serialize } from 'src/interceptors';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
 
-import {
-  AddOrderItemDTO,
-  AdminOrderDTO,
-  CreateOrderDTO,
-  UpdateOrderItemDTO,
-  UpdateOrderPaymentDTO,
-  UpdateOrderShippingDTO,
-  UpdateOrderStatusDTO,
-} from './dtos/admin';
+import { AddOrderItemDTO } from './dtos/admin/add-order-item.dto';
+import { AdminOrderDTO } from './dtos/admin/admin-order.dto';
+import { CreateOrderDTO } from './dtos/admin/create-order.dto';
+import { UpdateOrderPaymentDTO } from './dtos/admin/update-order-payment.dto';
+import { UpdateOrderShippingDTO } from './dtos/admin/update-order-shipping.dto';
+import { UpdateOrderStatusDTO } from './dtos/admin/update-order-status.dto';
+import { UpdateOrderItemDTO } from './dtos/admin/update-order.dto';
 import { OrdersService } from './orders.service';
 
 @Controller('admin/orders')

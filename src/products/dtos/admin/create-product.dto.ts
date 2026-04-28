@@ -1,9 +1,11 @@
 import { Type } from 'class-transformer';
 import { IsArray, IsIn, IsInt, ArrayMinSize, IsOptional, Min, ValidateNested } from 'class-validator';
 
-import { productStatuses } from 'src/entity';
-import { type ProductStatus } from 'src/entity';
-import { IsLocalized, type Localized } from 'src/i18n';
+import { IsLocalized } from 'src/i18n/decorators/is-localized.decorator';
+import type { Localized } from 'src/i18n/types';
+
+import { productStatuses } from '../../const';
+import type { ProductStatus } from '../../types';
 
 import { CreateVariantDTO } from './create-variant.dto';
 

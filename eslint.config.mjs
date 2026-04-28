@@ -1,15 +1,18 @@
 // @ts-check
 import eslint from '@eslint/js';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import { defineConfig } from 'eslint/config';
+import importPlugin from 'eslint-plugin-import';
 
-export default tseslint.config(
+export default defineConfig(
   {
     ignores: ['dist/**', 'eslint.config.mjs'],
   },
+
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
+
   {
     languageOptions: {
       globals: {
@@ -21,6 +24,30 @@ export default tseslint.config(
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+  },
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [importPlugin.flatConfigs.recommended, importPlugin.flatConfigs.typescript],
+    rules: {
+      'import/no-unresolved': 'off',
+      'import/order': [
+        'warn',
+        {
+          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+          pathGroups: [{ pattern: 'src/**', group: 'internal' }],
+          pathGroupsExcludedImportTypes: ['builtin'],
+          'newlines-between': 'always',
+          alphabetize: { order: 'asc', caseInsensitive: true },
+        },
+      ],
+      'import/no-cycle': 'error',
+    },
+  },
+  {
+    files: ['**/*.entity.ts'],
+    rules: {
+      'import/no-cycle': 'off',
     },
   },
   {

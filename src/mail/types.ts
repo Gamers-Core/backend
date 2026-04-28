@@ -1,6 +1,6 @@
-import { AuthPurpose } from 'src/auth';
-import { OrderDTO } from 'src/orders';
-import { TranslateFnWithoutLocale } from 'src/i18n';
+import { AuthPurpose } from 'src/auth/types';
+import { TranslateFnWithoutLocale } from 'src/i18n/types';
+import { OrderDTO } from 'src/orders/dtos/user/order.dto';
 
 import { mails, mailsOptions } from './const';
 

@@ -2,10 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { ConflictException, isUniqueViolation } from 'src/common';
-import { Policies, Policy, PolicyType } from 'src/entity';
+import { ConflictException } from 'src/common/exceptions';
+import { isUniqueViolation } from 'src/common/helpers/db.helpers';
 
-import { UpdatePolicyDTO } from './dtos';
+import { UpdatePolicyDTO } from './dtos/admin/update-policy.dto';
+import { Policy } from './entities/policy.entity';
+import { Policies, PolicyType } from './types';
 
 @Injectable()
 export class PoliciesService {

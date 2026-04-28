@@ -1,7 +1,8 @@
 import { Expose, Type } from 'class-transformer';
 
-import { AdminProductDTO, AdminVariantDTO } from 'src/products';
-import { type Localized } from 'src/i18n';
+import type { Localized } from 'src/i18n/types';
+import { AdminProductDTO } from 'src/products/dtos/admin/admin-product.dto';
+import { AdminVariantDTO } from 'src/products/dtos/admin/admin-variant.dto';
 
 class AdminVariantWithProductDTO extends AdminVariantDTO {
   @Expose()

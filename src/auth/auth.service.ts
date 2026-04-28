@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
 
-import { UsersService } from 'src/users';
-import { CartService } from 'src/cart';
-import { withEnvironment } from 'src/common';
-import { Locale, LocaleContextService } from 'src/i18n';
+import { CartService } from 'src/cart/cart.service';
+import { withEnvironment } from 'src/common/with-environment';
+import { LocaleContextService } from 'src/i18n/locale-context.service';
+import { Locale } from 'src/i18n/types';
+import { UsersService } from 'src/users/users.service';
 
-import { ResendOTPDTO, SigninDTO, VerifyOTPDTO } from './dtos';
-import { OtpSessionService } from './otp-session';
+import { ResendOTPDTO } from './dtos/resend-otp.dto';
+import { SigninDTO } from './dtos/signin.dto';
+import { VerifyOTPDTO } from './dtos/verify-otp.dto';
+import { OtpSessionService } from './otp-session/otp-session.service';
 import { AuthPurpose, OtpVerifyHandlers, OtpVerifyResultByPurpose } from './types';
 
 @Injectable()

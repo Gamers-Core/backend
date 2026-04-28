@@ -2,8 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
-import { Variant } from 'src/entity';
-import { BadRequestException, NotFoundException, withOptionalManager } from 'src/common';
+import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { withOptionalManager } from 'src/common/with-optional-manager';
+
+import { Variant } from '../entities/variant.entity';
 
 @Injectable()
 export class InventoryService {

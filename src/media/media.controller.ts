@@ -11,14 +11,15 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-import { Serialize } from 'src/interceptors';
-import { BadRequestException } from 'src/common';
+import { BadRequestException } from 'src/common/exceptions';
 import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
 
+import { mediaPolicyMap } from './cloudinary/const';
+import { MediaDTO } from './dtos/media.dto';
+import { UploadMediaDTO } from './dtos/upload-media.dto';
 import { MediaService } from './media.service';
-import { MediaDTO, UploadMediaDTO } from './dtos';
 import { UploadedMediaFile } from './types';
-import { mediaPolicyMap } from './cloudinary';
 
 @Controller('media')
 @UseGuards(IsAdminAuthGuard)

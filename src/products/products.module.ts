@@ -1,12 +1,18 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { Media, MediaAttachment, Product } from 'src/entity';
-import { Variant } from 'src/entity/product';
-import { MediaModule } from 'src/media';
+import { MediaAttachment } from 'src/media/entities/media-attachment.entity';
+import { Media } from 'src/media/entities/media.entity';
+import { MediaModule } from 'src/media/media.module';
 
-import { AdminProductsController, AdminVariantsController, UserProductsController } from './controllers';
-import { InventoryService, ProductsService, VariantsService } from './services';
+import { AdminProductsController } from './controllers/admin-products.controller';
+import { AdminVariantsController } from './controllers/admin-variants.controller';
+import { UserProductsController } from './controllers/user-products.controller';
+import { Product } from './entities/product.entity';
+import { Variant } from './entities/variant.entity';
+import { InventoryService } from './services/inventory.service';
+import { ProductsService } from './services/products.service';
+import { VariantsService } from './services/variants.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Product, Media, MediaAttachment, Variant]), MediaModule],

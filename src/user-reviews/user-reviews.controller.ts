@@ -1,9 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
 
-import { Serialize } from 'src/interceptors';
-import { Public } from 'src/auth';
+import { Public } from 'src/auth/decorators/public.decorator';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
 
-import { UserReviewDTO } from './dto';
+import { UserReviewDTO } from './dto/user-review.dto';
 import { UserReviewsService } from './user-reviews.service';
 
 @Controller('user-reviews')

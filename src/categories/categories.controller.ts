@@ -1,10 +1,10 @@
 import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 
-import { Public } from 'src/auth/decorators';
-import { Serialize } from 'src/interceptors';
+import { Public } from 'src/auth/decorators/public.decorator';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
 
 import { CategoriesService } from './categories.service';
-import { CategoryDTO } from './dtos';
+import { CategoryDTO } from './dtos/category.dto';
 
 @Controller('categories')
 @Public()

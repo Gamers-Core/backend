@@ -2,11 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
-import { Product, Variant } from 'src/entity';
-import { MediaAttachmentService } from 'src/media';
-import { BadRequestException, NotFoundException, withOptionalManager } from 'src/common';
+import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { withOptionalManager } from 'src/common/with-optional-manager';
+import { MediaAttachmentService } from 'src/media/media-attachment.service';
 
-import { CreateVariantDTO, UpdateVariantDTO } from '../dtos/admin';
+import { CreateVariantDTO } from '../dtos/admin/create-variant.dto';
+import { UpdateVariantDTO } from '../dtos/admin/update-variant.dto';
+import { Product } from '../entities/product.entity';
+import { Variant } from '../entities/variant.entity';
 import { variantWithProductFullRelations } from '../relations';
 
 @Injectable()

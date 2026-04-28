@@ -1,10 +1,12 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 
 import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
-import { Serialize } from 'src/interceptors';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
 
-import { AdminBrandDTO, AddBrandDTO, UpdateBrandDTO } from './dtos';
 import { BrandsService } from './brands.service';
+import { AddBrandDTO } from './dtos/add-brand.dto';
+import { AdminBrandDTO } from './dtos/admin-brand.dto';
+import { UpdateBrandDTO } from './dtos/update-brand.dto';
 
 @Controller('admin/brands')
 @UseGuards(IsAdminAuthGuard)

@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { UserReview } from 'src/entity';
-import { MediaModule } from 'src/media';
+import { MediaModule } from 'src/media/media.module';
 
+import { AdminUserReviewsController } from './admin-user-reviews.controller';
+import { UserReview } from './entities/user-review.entity';
 import { UserReviewsController } from './user-reviews.controller';
 import { UserReviewsService } from './user-reviews.service';
-import { AdminUserReviewsController } from './admin-user-reviews.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserReview]), MediaModule],

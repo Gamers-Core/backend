@@ -1,5 +1,7 @@
 import { IsArray, IsIn, IsInt } from 'class-validator';
-import { mediaEntityType, type MediaEntityType } from 'src/entity';
+
+import { mediaEntityType } from '../const';
+import { type MediaEntityType } from '../types';
 
 export class EntityAttachmentDTO {
   @IsInt()

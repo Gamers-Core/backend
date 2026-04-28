@@ -1,10 +1,12 @@
 import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 
-import { Public } from 'src/auth/decorators';
-import { Serialize } from 'src/interceptors';
+import { Public } from 'src/auth/decorators/public.decorator';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
 
-import { ProductDTO, SearchDTO, SearchProductsDTO } from '../dtos/user';
-import { ProductsService } from '../services';
+import { ProductDTO } from '../dtos/user/product.dto';
+import { SearchProductsDTO } from '../dtos/user/search-products.dto';
+import { SearchDTO } from '../dtos/user/search.dto';
+import { ProductsService } from '../services/products.service';
 
 @Controller('products')
 @Public()

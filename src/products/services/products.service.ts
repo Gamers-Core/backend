@@ -2,13 +2,20 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, In, Repository } from 'typeorm';
 
-import { Brand, Category, Product, Variant } from 'src/entity';
-import { MediaAttachmentService } from 'src/media';
-import { BadRequestException, NotFoundException } from 'src/common';
-import { LocaleContextService } from 'src/i18n';
+import { Brand } from 'src/brands/entities/brand.entity';
+import { Category } from 'src/categories/entities/category.entity';
+import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { LocaleContextService } from 'src/i18n/locale-context.service';
+import { MediaAttachmentService } from 'src/media/media-attachment.service';
 
-import { AdminSearchProductsDTO, CreateProductDTO, SearchProductsDTO, UpdateProductDTO } from '../dtos';
+import { AdminSearchProductsDTO } from '../dtos/admin/admin-search-products.dto';
+import { CreateProductDTO } from '../dtos/admin/create-product.dto';
+import { UpdateProductDTO } from '../dtos/admin/update-product.dto';
+import { SearchProductsDTO } from '../dtos/user/search-products.dto';
+import { Product } from '../entities/product.entity';
+import { Variant } from '../entities/variant.entity';
 import { productBrandCategoryRelations, productFullRelations } from '../relations';
+
 import { VariantsService } from './variants.service';
 
 @Injectable()

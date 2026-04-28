@@ -1,8 +1,9 @@
-import { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { Logger } from '@nestjs/common';
+import { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+
+import { ServiceUnavailableException } from 'src/common/exceptions';
 
 import { RequestManager, Response, ResponseError } from './types';
-import { ServiceUnavailableException } from 'src/common';
 
 const logger = new Logger('BostaErrorHandler');
 

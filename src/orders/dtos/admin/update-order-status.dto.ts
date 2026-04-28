@@ -1,6 +1,7 @@
 import { IsIn } from 'class-validator';
 
-import { orderStatuses, type OrderStatus } from 'src/entity';
+import { orderStatuses } from '../../statuses';
+import type { OrderStatus } from '../../types';
 
 export class UpdateOrderStatusDTO {
   @IsIn(orderStatuses)

@@ -10,7 +10,7 @@ import { plainToInstance, type ClassTransformOptions } from 'class-transformer';
 import { Request } from 'express';
 import { map, type Observable } from 'rxjs';
 
-import { LocaleContextService } from 'src/i18n';
+import { LocaleContextService } from 'src/i18n/locale-context.service';
 
 import 'src/types/class-transformer-options';
 

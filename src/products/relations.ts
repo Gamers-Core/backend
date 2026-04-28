@@ -1,6 +1,11 @@
 import { FindOptionsRelations } from 'typeorm';
 
-import { Cart, CartItem, FeaturedVariant, Product, Variant } from 'src/entity';
+import { CartItem } from 'src/cart/entities/cart-item.entity';
+import { Cart } from 'src/cart/entities/cart.entity';
+import { FeaturedVariant } from 'src/featured-variants/entities/featured-variant.entity';
+
+import { Product } from './entities/product.entity';
+import { Variant } from './entities/variant.entity';
 
 export const productBrandCategoryRelations = {
   brand: true,

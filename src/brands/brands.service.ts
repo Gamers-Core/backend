@@ -2,11 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
-import { Brand, MediaAttachment } from 'src/entity';
-import { BadRequestException, NotFoundException } from 'src/common';
-import { MediaAttachmentService } from 'src/media';
+import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { MediaAttachment } from 'src/media/entities/media-attachment.entity';
+import { MediaAttachmentService } from 'src/media/media-attachment.service';
 
-import { AddBrandDTO, UpdateBrandDTO } from './dtos';
+import { AddBrandDTO } from './dtos/add-brand.dto';
+import { UpdateBrandDTO } from './dtos/update-brand.dto';
+import { Brand } from './entities/brand.entity';
 
 @Injectable()
 export class BrandsService {

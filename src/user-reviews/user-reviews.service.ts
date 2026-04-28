@@ -2,11 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
-import { MediaAttachment, UserReview } from 'src/entity';
-import { MediaAttachmentService } from 'src/media';
-import { BadRequestException, NotFoundException } from 'src/common';
+import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { MediaAttachment } from 'src/media/entities/media-attachment.entity';
+import { MediaAttachmentService } from 'src/media/media-attachment.service';
 
-import { AddUserReviewDTO, UpdateUserReviewDTO } from './dto';
+import { AddUserReviewDTO } from './dto/add-user-review.dto';
+import { UpdateUserReviewDTO } from './dto/update-user-review.dto';
+import { UserReview } from './entities/user-review.entity';
 
 @Injectable()
 export class UserReviewsService {

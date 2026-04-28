@@ -1,6 +1,6 @@
 import { CommonTransformationOptions, ImageTransformationOptions, VideoTransformationOptions } from 'cloudinary';
 
-import { MediaType } from 'src/entity';
+import { MediaType } from '../types';
 
 export type MediaFormat = 'all' | MediaType;
 

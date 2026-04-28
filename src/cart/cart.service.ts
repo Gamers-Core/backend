@@ -2,13 +2,19 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
-import { Cart, CartItem, MediaAttachment, Variant } from 'src/entity';
-import { MediaAttachmentService } from 'src/media';
-import { InventoryService } from 'src/products';
-import { cartItemRelations, cartRelations } from 'src/products';
-import { withOptionalManager, BadRequestException, NotFoundException, isUniqueViolation } from 'src/common';
+import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { isUniqueViolation } from 'src/common/helpers/db.helpers';
+import { withOptionalManager } from 'src/common/with-optional-manager';
+import { MediaAttachment } from 'src/media/entities/media-attachment.entity';
+import { MediaAttachmentService } from 'src/media/media-attachment.service';
+import { Variant } from 'src/products/entities/variant.entity';
+import { cartRelations, cartItemRelations } from 'src/products/relations';
+import { InventoryService } from 'src/products/services/inventory.service';
 
-import { CreateCartItemDTO, UpdateCartItemDTO } from './dtos';
+import { CreateCartItemDTO } from './dtos/create-cart-item.dto';
+import { UpdateCartItemDTO } from './dtos/update-cart-item.dto';
+import { CartItem } from './entities/cart-item.entity';
+import { Cart } from './entities/cart.entity';
 
 @Injectable()
 export class CartService {
@@ -18,7 +24,7 @@ export class CartService {
     private readonly mediaAttachmentService: MediaAttachmentService,
   ) {}
 
-  async getCart(userId: number, manager?: EntityManager) {
+  getCart(userId: number, manager?: EntityManager) {
     return withOptionalManager(manager, this.cartRepo.manager, async (manager) => {
       const cartRepo = manager.getRepository(Cart);
 

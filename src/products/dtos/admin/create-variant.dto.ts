@@ -1,8 +1,8 @@
 import { IsArray, IsBoolean, IsInt, IsOptional, Min } from 'class-validator';
-import { IsGreaterThan } from 'src/common';
 
-import { IsLocalized, type Localized } from 'src/i18n';
-
+import { IsGreaterThan } from 'src/common/validators/is-greater-than.validator';
+import { IsLocalized } from 'src/i18n/decorators/is-localized.decorator';
+import type { Localized } from 'src/i18n/types';
 export class CreateVariantDTO {
   @IsLocalized()
   name: Localized;

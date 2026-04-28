@@ -1,10 +1,13 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 
-import { IsAdminAuthGuard } from 'src/guards';
-import { Serialize } from 'src/interceptors';
+import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
 
+import { AddUserReviewDTO } from './dto/add-user-review.dto';
+import { AdminUserReviewDTO } from './dto/admin-user-review.dto';
+import { ReorderUserReviewsDTO } from './dto/reorder-user-reviews.dto';
+import { UpdateUserReviewDTO } from './dto/update-user-review.dto';
 import { UserReviewsService } from './user-reviews.service';
-import { AddUserReviewDTO, AdminUserReviewDTO, ReorderUserReviewsDTO, UpdateUserReviewDTO } from './dto';
 
 @Controller('admin/user-reviews')
 @UseGuards(IsAdminAuthGuard)

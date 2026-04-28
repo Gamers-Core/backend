@@ -1,7 +1,7 @@
 import { IsIn } from 'class-validator';
 
-import { paymentStatuses } from 'src/entity/order/const';
-import type { PaymentStatus } from 'src/entity/order/types';
+import { paymentStatuses } from '../../statuses';
+import type { PaymentStatus } from '../../types';
 
 export class UpdateOrderPaymentDTO {
   @IsIn(paymentStatuses)

@@ -1,6 +1,7 @@
 import { IsIn, IsNotEmpty, IsString } from 'class-validator';
 
-import { type MediaEntityType, mediaEntityType } from 'src/entity';
+import { mediaEntityType } from '../const';
+import { type MediaEntityType } from '../types';
 
 export class UploadMediaDTO {
   @IsString()

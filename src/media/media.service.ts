@@ -2,12 +2,14 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { Media, MediaAttachment } from 'src/entity';
-import { NotFoundException, InternalServerErrorException } from 'src/common';
+import { NotFoundException, InternalServerErrorException } from 'src/common/exceptions';
 
-import { CloudinaryService, mediaTypesMap } from './cloudinary';
+import { CloudinaryService } from './cloudinary/cloudinary.service';
+import { mediaTypesMap } from './cloudinary/const';
+import { UploadMediaDTO } from './dtos/upload-media.dto';
+import { MediaAttachment } from './entities/media-attachment.entity';
+import { Media } from './entities/media.entity';
 import { UploadedMediaFile } from './types';
-import { UploadMediaDTO } from './dtos';
 
 @Injectable()
 export class MediaService implements OnModuleInit, OnModuleDestroy {

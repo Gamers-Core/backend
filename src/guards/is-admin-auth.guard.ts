@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Request } from 'express';
 
-import { ForbiddenException, UnauthorizedException } from 'src/common';
+import { ForbiddenException, UnauthorizedException } from '../common/exceptions';
 
 @Injectable()
 export class IsAdminAuthGuard implements CanActivate {

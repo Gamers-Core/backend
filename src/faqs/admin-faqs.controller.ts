@@ -1,10 +1,13 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 
-import { IsAdminAuthGuard } from 'src/guards';
-import { Serialize } from 'src/interceptors';
+import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
 
+import { AddFAQDTO } from './dtos/add-faq.dto';
+import { AdminFAQDTO } from './dtos/admin-faq.dto';
+import { ReorderFAQsDTO } from './dtos/reorder-faqs.dto';
+import { UpdateFAQDTO } from './dtos/update-faq.dto';
 import { FAQsService } from './faqs.service';
-import { AddFAQDTO, AdminFAQDTO, ReorderFAQsDTO, UpdateFAQDTO } from './dtos';
 
 @Controller('admin/faqs')
 @Serialize(AdminFAQDTO)

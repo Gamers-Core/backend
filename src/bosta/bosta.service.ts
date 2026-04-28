@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
+import { Injectable } from '@nestjs/common';
 
-import { AppCacheService } from 'src/cache';
-import { BostaPickupLocation, ShippingFeesResponseDTO } from 'src/addresses';
-import { ConfigService } from 'src/config';
+import { ShippingFeesResponseDTO } from 'src/addresses/dtos/shipping-fees-response.dto';
+import { BostaPickupLocation } from 'src/addresses/types';
+import { AppCacheService } from 'src/cache/cache.service';
+import { ConfigService } from 'src/config/config.service';
 
+import { ShippingFeesDTO } from './dtos/shipping-fees.dto';
 import { errorHandler, requestManager } from './helpers';
 import {
   City,
@@ -17,7 +19,6 @@ import {
   InsuranceFee,
   ShippingFees,
 } from './types';
-import { ShippingFeesDTO } from './dtos';
 
 @Injectable()
 export class BostaService {

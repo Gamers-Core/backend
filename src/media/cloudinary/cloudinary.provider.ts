@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 
-import { ConfigService } from 'src/config';
+import { ConfigService } from 'src/config/config.service';
 
 export const CLOUDINARY = Symbol('CLOUDINARY');
 

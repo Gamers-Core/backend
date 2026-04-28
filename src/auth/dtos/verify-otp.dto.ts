@@ -1,5 +1,5 @@
-import { IsNumberString, IsString, MaxLength, MinLength } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { IsNumberString, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class VerifyOTPDTO {
   @IsString()

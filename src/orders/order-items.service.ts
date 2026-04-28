@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 
-import { ItemSnapshot, MediaAttachment, Order, Variant } from 'src/entity';
-import { InventoryService } from 'src/products';
-import { BadRequestException, NotFoundException } from 'src/common';
-import { MediaAttachmentService } from 'src/media';
+import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { MediaAttachment } from 'src/media/entities/media-attachment.entity';
+import { MediaAttachmentService } from 'src/media/media-attachment.service';
+import { Variant } from 'src/products/entities/variant.entity';
+import { InventoryService } from 'src/products/services/inventory.service';
 
-import { AddOrderItemDTO, UpdateOrderItemDTO } from './dtos';
+import { AddOrderItemDTO } from './dtos/admin/add-order-item.dto';
+import { UpdateOrderItemDTO } from './dtos/admin/update-order.dto';
+import { ItemSnapshot } from './entities/item-snapshot.entity';
+import { Order } from './entities/order.entity';
 
 @Injectable()
 export class OrderItemsService {

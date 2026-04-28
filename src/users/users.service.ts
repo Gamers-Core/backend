@@ -2,9 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
 
-import { User } from 'src/entity';
-import { NotFoundException, isUniqueViolation } from 'src/common';
-import { type Locale } from 'src/i18n';
+import { NotFoundException } from 'src/common/exceptions';
+import { isUniqueViolation } from 'src/common/helpers/db.helpers';
+import { Locale } from 'src/i18n/types';
+
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {

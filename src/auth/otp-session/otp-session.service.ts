@@ -1,11 +1,16 @@
-import { Inject, Injectable } from '@nestjs/common';
 import { randomBytes } from 'crypto';
+
+import { Inject, Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
 
-import { REDIS_CLIENT } from 'src/redis';
-import { MailService } from 'src/mail';
-import { BadRequestException, withEnvironment } from 'src/common';
-import { Locale } from 'src/i18n';
+import { BadRequestException } from 'src/common/exceptions';
+import { withEnvironment } from 'src/common/with-environment';
+import { Locale } from 'src/i18n/types';
+import { MailService } from 'src/mail/mail.service';
+import { REDIS_CLIENT } from 'src/redis/redis.module';
+
+import { authPurposes } from '../const';
+import { AuthPurpose, OtpDataByPurpose } from '../types';
 
 import {
   OTP_DEFAULT_MAX_ATTEMPTS,
@@ -15,8 +20,6 @@ import {
 } from './const';
 import { compareHashedOtp, generateHashedOtp, generateOtp, getSessionKey } from './helpers';
 import { CreateSessionOptions, ResendSessionOptions, OTPAuthSession, VerifySessionOptions } from './types';
-import { AuthPurpose, OtpDataByPurpose } from '../types';
-import { authPurposes } from '../const';
 
 @Injectable()
 export class OtpSessionService {

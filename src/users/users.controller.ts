@@ -1,12 +1,15 @@
 import { Body, Controller, Get, Param, ParseEnumPipe, Patch } from '@nestjs/common';
 
-import { User } from 'src/entity';
-import { locales, type Locale } from 'src/i18n';
-import { Serialize } from 'src/interceptors';
+import { locales } from 'src/i18n/const';
+import type { Locale } from 'src/i18n/types';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
 
-import { CurrentUser } from './decorators';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { BasicUserDTO } from './dtos/basic-user.dto';
+import { FullUserDTO } from './dtos/full-user.dto';
+import { UpdateMeDTO } from './dtos/update-me.dto';
+import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
-import { BasicUserDTO, FullUserDTO, UpdateMeDTO } from './dtos';
 
 @Controller('users')
 export class UsersController {

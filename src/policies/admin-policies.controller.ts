@@ -1,11 +1,13 @@
 import { Body, Controller, Get, Param, ParseEnumPipe, Put, UseGuards } from '@nestjs/common';
 
-import { policyTypes, type PolicyType } from 'src/entity';
-import { IsAdminAuthGuard } from 'src/guards';
-import { Serialize } from 'src/interceptors';
+import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
 
+import { policyTypes } from './const';
+import { AdminPoliciesDTO, AdminPolicyDTO } from './dtos/admin/admin-policies.dto';
+import { UpdatePolicyDTO } from './dtos/admin/update-policy.dto';
 import { PoliciesService } from './policies.service';
-import { AdminPoliciesDTO, AdminPolicyDTO, UpdatePolicyDTO } from './dtos';
+import type { PolicyType } from './types';
 
 @Controller('admin/policies')
 @UseGuards(IsAdminAuthGuard)

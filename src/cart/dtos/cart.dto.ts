@@ -1,8 +1,8 @@
 import { Expose, Transform, Type } from 'class-transformer';
 
-import { Localize } from 'src/i18n';
-import { BrandDTO } from 'src/brands';
-import { CategoryDTO } from 'src/categories';
+import { BrandDTO } from 'src/brands/dtos/brand.dto';
+import { CategoryDTO } from 'src/categories/dtos/category.dto';
+import { Localize } from 'src/i18n/decorators/localize.decorator';
 
 class CartProductDTO {
   @Expose()

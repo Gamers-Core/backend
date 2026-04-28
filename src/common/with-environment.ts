@@ -1,4 +1,5 @@
-import { Environment, getEnvironment } from 'src/config';
+import { getEnvironment } from 'src/config/helpers';
+import { Environment } from 'src/config/types';
 
 export function withEnvironment<T>(
   callback: (isValid: boolean, env: Environment) => T,

@@ -2,11 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, In, Repository } from 'typeorm';
 
-import { Media, MediaAttachment, MediaEntityType } from 'src/entity';
-import { withOptionalManager, BadRequestException } from 'src/common';
+import { BadRequestException } from 'src/common/exceptions';
+import { withOptionalManager } from 'src/common/with-optional-manager';
 
+import { MediaAttachmentOptionsDTO, EntityAttachmentDTO } from './dtos/media-attachment-options.dto';
+import { MediaAttachment } from './entities/media-attachment.entity';
+import { Media } from './entities/media.entity';
 import { MediaService } from './media.service';
-import { MediaAttachmentOptionsDTO, EntityAttachmentDTO } from './dtos';
+import { MediaEntityType } from './types';
 
 @Injectable()
 export class MediaAttachmentService {

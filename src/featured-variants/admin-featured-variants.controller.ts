@@ -1,14 +1,12 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 
 import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
-import { Serialize } from 'src/interceptors';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
 
-import {
-  AddFeaturedVariantDTO,
-  AdminFeaturedVariantDTO,
-  ReorderFeaturedVariantsDTO,
-  UpdateFeaturedVariantDTO,
-} from './dtos';
+import { AddFeaturedVariantDTO } from './dtos/add-featured-variant.dto';
+import { AdminFeaturedVariantDTO } from './dtos/admin-featured-variant.dto';
+import { ReorderFeaturedVariantsDTO } from './dtos/reorder-featured-variants.dto';
+import { UpdateFeaturedVariantDTO } from './dtos/update-featured-variant.dto';
 import { FeaturedVariantsService } from './featured-variants.service';
 
 @Controller('admin/featured-variants')

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService as NestConfigService } from '@nestjs/config';
 
-import { BaseSchema, EnvVariables, ExtendedEnv } from './schemas';
+import { BaseSchema, EnvVariables, ExtendedEnv } from './schema';
 import { Environment } from './types';
 
 @Injectable()

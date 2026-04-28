@@ -1,9 +1,11 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { timingSafeEqual } from 'crypto';
+
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Request } from 'express';
 
-import { UnauthorizedException, withEnvironment } from 'src/common';
-import { ConfigService } from 'src/config';
+import { UnauthorizedException } from 'src/common/exceptions/http.exceptions';
+import { withEnvironment } from 'src/common/with-environment';
+import { ConfigService } from 'src/config/config.service';
 
 const safeCompare = (a: string, b: string): boolean => {
   const bufA = Buffer.from(a);

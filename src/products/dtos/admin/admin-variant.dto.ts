@@ -1,8 +1,7 @@
 import { Expose, Type } from 'class-transformer';
 
-import type { Localized } from 'src/i18n';
-
-import { AdminMediaAttachmentDTO } from 'src/media';
+import type { Localized } from 'src/i18n/types';
+import { AdminMediaAttachmentDTO } from 'src/media/dtos/admin-media-attachment.dto';
 
 export class AdminVariantDTO {
   @Expose()

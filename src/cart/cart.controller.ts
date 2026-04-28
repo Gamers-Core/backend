@@ -11,12 +11,15 @@ import {
   Post,
 } from '@nestjs/common';
 
-import { User } from 'src/entity';
-import { Serialize } from 'src/interceptors';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { CurrentUser } from 'src/users/decorators/current-user.decorator';
+import { User } from 'src/users/entities/user.entity';
 
-import { AddCartItemDTO, CartDTO, CreateCartItemDTO, UpdateCartItemDTO } from './dtos';
 import { CartService } from './cart.service';
+import { AddCartItemDTO } from './dtos/add-cart-item.dto';
+import { CartDTO } from './dtos/cart.dto';
+import { CreateCartItemDTO } from './dtos/create-cart-item.dto';
+import { UpdateCartItemDTO } from './dtos/update-cart-item.dto';
 
 @Serialize(CartDTO)
 @Controller('cart')

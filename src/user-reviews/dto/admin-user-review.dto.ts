@@ -1,6 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 
-import { AdminMediaAttachmentDTO } from 'src/media';
+import { AdminMediaAttachmentDTO } from 'src/media/dtos/admin-media-attachment.dto';
 
 export class AdminUserReviewDTO {
   @Expose()

@@ -1,15 +1,14 @@
-import { forwardRef, Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
+import { Module } from '@nestjs/common';
 
-import { OrdersModule } from 'src/orders';
-import { AddressesModule } from 'src/addresses';
+import { OrdersModule } from 'src/orders/orders.module';
 
-import { BostaService } from './bosta.service';
-import { BostaController } from './bosta.controller';
 import { BostaWebhookAuthGuard } from './bosta-webhook-auth.guard';
+import { BostaController } from './bosta.controller';
+import { BostaService } from './bosta.service';
 
 @Module({
-  imports: [HttpModule, OrdersModule, forwardRef(() => AddressesModule)],
+  imports: [HttpModule, OrdersModule],
   providers: [BostaService, BostaWebhookAuthGuard],
   controllers: [BostaController],
   exports: [BostaService],

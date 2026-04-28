@@ -2,11 +2,14 @@ import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
-import { BostaService } from 'src/bosta';
-import { Address, User } from 'src/entity';
-import { withOptionalManager, BadRequestException, NotFoundException } from 'src/common';
+import { BostaService } from 'src/bosta/bosta.service';
+import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { withOptionalManager } from 'src/common/with-optional-manager';
+import { User } from 'src/users/entities/user.entity';
 
-import { CreateAddressDTO, UpdateAddressDTO } from './dtos';
+import { CreateAddressDTO } from './dtos/create-address.dto';
+import { UpdateAddressDTO } from './dtos/update-address.dto';
+import { Address } from './entities/address.entity';
 import { BostaLocation } from './types';
 
 @Injectable()

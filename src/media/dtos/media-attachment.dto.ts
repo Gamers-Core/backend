@@ -1,6 +1,6 @@
 import { Expose, Transform } from 'class-transformer';
 
-import { type MediaType } from 'src/entity';
+import type { MediaType } from '../types';
 
 export class MediaAttachmentDTO {
   @Expose()

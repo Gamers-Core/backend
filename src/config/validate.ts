@@ -1,5 +1,5 @@
-import { EnvVariablesSchemas, envVariablesSchemaMap } from './schemas';
 import { getEnvironment } from './helpers';
+import { EnvVariablesSchemas, envVariablesSchemaMap } from './schema';
 
 export function validate(config: Record<string, unknown>): EnvVariablesSchemas {
   const environment = getEnvironment(config['NODE_ENV']);

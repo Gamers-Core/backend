@@ -1,10 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
 
-import { Serialize } from 'src/interceptors';
-import { Public } from 'src/auth';
+import { Public } from 'src/auth/decorators/public.decorator';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
 
+import { PoliciesDTO } from './dtos/user/policies.dto';
 import { PoliciesService } from './policies.service';
-import { PoliciesDTO } from './dtos';
 
 @Controller('policies')
 @Serialize(PoliciesDTO)

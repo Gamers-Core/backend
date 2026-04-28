@@ -1,3 +1,5 @@
+import { mediaEntityType, mediaTypes } from './const';
+
 export interface UploadedMediaFile {
   fieldname: string;
   originalname: string;
@@ -6,3 +8,6 @@ export interface UploadedMediaFile {
   buffer: Buffer;
   size: number;
 }
+
+export type MediaType = (typeof mediaTypes)[number];
+export type MediaEntityType = (typeof mediaEntityType)[number];

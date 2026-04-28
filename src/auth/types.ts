@@ -1,4 +1,5 @@
-import { Cart, User } from 'src/entity';
+import { Cart } from 'src/cart/entities/cart.entity';
+import { User } from 'src/users/entities/user.entity';
 
 import { authPurposes } from './const';
 

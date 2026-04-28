@@ -1,7 +1,7 @@
 import { ValidationError } from 'class-validator';
 
-import { type Locale } from 'src/i18n';
 import messages from 'src/i18n/messages';
+import { Locale } from 'src/i18n/types';
 
 const resolveConstraintMessage =
   (locale: Locale) =>

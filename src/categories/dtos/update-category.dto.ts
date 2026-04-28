@@ -1,4 +1,4 @@
-import { PartialType } from 'src/common';
+import { PartialType } from 'src/common/partial-type';
 
 import { AddCategoryDTO } from './add-category.dto';
 

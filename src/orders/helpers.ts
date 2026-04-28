@@ -1,7 +1,8 @@
-import { BadRequestException } from 'src/common';
-import { Order, type OrderStatus, type PaymentStatus } from 'src/entity';
+import { BadRequestException } from 'src/common/exceptions';
 
+import { Order } from './entities/order.entity';
 import { orderStatusGuards, orderTransitions, paymentStatusGuards, paymentTransitions } from './statuses';
+import { OrderStatus, PaymentStatus } from './types';
 
 export const assertValidOrderTransition = (current: OrderStatus, next: OrderStatus) => {
   const allowed = orderTransitions[current] ?? [];

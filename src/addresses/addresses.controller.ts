@@ -1,13 +1,18 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
 
-import { User } from 'src/entity';
-import { Serialize } from 'src/interceptors';
-import { BostaService, CityDTO, DistrictDTO, ShippingFeesDTO } from 'src/bosta';
-
+import { BostaService } from 'src/bosta/bosta.service';
+import { CityDTO } from 'src/bosta/dtos/city.dto';
+import { DistrictDTO } from 'src/bosta/dtos/district.dto';
+import { ShippingFeesDTO } from 'src/bosta/dtos/shipping-fees.dto';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { CurrentUser } from 'src/users/decorators/current-user.decorator';
+import { User } from 'src/users/entities/user.entity';
 
-import { AddressDTO, CreateAddressDTO, ShippingFeesResponseDTO, UpdateAddressDTO } from './dtos';
 import { AddressesService } from './addresses.service';
+import { AddressDTO } from './dtos/address.dto';
+import { CreateAddressDTO } from './dtos/create-address.dto';
+import { ShippingFeesResponseDTO } from './dtos/shipping-fees-response.dto';
+import { UpdateAddressDTO } from './dtos/update-address.dto';
 
 @Controller('addresses')
 export class AddressesController {

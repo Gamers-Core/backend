@@ -2,12 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, IsNull, Repository } from 'typeorm';
 
-import { FeaturedVariant, MediaAttachment, Variant } from 'src/entity';
-import { BadRequestException, ConflictException, NotFoundException, withOptionalManager } from 'src/common';
-import { MediaAttachmentService } from 'src/media';
-import { featuredVariantRelations } from 'src/products';
+import { BadRequestException, ConflictException, NotFoundException } from 'src/common/exceptions';
+import { withOptionalManager } from 'src/common/with-optional-manager';
+import { MediaAttachment } from 'src/media/entities/media-attachment.entity';
+import { MediaAttachmentService } from 'src/media/media-attachment.service';
+import { Variant } from 'src/products/entities/variant.entity';
+import { featuredVariantRelations } from 'src/products/relations';
 
-import { AddFeaturedVariantDTO, UpdateFeaturedVariantDTO } from './dtos';
+import { AddFeaturedVariantDTO } from './dtos/add-featured-variant.dto';
+import { UpdateFeaturedVariantDTO } from './dtos/update-featured-variant.dto';
+import { FeaturedVariant } from './entities/featured-variant.entity';
 
 @Injectable()
 export class FeaturedVariantsService {

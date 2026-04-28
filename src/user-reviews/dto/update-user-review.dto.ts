@@ -1,4 +1,4 @@
-import { PartialType } from 'src/common';
+import { PartialType } from 'src/common/partial-type';
 
 import { AddUserReviewDTO } from './add-user-review.dto';
 

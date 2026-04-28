@@ -1,7 +1,7 @@
 import { Global, Module } from '@nestjs/common';
 
-import { LocaleContextService } from './locale-context.service';
 import { LocaleContextMiddleware } from './locale-context.middleware';
+import { LocaleContextService } from './locale-context.service';
 
 @Global()
 @Module({

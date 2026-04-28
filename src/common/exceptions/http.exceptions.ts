@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 
-import { I18nKey, Translate } from 'src/i18n';
+import { I18nKey, Translate } from 'src/i18n/types';
 
 export class AppException<T extends I18nKey = I18nKey> extends HttpException {
   constructor(

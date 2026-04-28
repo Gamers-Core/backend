@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { Policy } from 'src/entity';
-
-import { PoliciesService } from './policies.service';
 import { AdminPoliciesController } from './admin-policies.controller';
+import { Policy } from './entities/policy.entity';
+import { PoliciesService } from './policies.service';
 import { PoliciesController } from './user-policies.controller';
 
 @Module({

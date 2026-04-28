@@ -1,4 +1,4 @@
-import { MediaEntityType, MediaType } from 'src/entity';
+import { MediaEntityType, MediaType } from '../types';
 
 import { CloudinaryResourceType, MediaFormat, MediaPolicy } from './types';
 

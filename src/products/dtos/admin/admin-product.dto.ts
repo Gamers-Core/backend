@@ -1,9 +1,9 @@
 import { Expose, Type } from 'class-transformer';
 
-import { AdminMediaAttachmentDTO } from 'src/media';
-import type { Localized } from 'src/i18n';
-import { AdminBrandDTO } from 'src/brands';
-import { AdminCategoryDTO } from 'src/categories';
+import { AdminBrandDTO } from 'src/brands/dtos/admin-brand.dto';
+import { AdminCategoryDTO } from 'src/categories/dtos/admin-category.dto';
+import type { Localized } from 'src/i18n/types';
+import { AdminMediaAttachmentDTO } from 'src/media/dtos/admin-media-attachment.dto';
 
 import { AdminVariantDTO } from './admin-variant.dto';
 

@@ -4,9 +4,9 @@ import { DataSourceOptions, DataSource } from 'typeorm';
 import { join } from 'path';
 import { config } from 'dotenv';
 
-import { getEnvironment } from 'src/config';
-import { withEnvironment } from 'src/common';
 import { UserSubscriber } from 'src/subscribers/user.subscriber';
+import { getEnvironment } from 'src/config/helpers';
+import { withEnvironment } from 'src/common/with-environment';
 
 export const getDataSourceOptions = (url: string, isSsl: boolean): DataSourceOptions => ({
   type: 'postgres',

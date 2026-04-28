@@ -1,11 +1,11 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 
-import { Public } from 'src/auth';
-import { OrdersService } from 'src/orders';
+import { Public } from 'src/auth/decorators/public.decorator';
+import { OrdersService } from 'src/orders/orders.service';
 
-import { WebhookDTO } from './dtos';
-import { deliveryStates } from './const';
 import { BostaWebhookAuthGuard } from './bosta-webhook-auth.guard';
+import { deliveryStates } from './const';
+import { WebhookDTO } from './dtos/webhook.dto';
 
 @Controller('bosta')
 export class BostaController {

@@ -1,7 +1,6 @@
-import messages from './messages';
-
 import { defaultLocale, locales } from './const';
 import { translate } from './helpers';
+import messages from './messages';
 
 export type Locale = (typeof locales)[number];
 export type Messages = typeof messages;

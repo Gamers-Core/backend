@@ -1,13 +1,15 @@
-import { AxiosError, AxiosInstance } from 'axios';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
+import { AxiosError, AxiosInstance } from 'axios';
 
-import { Locale, LocaleContextService, translateWithoutLocale } from 'src/i18n';
-import { ServiceUnavailableException } from 'src/common';
-import { ConfigService } from 'src/config';
+import { ServiceUnavailableException } from 'src/common/exceptions';
+import { ConfigService } from 'src/config/config.service';
+import { translateWithoutLocale } from 'src/i18n/helpers';
+import { LocaleContextService } from 'src/i18n/locale-context.service';
+import { Locale } from 'src/i18n/types';
 
-import { mailTemplates } from './templates';
 import { getEmail, renderMailWrapper } from './helpers';
+import { mailTemplates } from './templates';
 import { MailOptions, MailOptionsType, MailType, SendMailOptions } from './types';
 
 @Injectable()

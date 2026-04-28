@@ -2,10 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
-import { BadRequestException, NotFoundException } from 'src/common';
-import { FAQ } from 'src/entity';
+import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 
-import { AddFAQDTO, UpdateFAQDTO } from './dtos';
+import { AddFAQDTO } from './dtos/add-faq.dto';
+import { UpdateFAQDTO } from './dtos/update-faq.dto';
+import { FAQ } from './entities/faq.entity';
 
 @Injectable()
 export class FAQsService {

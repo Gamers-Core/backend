@@ -1,10 +1,12 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 
 import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
-import { Serialize } from 'src/interceptors';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
 
-import { AddCategoryDTO, AdminCategoryDTO, UpdateCategoryDTO } from './dtos';
 import { CategoriesService } from './categories.service';
+import { AddCategoryDTO } from './dtos/add-category.dto';
+import { AdminCategoryDTO } from './dtos/admin-category.dto';
+import { UpdateCategoryDTO } from './dtos/update-category.dto';
 
 @Controller('admin/categories')
 @UseGuards(IsAdminAuthGuard)

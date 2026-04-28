@@ -1,4 +1,4 @@
-import { OrderStatus } from 'src/entity';
+import { OrderStatus } from 'src/orders/types';
 
 export const deliveryTypes = [
   'SEND',

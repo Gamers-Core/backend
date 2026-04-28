@@ -1,7 +1,8 @@
 import { Expose, Transform, Type } from 'class-transformer';
 
-import { type PolicyType } from 'src/entity';
-import { type Localized } from 'src/i18n';
+import type { Localized } from 'src/i18n/types';
+
+import type { PolicyType } from '../../types';
 
 export class AdminPolicyDTO {
   @Expose()
