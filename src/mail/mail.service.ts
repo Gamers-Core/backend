@@ -1,10 +1,10 @@
 import { AxiosError, AxiosInstance } from 'axios';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 
 import { Locale, LocaleContextService, translateWithoutLocale } from 'src/i18n';
 import { ServiceUnavailableException } from 'src/common';
+import { ConfigService } from 'src/config';
 
 import { mailTemplates } from './templates';
 import { getEmail, renderMailWrapper } from './helpers';
@@ -20,14 +20,10 @@ export class MailService {
     private readonly configService: ConfigService,
     private readonly LocaleContextService: LocaleContextService,
   ) {
-    this.brevo = this.httpService.axiosRef.create({
-      baseURL: this.configService.get<string>('BREVO_API_BASE_URL') || 'https://api.brevo.com/v3',
-      timeout: Number(this.configService.get<string>('BREVO_API_TIMEOUT_MS') ?? 10_000),
-    });
+    this.brevo = this.httpService.axiosRef.create({ baseURL: 'https://api.brevo.com/v3', timeout: 10_000 });
 
     this.brevo.interceptors.request.use((config) => {
-      const apiKey = this.configService.get<string>('BREVO_API_KEY');
-      if (!apiKey) throw new ServiceUnavailableException('mail.unavailable');
+      const apiKey = this.configService.get('BREVO_API_KEY');
 
       config.headers['api-key'] = apiKey;
       config.headers.accept = 'application/json';

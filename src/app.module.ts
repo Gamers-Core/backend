@@ -1,11 +1,12 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MiddlewareConsumer, Module, ValidationPipe } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import cookieSession from 'cookie-session';
 import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 
 import { getDataSourceOptions } from 'datasource';
 
+import { ConfigModule, ConfigService, getEnvironment, validate } from './config';
 import { GlobalExceptionFilter, ValidationException } from './common';
 import { I18nModule, LocaleContextMiddleware } from './i18n';
 import { FeaturedVariantsModule } from './featured-variants';
@@ -31,9 +32,10 @@ import { FAQsModule } from './faqs';
 @Module({
   imports: [
     TypeOrmModule.forRoot(getDataSourceOptions()),
-    ConfigModule.forRoot({
+    NestConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env.${process.env.NODE_ENV ?? 'development'}`,
+      envFilePath: `.env.${getEnvironment(process.env.NODE_ENV)}`,
+      validate,
     }),
     FeaturedVariantsModule,
     UserReviewsModule,
@@ -42,6 +44,7 @@ import { FAQsModule } from './faqs';
     ProductsModule,
     AppCacheModule,
     PoliciesModule,
+    ConfigModule,
     BrandsModule,
     OrdersModule,
     RedisModule,
@@ -80,12 +83,10 @@ export class AppModule {
   ) {}
 
   configure(consumer: MiddlewareConsumer) {
-    const cookieKey = this.configService.get<string>('COOKIE_KEY');
-    if (!cookieKey) throw new Error('COOKIE_KEY is required');
+    const cookieKey = this.configService.get('COOKIE_KEY');
 
-    const env = this.configService.get<string>('NODE_ENV');
-    const isLocal = env === 'local';
-    const cookieDomain = this.configService.get<string>('COOKIE_DOMAIN');
+    const isLocal = this.configService.environment === 'local';
+    const cookieDomain = this.configService.get('COOKIE_DOMAIN');
 
     consumer
       .apply(
@@ -94,7 +95,7 @@ export class AppModule {
           httpOnly: true,
           sameSite: isLocal ? 'lax' : 'none',
           secure: !isLocal,
-          domain: cookieDomain || undefined,
+          domain: cookieDomain,
           path: '/',
           maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
         }),

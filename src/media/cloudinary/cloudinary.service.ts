@@ -1,10 +1,11 @@
-import { ConfigService } from '@nestjs/config';
 import { Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { v2, UploadApiErrorResponse, UploadApiResponse, UploadStream } from 'cloudinary';
 
-import { getFileType, UploadedMediaFile } from 'src/media';
 import { MediaEntityType, MediaType, mediaTypes } from 'src/entity';
-import { BadRequestException, Environment } from 'src/common';
+import { BadRequestException } from 'src/common';
+import { ConfigService } from 'src/config';
+
+import { getFileType, UploadedMediaFile } from '../';
 
 import { CLOUDINARY } from './cloudinary.provider';
 import { mediaPolicyMap, mediaTypesMap } from './const';
@@ -22,8 +23,7 @@ export class CloudinaryService {
     const fileType = getFileType(file);
     const policy = mediaPolicyMap[folder];
 
-    const env = this.configService.get<Environment>('NODE_ENV')!;
-    const folderPath = `${env}/${folder}`;
+    const folderPath = `${this.configService.environment}/${folder}`;
 
     return new Promise<UploadApiResponse>((resolve, reject) => {
       const stream: UploadStream = this.cloudinary.uploader.upload_stream(

@@ -1,9 +1,9 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { ConfigService } from '@nestjs/config';
 
 import { AppCacheService } from 'src/cache';
 import { BostaPickupLocation, ShippingFeesResponseDTO } from 'src/addresses';
+import { ConfigService } from 'src/config';
 
 import { errorHandler, requestManager } from './helpers';
 import {
@@ -28,14 +28,10 @@ export class BostaService {
     private readonly configService: ConfigService,
     private readonly cacheService: AppCacheService,
   ) {
-    const api = this.httpService.axiosRef.create({
-      baseURL: 'https://app.bosta.co/api/v2',
-    });
+    const api = this.httpService.axiosRef.create({ baseURL: 'https://app.bosta.co/api/v2' });
 
     api.interceptors.request.use((config) => {
-      const token = this.configService.get<string>('BOSTA_TOKEN');
-      // Using ServiceUnavailableException here because the absence of the token is a configuration issue that prevents the service from functioning, rather than a client error.
-      if (!token) throw new ServiceUnavailableException('BOSTA_TOKEN is not configured');
+      const token = this.configService.get('BOSTA_TOKEN');
 
       config.headers.Authorization = token;
 
