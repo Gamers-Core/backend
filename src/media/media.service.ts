@@ -3,9 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Media, MediaAttachment } from 'src/entity';
-import { CloudinaryService } from 'src/cloudinary';
 import { NotFoundException, InternalServerErrorException } from 'src/common';
 
+import { CloudinaryService, mediaTypesMap } from './cloudinary';
 import { UploadedMediaFile } from './types';
 import { UploadMediaDTO } from './dtos';
 
@@ -42,7 +42,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     const media = this.mediaRepository.create({
       publicId: result.public_id,
       url: result.secure_url,
-      type: result.resource_type,
+      type: mediaTypesMap[result.resource_type],
       width: result.width,
       height: result.height,
       format: result.format,
@@ -54,7 +54,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
       return await this.mediaRepository.save(media);
     } catch (error) {
       try {
-        await this.cloudinaryService.destroy(result.public_id);
+        await this.cloudinaryService.destroy(result.public_id, media.type);
       } catch (destroyError) {
         this.logger.warn(
           `Media DB save failed and Cloudinary cleanup failed for ${result.public_id}: ${destroyError instanceof Error ? destroyError.message : String(destroyError)}`,
@@ -79,7 +79,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     if (!media) throw new NotFoundException('media.notFound');
 
     try {
-      await this.cloudinaryService.destroy(media.publicId);
+      await this.cloudinaryService.destroy(media.publicId, media.type);
     } catch (error) {
       this.logger.error(
         `Failed to delete media with publicId ${media.publicId} from Cloudinary during media deletion: ${error instanceof Error ? error.message : String(error)}`,
@@ -98,7 +98,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     try {
       const expiredDraftMedia = await this.mediaRepository
         .createQueryBuilder('m')
-        .select(['m.id', 'm.public_id'])
+        .select(['m.id', 'm.public_id', 'm.type'])
         .where('m.expires_at IS NOT NULL')
         .andWhere('m.expires_at < :now', { now })
         .andWhere('m.is_deleted = :isDeleted', { isDeleted: false })
@@ -111,7 +111,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
 
       if (!expiredDraftMedia.length) return;
 
-      const softDeletedMedia: Array<{ id: number; publicId: string }> = [];
+      const softDeletedMedia: Media[] = [];
 
       await Promise.all(
         expiredDraftMedia.map(async (media) => {
@@ -127,7 +127,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
             .execute();
 
           if (updateResult.affected) {
-            softDeletedMedia.push({ id: media.id, publicId: media.publicId });
+            softDeletedMedia.push(media);
           }
         }),
       );
@@ -140,13 +140,13 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async cleanupSoftDeletedMedia(mediaList: Array<{ id: number; publicId: string }>) {
+  private async cleanupSoftDeletedMedia(mediaList: Media[]) {
     if (!mediaList.length) return;
 
     try {
       const cleanupResults = await Promise.allSettled(
         mediaList.map(async (media) => {
-          await this.cloudinaryService.destroy(media.publicId);
+          await this.cloudinaryService.destroy(media.publicId, media.type);
 
           await this.mediaRepository
             .createQueryBuilder()

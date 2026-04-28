@@ -18,6 +18,7 @@ import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
 import { MediaService } from './media.service';
 import { MediaDTO, UploadMediaDTO } from './dtos';
 import { UploadedMediaFile } from './types';
+import { mediaPolicyMap } from './cloudinary';
 
 @Controller('media')
 @UseGuards(IsAdminAuthGuard)
@@ -26,7 +27,18 @@ export class MediaController {
 
   @Serialize(MediaDTO)
   @Post()
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: Math.max(...Object.values(mediaPolicyMap).map((policy) => policy.maxBytes)),
+      },
+      fileFilter: (req, file, cb) => {
+        if (!file.mimetype?.includes('/')) return cb(new BadRequestException('media.invalidType'), false);
+
+        cb(null, true);
+      },
+    }),
+  )
   async upload(@Body() body: UploadMediaDTO, @UploadedFile() file: UploadedMediaFile | undefined) {
     if (!file) throw new BadRequestException('media.required');
 

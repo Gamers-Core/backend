@@ -11,7 +11,6 @@ import { I18nModule, LocaleContextMiddleware } from './i18n';
 import { FeaturedVariantsModule } from './featured-variants';
 import { UserReviewsModule } from './user-reviews';
 import { AppController } from './app.controller';
-import { CloudinaryModule } from './cloudinary';
 import { CategoriesModule } from './categories';
 import { AddressesModule } from './addresses';
 import { ProductsModule } from './products';
@@ -38,7 +37,6 @@ import { FAQsModule } from './faqs';
     }),
     FeaturedVariantsModule,
     UserReviewsModule,
-    CloudinaryModule,
     CategoriesModule,
     AddressesModule,
     ProductsModule,

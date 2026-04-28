@@ -1,7 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { ConfigService } from '@nestjs/config';
 
-export const CLOUDINARY = 'CLOUDINARY';
+export const CLOUDINARY = Symbol('CLOUDINARY');
 
 export const CloudinaryProvider = {
   provide: CLOUDINARY,

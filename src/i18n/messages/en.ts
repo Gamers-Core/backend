@@ -24,6 +24,9 @@ export default {
   'media.invalidType': 'Invalid file type',
   'media.invalidTypeWithAllowed': 'Invalid file type. Allowed types: {allowedTypes}',
   'media.saveFailed': 'Failed to save media record',
+  'media.tooLarge': 'File size exceeds the maximum allowed size of {maxSize} mb',
+  'media.uploadFailed': 'Media upload failed',
+  'media.unsupportedType': 'Unsupported media type',
 
   'products.brandNotFound': 'Brand not found',
   'products.categoryNotFound': 'Category not found',

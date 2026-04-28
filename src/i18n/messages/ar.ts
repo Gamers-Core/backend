@@ -24,6 +24,9 @@ export default {
   'media.invalidType': 'نوع الملف غير صالح',
   'media.invalidTypeWithAllowed': 'نوع الملف غير صالح. الأنواع المسموح بها: {allowedTypes}',
   'media.saveFailed': 'فشل في حفظ سجل الوسائط',
+  'media.tooLarge': 'حجم الملف يتجاوز الحد الأقصى المسموح به {maxSize} ميجابايت',
+  'media.uploadFailed': 'فشل في رفع الوسائط',
+  'media.unsupportedType': 'نوع الوسائط غير مدعوم',
 
   'products.brandNotFound': 'العلامة التجارية غير موجودة',
   'products.categoryNotFound': 'الفئة غير موجودة',
