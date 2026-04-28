@@ -1,12 +1,12 @@
-// datasource.ts
-import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
-import { DataSourceOptions, DataSource } from 'typeorm';
 import { join } from 'path';
-import { config } from 'dotenv';
 
-import { UserSubscriber } from 'src/subscribers/user.subscriber';
-import { getEnvironment } from 'src/config/helpers';
+import { config } from 'dotenv';
+import { DataSourceOptions, DataSource } from 'typeorm';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+
 import { withEnvironment } from 'src/common/with-environment';
+import { getEnvironment } from 'src/config/helpers';
+import { UserSubscriber } from 'src/subscribers/user.subscriber';
 
 export const getDataSourceOptions = (url: string, isSsl: boolean): DataSourceOptions => ({
   type: 'postgres',

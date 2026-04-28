@@ -5,7 +5,6 @@ import type { Localized } from 'src/i18n/types';
 import { Product } from 'src/products/entities/product.entity';
 
 @Entity()
-// TODO: handle unique constraint on jsonb column.
 export class Brand {
   @PrimaryGeneratedColumn()
   id: number;
