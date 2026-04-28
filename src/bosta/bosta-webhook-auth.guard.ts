@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { timingSafeEqual } from 'crypto';
 import { Request } from 'express';
 
-import { UnauthorizedException } from 'src/common';
+import { UnauthorizedException, withEnvironment } from 'src/common';
 import { ConfigService } from 'src/config';
 
 const safeCompare = (a: string, b: string): boolean => {
@@ -19,14 +19,16 @@ export class BostaWebhookAuthGuard implements CanActivate {
   constructor(private readonly configService: ConfigService) {}
 
   canActivate(context: ExecutionContext): boolean {
-    if (this.configService.environment !== 'production') return true;
+    return withEnvironment(['production'], (isValid) => {
+      if (!isValid) return true;
 
-    const req = context.switchToHttp().getRequest<Request>();
-    const expectedSecret = this.configService.get('BOSTA_WEBHOOK_SECRET')!;
-    const providedSecret = (req.headers['x-bosta-secret'] as string) ?? '';
+      const req = context.switchToHttp().getRequest<Request>();
+      const expectedSecret = this.configService.get('BOSTA_WEBHOOK_SECRET')!;
+      const providedSecret = (req.headers['x-bosta-secret'] as string) ?? '';
 
-    if (!safeCompare(providedSecret, expectedSecret)) throw new UnauthorizedException('unauthorized');
+      if (!safeCompare(providedSecret, expectedSecret)) throw new UnauthorizedException('unauthorized');
 
-    return true;
+      return true;
+    });
   }
 }
