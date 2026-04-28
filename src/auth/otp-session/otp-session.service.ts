@@ -81,11 +81,14 @@ export class OtpSessionService {
       .expire(key, ttlSeconds)
       .exec();
 
-    await withEnvironment(['staging', 'production'], async (isValid) => {
-      if (!isValid) return;
+    await withEnvironment(
+      async (isValid) => {
+        if (!isValid) return;
 
-      await this.mailService.sendTypedMail(email, purpose, { otp }, locale);
-    });
+        await this.mailService.sendTypedMail(email, purpose, { otp }, locale);
+      },
+      ['staging', 'production'],
+    );
 
     return { sessionId };
   }
@@ -103,14 +106,17 @@ export class OtpSessionService {
       throw new BadRequestException('auth.otp.tooManyAttempts');
     }
 
-    await withEnvironment(['staging', 'production'], async (isValid) => {
-      if (!isValid) return;
+    await withEnvironment(
+      async (isValid) => {
+        if (!isValid) return;
 
-      if (!(await compareHashedOtp(otp, session.otp))) {
-        await this.redis.hincrby(key, 'otp_attempts', 1);
-        throw new BadRequestException('auth.otp.invalid');
-      }
-    });
+        if (!(await compareHashedOtp(otp, session.otp))) {
+          await this.redis.hincrby(key, 'otp_attempts', 1);
+          throw new BadRequestException('auth.otp.invalid');
+        }
+      },
+      ['staging', 'production'],
+    );
 
     await this.redis.del(key);
 

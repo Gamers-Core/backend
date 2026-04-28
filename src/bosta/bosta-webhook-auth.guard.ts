@@ -19,16 +19,19 @@ export class BostaWebhookAuthGuard implements CanActivate {
   constructor(private readonly configService: ConfigService) {}
 
   canActivate(context: ExecutionContext): boolean {
-    return withEnvironment(['production'], (isValid) => {
-      if (!isValid) return true;
+    return withEnvironment(
+      (isValid) => {
+        if (!isValid) return true;
 
-      const req = context.switchToHttp().getRequest<Request>();
-      const expectedSecret = this.configService.get('BOSTA_WEBHOOK_SECRET')!;
-      const providedSecret = (req.headers['x-bosta-secret'] as string) ?? '';
+        const req = context.switchToHttp().getRequest<Request>();
+        const expectedSecret = this.configService.get('BOSTA_WEBHOOK_SECRET')!;
+        const providedSecret = (req.headers['x-bosta-secret'] as string) ?? '';
 
-      if (!safeCompare(providedSecret, expectedSecret)) throw new UnauthorizedException('unauthorized');
+        if (!safeCompare(providedSecret, expectedSecret)) throw new UnauthorizedException('unauthorized');
 
-      return true;
-    });
+        return true;
+      },
+      ['production'],
+    );
   }
 }

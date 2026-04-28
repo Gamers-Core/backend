@@ -47,10 +47,13 @@ export class AuthService {
   }
 
   async resendOTP({ sessionId }: ResendOTPDTO, locale?: Locale) {
-    return withEnvironment(['staging', 'production'], async (isValid) => {
-      if (!isValid) return;
+    return withEnvironment(
+      async (isValid) => {
+        if (!isValid) return;
 
-      return this.otpSessionService.resendSession({ sessionId }, locale);
-    });
+        return this.otpSessionService.resendSession({ sessionId }, locale);
+      },
+      ['staging', 'production'],
+    );
   }
 }
