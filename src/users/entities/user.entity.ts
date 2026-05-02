@@ -7,11 +7,10 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { locales } from 'zod';
 
 import { Address } from 'src/addresses/entities/address.entity';
 import { Cart } from 'src/cart/entities/cart.entity';
-import { defaultLocale } from 'src/i18n/const';
+import { defaultLocale, locales } from 'src/i18n/const';
 import type { Locale } from 'src/i18n/types';
 import { Order } from 'src/orders/entities/order.entity';
 

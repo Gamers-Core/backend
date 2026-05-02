@@ -36,6 +36,6 @@ export class UsersController {
   @Serialize(BasicUserDTO)
   @Patch('me/locale/:locale')
   updateLocale(@CurrentUser() user: User, @Param('locale', new ParseEnumPipe(locales)) locale: Locale) {
-    return this.usersService.updateLocale(user, locale);
+    return this.usersService.updateLocale(user.id, locale);
   }
 }

@@ -13,32 +13,23 @@ export class UsersService {
   constructor(@InjectRepository(User) private repo: Repository<User>) {}
 
   async findOrCreate(email: string) {
-    const [user] = await this.find(email);
+    const user = await this.findOneByEmail(email);
     if (user) return { user, isNewUser: false };
 
     try {
-      const user = await this.create(email);
-
-      return { user, isNewUser: true };
-    } catch (e) {
-      if (isUniqueViolation(e)) {
+      const newUser = await this.create(email);
+      return { user: newUser, isNewUser: true };
+    } catch (error) {
+      if (isUniqueViolation(error)) {
         const user = await this.findOneByEmailOrFail(email);
-
         return { user, isNewUser: false };
       }
-
-      throw e;
+      throw error;
     }
   }
 
   create(email: string) {
-    const user = this.repo.create({ email });
-
-    return this.repo.save(user);
-  }
-
-  find(email: string) {
-    return this.repo.find({ where: { email } });
+    return this.repo.save(this.repo.create({ email }));
   }
 
   findOne(id: number) {
@@ -46,45 +37,30 @@ export class UsersService {
   }
 
   findFull(id: number) {
-    return this.repo.findOne({ where: { id }, relations: ['addresses'] });
+    return this.repo.findOne({ where: { id }, relations: { addresses: true } });
   }
 
-  updateLocale(user: User, locale: Locale) {
-    return this.updateUser(user, { locale });
-  }
-
-  async updateByEmail(email: string, updatedUser: Partial<User>) {
-    const [user] = await this.find(email);
-    if (!user) return null;
-
-    return this.updateUser(user, updatedUser);
+  updateLocale(id: number, locale: Locale) {
+    return this.update(id, { locale });
   }
 
   async update(id: number, updatedUser: DeepPartial<User>) {
-    const user = await this.findOne(id);
-    if (!user) throw new NotFoundException('user.notFound');
-
-    return this.updateUser(user, updatedUser);
+    const result = await this.repo.update(id, updatedUser);
+    if (!result.affected) throw new NotFoundException('user.notFound');
   }
 
   async remove(id: number) {
-    const user = await this.findOne(id);
+    const result = await this.repo.delete(id);
+    if (!result.affected) throw new NotFoundException('user.notFound');
+  }
 
-    if (!user) throw new NotFoundException('user.notFound');
-
-    return this.repo.remove(user);
+  private findOneByEmail(email: string) {
+    return this.repo.findOne({ where: { email } });
   }
 
   private async findOneByEmailOrFail(email: string) {
-    const user = await this.repo.findOne({ where: { email } });
+    const user = await this.findOneByEmail(email);
     if (!user) throw new NotFoundException('user.notFound');
-
     return user;
-  }
-
-  private async updateUser(user: User, updatedUser: DeepPartial<User>) {
-    Object.assign(user, updatedUser);
-
-    return this.repo.save(user);
   }
 }
