@@ -17,18 +17,18 @@ export class AdminPoliciesController {
   @Get()
   @Serialize(AdminPoliciesDTO)
   getAll() {
-    return this.policiesService.getLatestAll();
+    return this.policiesService.getAll();
   }
 
   @Serialize(AdminPolicyDTO)
   @Get(':type/history')
-  history(@Param('type', new ParseEnumPipe(policyTypes)) type: PolicyType) {
+  getHistory(@Param('type', new ParseEnumPipe(policyTypes)) type: PolicyType) {
     return this.policiesService.getHistory(type);
   }
 
   @Put(':type')
   @Serialize(AdminPolicyDTO)
   update(@Param('type', new ParseEnumPipe(policyTypes)) type: PolicyType, @Body() dto: UpdatePolicyDTO) {
-    return this.policiesService.updatePolicy(type, dto);
+    return this.policiesService.update(type, dto);
   }
 }

@@ -20,17 +20,17 @@ export class AdminOrdersController {
 
   @Get()
   getOrders() {
-    return this.ordersService.getOrders();
+    return this.ordersService.getAll();
   }
 
   @Get(':orderNumber')
-  getOrder(@Param('orderNumber') orderNumber: string) {
-    return this.ordersService.getOrder(orderNumber);
+  getOne(@Param('orderNumber') orderNumber: string) {
+    return this.ordersService.getOne(orderNumber);
   }
 
   @Post()
-  createOrder(@Body() body: CreateOrderDTO) {
-    return this.ordersService.createOrder(body);
+  create(@Body() body: CreateOrderDTO) {
+    return this.ordersService.create(body);
   }
 
   @Patch(':orderNumber/paymentStatus')
@@ -49,7 +49,7 @@ export class AdminOrdersController {
   }
 
   @Post(':orderNumber/items')
-  addOrderItem(@Param('orderNumber') orderNumber: string, @Body() body: AddOrderItemDTO) {
+  addItems(@Param('orderNumber') orderNumber: string, @Body() body: AddOrderItemDTO) {
     return this.ordersService.addItems(orderNumber, body);
   }
 
@@ -63,7 +63,7 @@ export class AdminOrdersController {
   }
 
   @Delete(':orderNumber/items/:itemId')
-  deleteOrderItem(@Param('orderNumber') orderNumber: string, @Param('itemId', ParseIntPipe) itemId: number) {
-    return this.ordersService.deleteOrderItem(orderNumber, itemId);
+  removeOrderItem(@Param('orderNumber') orderNumber: string, @Param('itemId', ParseIntPipe) itemId: number) {
+    return this.ordersService.removeOrderItem(orderNumber, itemId);
   }
 }

@@ -26,7 +26,7 @@ export class BrandsService {
   }
 
   getOne(id: number) {
-    return this.getBrandOrThrow(id);
+    return this.getOneOrFail(id);
   }
 
   add({ imageId, ...dto }: AddBrandDTO) {
@@ -36,7 +36,7 @@ export class BrandsService {
       const image = await this.mediaService.attach(imageId, manager);
       const brand = await repo.save(repo.create({ ...dto, image }));
 
-      return this.getBrandOrThrow(brand.id, manager);
+      return this.getOneOrFail(brand.id, manager);
     });
   }
 
@@ -44,7 +44,7 @@ export class BrandsService {
     return this.repo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(Brand);
 
-      const brand = await this.getBrandOrThrow(id, manager);
+      const brand = await this.getOneOrFail(id, manager);
 
       Object.assign(brand, dto);
 
@@ -52,15 +52,15 @@ export class BrandsService {
 
       await repo.save(brand);
 
-      return this.getBrandOrThrow(brand.id, manager);
+      return this.getOneOrFail(brand.id, manager);
     });
   }
 
-  delete(id: number) {
+  remove(id: number) {
     return this.repo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(Brand);
 
-      const brand = await this.getBrandOrThrow(id, manager, { products: true });
+      const brand = await this.getOneOrFail(id, manager, { products: true });
       if (brand.products.length) throw BadRequestException('products.brandHasProducts');
 
       if (brand.image) await this.mediaService.detach(brand.image.id, manager);
@@ -71,11 +71,7 @@ export class BrandsService {
     });
   }
 
-  private getBrandOrThrow(
-    id: number,
-    manager?: EntityManager,
-    relations?: FindOptionsRelations<Brand>,
-  ): Promise<Brand> {
+  private getOneOrFail(id: number, manager?: EntityManager, relations?: FindOptionsRelations<Brand>): Promise<Brand> {
     return withOptionalManager(manager, this.repo.manager, async (manager) => {
       const repo = manager.getRepository(Brand);
 

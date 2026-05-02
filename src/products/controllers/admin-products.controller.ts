@@ -16,20 +16,20 @@ export class AdminProductsController {
 
   @Get(':id')
   @Serialize(AdminProductDTO)
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.productsService.findOne(id);
+  getOne(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.getOne(id);
   }
 
   @Get()
   @Serialize(AdminProductDTO)
-  findAll(@Query() dto: AdminSearchProductsDTO) {
+  search(@Query() dto: AdminSearchProductsDTO) {
     return this.productsService.search(dto, true);
   }
 
   @Post()
   @Serialize(AdminProductDTO)
-  create(@Body() createProductDTO: CreateProductDTO) {
-    return this.productsService.create(createProductDTO);
+  add(@Body() createProductDTO: CreateProductDTO) {
+    return this.productsService.add(createProductDTO);
   }
 
   @Patch(':id')
@@ -39,7 +39,7 @@ export class AdminProductsController {
   }
 
   @Delete(':id')
-  delete(@Param('id', ParseIntPipe) id: number) {
-    return this.productsService.delete(id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.remove(id);
   }
 }

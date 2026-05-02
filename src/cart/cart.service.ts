@@ -33,7 +33,7 @@ export class CartService {
       const uniqueExternalIds = [...new Set(items.map((item) => item.externalId))];
       if (uniqueExternalIds.length !== items.length) throw BadRequestException('cart.duplicateExternalIds');
 
-      const variants = await this.inventoryService.findManyByExternalIds(uniqueExternalIds, manager);
+      const variants = await this.inventoryService.getManyByExternalIds(uniqueExternalIds, manager);
 
       items.forEach((item, i) => {
         if (item.quantity > variants[i].stock)

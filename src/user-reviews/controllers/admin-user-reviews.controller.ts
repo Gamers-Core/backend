@@ -40,7 +40,7 @@ export class AdminUserReviewsController {
 
   @Delete(':position')
   @Serialize(AdminUserReviewDTO)
-  async delete(@Param('position', ParseIntPipe) position: number) {
-    return this.userReviewsService.delete(position);
+  remove(@Param('position', ParseIntPipe) position: number) {
+    return this.userReviewsService.remove(position);
   }
 }

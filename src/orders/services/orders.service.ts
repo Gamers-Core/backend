@@ -47,7 +47,7 @@ export class OrdersService {
     private readonly LocaleContextService: LocaleContextService,
   ) {}
 
-  getOrders(userId?: number) {
+  getAll(userId?: number) {
     return this.ordersRepo.find({
       where: userId ? { user: { id: userId } } : undefined,
       relations: { items: true, user: !!userId, history: true },
@@ -55,11 +55,11 @@ export class OrdersService {
     });
   }
 
-  getOrder(orderNumber: string, userId?: number) {
-    return this.getOrderOrFail(this.ordersRepo.manager, { orderNumber, userId }, true);
+  getOne(orderNumber: string, userId?: number) {
+    return this.getOneOrFail(this.ordersRepo.manager, { orderNumber, userId }, true);
   }
 
-  async checkout(userId: number, body: CheckoutOrderDTO) {
+  checkout(userId: number, body: CheckoutOrderDTO) {
     return this.ordersRepo.manager.transaction(async (manager) => {
       const cart = await this.cartService.getOrCreateCart(userId, manager);
       if (!cart.items.length) throw BadRequestException('orders.cartEmpty');
@@ -69,7 +69,7 @@ export class OrdersService {
     });
   }
 
-  createOrder(body: CreateOrderDTO) {
+  create(body: CreateOrderDTO) {
     return this.ordersRepo.manager.transaction(async (manager) => {
       const order = await this.createOrderInternal(body, manager);
 
@@ -80,7 +80,7 @@ export class OrdersService {
   addItems(orderNumber: string, item: AddOrderItemDTO) {
     return this.ordersRepo.manager.transaction((manager) =>
       this.mutateItems({ orderNumber }, manager, (order, manager) =>
-        this.orderItemsService.addItems(order, [item], manager),
+        this.orderItemsService.add(order, [item], manager),
       ),
     );
   }
@@ -88,15 +88,15 @@ export class OrdersService {
   updateOrderItem(orderNumber: string, itemId: number, body: UpdateOrderItemDTO) {
     return this.ordersRepo.manager.transaction((manager) =>
       this.mutateItems({ orderNumber }, manager, (order, manager) =>
-        this.orderItemsService.updateItem(order, itemId, body, manager),
+        this.orderItemsService.update(order, itemId, body, manager),
       ),
     );
   }
 
-  deleteOrderItem(orderNumber: string, itemId: number) {
+  removeOrderItem(orderNumber: string, itemId: number) {
     return this.ordersRepo.manager.transaction((manager) =>
       this.mutateItems({ orderNumber }, manager, (order, manager) =>
-        this.orderItemsService.deleteItem(order, itemId, manager),
+        this.orderItemsService.remove(order, itemId, manager),
       ),
     );
   }
@@ -138,7 +138,7 @@ export class OrdersService {
 
     const orderRepo = manager.getRepository(Order);
 
-    const address = await this.addressService.getAddressOrFail(body.addressId, userId, manager);
+    const address = await this.addressService.getOneOrFail(body.addressId, userId, manager);
 
     const order = orderRepo.create({
       user: { id: userId },
@@ -156,13 +156,13 @@ export class OrdersService {
     await orderRepo.save(order);
     await this.appendHistory(order, order.status, manager);
 
-    const diff = await this.orderItemsService.addItems(order, body.variants, manager);
+    const diff = await this.orderItemsService.add(order, body.variants, manager);
     order.subtotal += diff;
     await this.recalculateAndSaveTotals(order, manager);
 
     if (clearCartAfterCreate) await this.cartService.sync(userId, [], manager);
 
-    const updatedOrder = await this.getOrderOrFail(manager, { orderNumber: order.orderNumber, userId }, true);
+    const updatedOrder = await this.getOneOrFail(manager, { orderNumber: order.orderNumber, userId }, true);
 
     await this.statusHandlers.pending(updatedOrder);
 
@@ -194,7 +194,7 @@ export class OrdersService {
     manager: EntityManager,
     mutate: (order: Order, manager: EntityManager) => Promise<number>,
   ) {
-    const order = await this.getOrderOrFail(manager, options, true);
+    const order = await this.getOneOrFail(manager, options, true);
 
     if (!editableStatuses.includes(order.status)) throw BadRequestException('orders.notEditableInCurrentStatus');
 
@@ -203,14 +203,14 @@ export class OrdersService {
     order.subtotal += diff;
     await this.recalculateAndSaveTotals(order, manager);
 
-    const updatedOrder = await this.getOrderOrFail(manager, options, true);
+    const updatedOrder = await this.getOneOrFail(manager, options, true);
 
     return this.serializeOrder(updatedOrder);
   }
 
   private updateOrder(options: OrderOptions, mutate: (order: Order, manager: EntityManager) => void | Promise<void>) {
     return this.ordersRepo.manager.transaction(async (manager) => {
-      const order = await this.getOrderOrFail(manager, options, true);
+      const order = await this.getOneOrFail(manager, options, true);
       await mutate(order, manager);
 
       const repo = manager.getRepository(Order);
@@ -226,7 +226,7 @@ export class OrdersService {
     });
   }
 
-  private async getOrderOrFail(manager: EntityManager, options: OrderOptions, includeRelations = false) {
+  private async getOneOrFail(manager: EntityManager, options: OrderOptions, includeRelations = false) {
     const { userId, ...identifier } = options;
 
     const order = await manager.getRepository(Order).findOne({

@@ -12,8 +12,8 @@ import { User } from './entities/user.entity';
 export class UsersService {
   constructor(@InjectRepository(User) private repo: Repository<User>) {}
 
-  async findOrCreate(email: string) {
-    const user = await this.findOneByEmail(email);
+  async getOrCreate(email: string) {
+    const user = await this.getOneByEmail(email);
     if (user) return { user, isNewUser: false };
 
     try {
@@ -21,7 +21,7 @@ export class UsersService {
       return { user: newUser, isNewUser: true };
     } catch (error) {
       if (isUniqueViolation(error)) {
-        const user = await this.findOneByEmailOrFail(email);
+        const user = await this.getOneByEmailOrFail(email);
         return { user, isNewUser: false };
       }
       throw error;
@@ -32,11 +32,11 @@ export class UsersService {
     return this.repo.save(this.repo.create({ email }));
   }
 
-  findOne(id: number) {
+  getOne(id: number) {
     return this.repo.findOne({ where: { id } });
   }
 
-  findFull(id: number) {
+  getFull(id: number) {
     return this.repo.findOne({ where: { id }, relations: { addresses: true } });
   }
 
@@ -46,6 +46,7 @@ export class UsersService {
 
   async update(id: number, updatedUser: DeepPartial<User>) {
     const result = await this.repo.update(id, updatedUser);
+
     if (!result.affected) throw NotFoundException('user.notFound');
   }
 
@@ -54,12 +55,12 @@ export class UsersService {
     if (!result.affected) throw NotFoundException('user.notFound');
   }
 
-  private findOneByEmail(email: string) {
+  private getOneByEmail(email: string) {
     return this.repo.findOne({ where: { email } });
   }
 
-  private async findOneByEmailOrFail(email: string) {
-    const user = await this.findOneByEmail(email);
+  private async getOneByEmailOrFail(email: string) {
+    const user = await this.getOneByEmail(email);
     if (!user) throw NotFoundException('user.notFound');
     return user;
   }

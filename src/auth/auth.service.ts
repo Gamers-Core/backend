@@ -20,15 +20,15 @@ export class AuthService {
 
   private readonly otpVerifyHandlers: OtpVerifyHandlers = {
     signin: async (email) => {
-      const { user, isNewUser } = await this.usersService.findOrCreate(email);
+      const { user, isNewUser } = await this.usersService.getOrCreate(email);
       const cart = await this.cartService.getOrCreateCart(user.id);
 
       return { user, cart, isNewUser };
     },
   };
 
-  async signin({ email }: SigninDTO) {
-    return await this.otpSessionService.createSession({ purpose: 'signin', email });
+  signin({ email }: SigninDTO) {
+    return this.otpSessionService.createSession({ purpose: 'signin', email });
   }
 
   async verifyOTP<P extends AuthPurpose>({
@@ -42,7 +42,7 @@ export class AuthService {
     return { purpose, ...res };
   }
 
-  async resendOTP({ sessionId }: ResendOTPDTO) {
+  resendOTP({ sessionId }: ResendOTPDTO) {
     return withEnvironment(
       async (isValid) => {
         if (!isValid) return;

@@ -42,7 +42,7 @@ export class VariantsService {
     return this.variantRepository.manager.transaction(async (manager) => {
       const variantRepository = manager.getRepository(Variant);
 
-      const variant = await this.findVariantOrFail(productId, variantId, manager);
+      const variant = await this.getOneOrFail(productId, variantId, manager);
       const remainingVariants = variant.product.variants.filter(({ id }) => id !== variantId);
 
       if (variant.compareAt && variant.compareAt <= variant.price)
@@ -64,7 +64,7 @@ export class VariantsService {
     return this.variantRepository.manager.transaction(async (manager) => {
       const variantRepository = manager.getRepository(Variant);
 
-      const variant = await this.findVariantOrFail(productId, variantId, manager);
+      const variant = await this.getOneOrFail(productId, variantId, manager);
       const remainingVariants = variant.product.variants.filter(({ id }) => id !== variantId);
       if (!remainingVariants.length) throw BadRequestException('products.cannotRemoveLastVariant');
 
@@ -79,7 +79,7 @@ export class VariantsService {
     });
   }
 
-  private async findVariantOrFail(productId: number, variantId: number, manager: EntityManager) {
+  private async getOneOrFail(productId: number, variantId: number, manager: EntityManager) {
     const variantRepository = manager.getRepository(Variant);
 
     const variant = await variantRepository.findOne({

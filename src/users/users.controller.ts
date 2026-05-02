@@ -30,7 +30,7 @@ export class UsersController {
   @Serialize(FullUserDTO)
   @Get('me/full')
   getFullCurrentUser(@CurrentUser() user: User) {
-    return this.usersService.findFull(user.id);
+    return this.usersService.getFull(user.id);
   }
 
   @Serialize(BasicUserDTO)

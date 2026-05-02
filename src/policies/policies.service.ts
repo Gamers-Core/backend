@@ -15,7 +15,7 @@ export class PoliciesService {
 
   private static readonly POLICY_HISTORY_DEPTH = 2;
 
-  async updatePolicy(type: PolicyType, updateDTO: UpdatePolicyDTO): Promise<Policy> {
+  async update(type: PolicyType, updateDTO: UpdatePolicyDTO): Promise<Policy> {
     try {
       return await this.repo.manager.transaction(async (manager) => {
         const policyRepo = manager.getRepository(Policy);
@@ -50,7 +50,7 @@ export class PoliciesService {
     }
   }
 
-  async getLatestAll(): Promise<Policies> {
+  async getAll(): Promise<Policies> {
     const rows = await this.repo
       .createQueryBuilder('p')
       .distinctOn(['p.type'])

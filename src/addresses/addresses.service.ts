@@ -19,14 +19,14 @@ export class AddressesService {
     private readonly bostaService: BostaService,
   ) {}
 
-  getAddresses(userId: number) {
+  getAll(userId: number) {
     return this.addressesRepo.find({
       where: { user: { id: userId } },
       order: { isDefault: 'DESC', createdAt: 'DESC' },
     });
   }
 
-  async addAddress(userId: number, { cityId, districtId, ...createDTO }: CreateAddressDTO) {
+  add(userId: number, { cityId, districtId, ...createDTO }: CreateAddressDTO) {
     return this.addressesRepo.manager.transaction(async (manager) => {
       const addressRepo = manager.getRepository(Address);
 
@@ -37,15 +37,15 @@ export class AddressesService {
 
       await this.setDefault(createdAddress.id, userId, manager);
 
-      return this.getAddressOrFail(createdAddress.id, userId, manager);
+      return this.getOneOrFail(createdAddress.id, userId, manager);
     });
   }
 
-  updateAddress(id: number, userId: number, dto: UpdateAddressDTO) {
+  update(id: number, userId: number, dto: UpdateAddressDTO) {
     return this.addressesRepo.manager.transaction(async (manager) => {
       const addressRepo = manager.getRepository(Address);
 
-      const address = await this.getAddressOrFail(id, userId, manager);
+      const address = await this.getOneOrFail(id, userId, manager);
 
       if (dto.cityId || dto.districtId) {
         const locationData = await this.resolveLocationUpdate(dto, address);
@@ -60,29 +60,12 @@ export class AddressesService {
       return updated;
     });
   }
-  async setDefault(id: number, userId: number, manager?: EntityManager) {
-    return withOptionalManager(manager, this.addressesRepo.manager, async (manager) => {
-      const repo = manager.getRepository(Address);
 
-      const exists = await repo.existsBy({ id, user: { id: userId } });
-      if (!exists) throw NotFoundException('address.notFound');
-
-      await repo
-        .createQueryBuilder()
-        .update(Address)
-        .set({ isDefault: () => `id = ${id}` })
-        .where('user_id = :userId', { userId })
-        .execute();
-
-      return { success: true };
-    });
-  }
-
-  async removeAddress(id: number, userId: number) {
+  async remove(id: number, userId: number) {
     await this.addressesRepo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(Address);
 
-      const address = await this.getAddressOrFail(id, userId, manager);
+      const address = await this.getOneOrFail(id, userId, manager);
 
       await repo.delete(address.id);
       if (!address.isDefault) return;
@@ -100,7 +83,25 @@ export class AddressesService {
     return { deleted: true };
   }
 
-  async getAddressOrFail(id: number, userId: number, manager?: EntityManager) {
+  setDefault(id: number, userId: number, manager?: EntityManager) {
+    return withOptionalManager(manager, this.addressesRepo.manager, async (manager) => {
+      const repo = manager.getRepository(Address);
+
+      const exists = await repo.existsBy({ id, user: { id: userId } });
+      if (!exists) throw NotFoundException('address.notFound');
+
+      await repo
+        .createQueryBuilder()
+        .update(Address)
+        .set({ isDefault: () => `id = ${id}` })
+        .where('user_id = :userId', { userId })
+        .execute();
+
+      return { success: true };
+    });
+  }
+
+  getOneOrFail(id: number, userId: number, manager?: EntityManager) {
     return withOptionalManager(manager, this.addressesRepo.manager, async (manager) => {
       const addressRepo = manager.getRepository(Address);
 

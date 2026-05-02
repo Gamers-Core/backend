@@ -43,11 +43,11 @@ export class MediaController {
   async upload(@Body() body: UploadMediaDTO, @UploadedFile() file: UploadedMediaFile | undefined) {
     if (!file) throw BadRequestException('media.required');
 
-    return this.mediaService.create(file, body);
+    return this.mediaService.upload(file, body);
   }
 
   @Delete(':id')
-  delete(@Param('id', ParseIntPipe) id: number) {
-    return this.mediaService.delete(id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.mediaService.remove(id);
   }
 }

@@ -15,19 +15,19 @@ export class ProductsController {
 
   @Get('many')
   @Serialize(ProductDTO)
-  findMany(@Query('ids') ids: string) {
-    return this.productsService.findMany(ids);
+  getMany(@Query('ids') ids: string) {
+    return this.productsService.getMany(ids);
   }
 
   @Get(':id')
   @Serialize(ProductDTO)
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.productsService.findOne(id);
+  getOne(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.getOne(id);
   }
 
   @Get()
   @Serialize(SearchDTO)
-  findAll(@Query() dto: SearchProductsDTO) {
+  search(@Query() dto: SearchProductsDTO) {
     return this.productsService.search(dto, false);
   }
 

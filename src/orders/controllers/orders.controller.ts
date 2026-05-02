@@ -14,13 +14,13 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Get(':orderNumber')
-  getOrder(@CurrentUser() user: User, @Param('orderNumber') orderNumber: string) {
-    return this.ordersService.getOrder(orderNumber, user.id);
+  getOne(@CurrentUser() user: User, @Param('orderNumber') orderNumber: string) {
+    return this.ordersService.getOne(orderNumber, user.id);
   }
 
   @Get()
-  getOrders(@CurrentUser() user: User) {
-    return this.ordersService.getOrders(user.id);
+  getAll(@CurrentUser() user: User) {
+    return this.ordersService.getAll(user.id);
   }
 
   @Post('checkout')

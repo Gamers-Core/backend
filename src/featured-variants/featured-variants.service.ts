@@ -81,7 +81,7 @@ export class FeaturedVariantsService {
       if (!result.affected) throw NotFoundException('featuredVariants.notFound');
 
       const remaining = await this.getAllOrdered(manager);
-      await this.reorderWithPositions(remaining, manager);
+      await this.reorderInternal(remaining, manager);
 
       return this.getAllOrdered(manager);
     });
@@ -97,13 +97,13 @@ export class FeaturedVariantsService {
       const featuredById = new Map(featured.map((item) => [item.id, item]));
       const ordered = ids.map((id) => featuredById.get(id)!);
 
-      await this.reorderWithPositions(ordered, manager);
+      await this.reorderInternal(ordered, manager);
 
       return this.getAllOrdered(manager);
     });
   }
 
-  private async reorderWithPositions(featured: FeaturedVariant[], manager: EntityManager): Promise<void> {
+  private async reorderInternal(featured: FeaturedVariant[], manager: EntityManager): Promise<void> {
     if (!featured.length) return;
 
     const repo = manager.getRepository(FeaturedVariant);

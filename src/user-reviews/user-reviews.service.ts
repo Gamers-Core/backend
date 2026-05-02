@@ -19,10 +19,10 @@ export class UserReviewsService {
   ) {}
 
   getAll() {
-    return this.findAllWithRelations();
+    return this.getAllOrdered();
   }
 
-  async add({ imageId, ...dto }: AddUserReviewDTO) {
+  add({ imageId, ...dto }: AddUserReviewDTO) {
     return this.repo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(UserReview);
 
@@ -32,11 +32,11 @@ export class UserReviewsService {
       const image = await this.mediaService.attach(imageId, manager);
       await repo.save(repo.create({ ...dto, position: count + 1, image }));
 
-      return this.findAllWithRelations(manager);
+      return this.getAllOrdered(manager);
     });
   }
 
-  async update(position: number, { imageId, ...dto }: UpdateUserReviewDTO) {
+  update(position: number, { imageId, ...dto }: UpdateUserReviewDTO) {
     return this.repo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(UserReview);
 
@@ -49,13 +49,13 @@ export class UserReviewsService {
 
       await repo.save(review);
 
-      return this.findAllWithRelations(manager);
+      return this.getAllOrdered(manager);
     });
   }
 
   reorder(ids: number[]) {
     return this.repo.manager.transaction(async (manager) => {
-      const reviews = await this.findAllWithRelations(manager);
+      const reviews = await this.getAllOrdered(manager);
 
       const uniqueIds = new Set(ids);
       if (reviews.length !== uniqueIds.size) throw BadRequestException('userReviews.invalidIds');
@@ -66,21 +66,21 @@ export class UserReviewsService {
       const ordered = ids.map((id) => reviewById.get(id)!);
       await this.reorderInternal(ordered, manager);
 
-      return this.findAllWithRelations(manager);
+      return this.getAllOrdered(manager);
     });
   }
 
-  delete(position: number) {
+  remove(position: number) {
     return this.repo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(UserReview);
 
       const result = await repo.delete({ position });
       if (!result.affected) throw NotFoundException('userReviews.notFound');
 
-      const remaining = await this.findAllWithRelations(manager);
+      const remaining = await this.getAllOrdered(manager);
       await this.reorderInternal(remaining, manager);
 
-      return this.findAllWithRelations(manager);
+      return this.getAllOrdered(manager);
     });
   }
 
@@ -92,7 +92,7 @@ export class UserReviewsService {
     await repo.save(reviews.map((review, i) => ({ ...review, position: i + 1 })));
   }
 
-  private async findAllWithRelations(manager?: EntityManager) {
+  private async getAllOrdered(manager?: EntityManager) {
     return withOptionalManager(manager, this.repo.manager, async (manager) => {
       const repo = manager.getRepository(UserReview);
 

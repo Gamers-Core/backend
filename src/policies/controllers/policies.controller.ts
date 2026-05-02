@@ -14,6 +14,6 @@ export class PoliciesController {
 
   @Get()
   getAll() {
-    return this.policiesService.getLatestAll();
+    return this.policiesService.getAll();
   }
 }

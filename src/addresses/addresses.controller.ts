@@ -23,31 +23,31 @@ export class AddressesController {
 
   @Serialize(AddressDTO)
   @Get()
-  getAddresses(@CurrentUser() user: User) {
-    return this.addressesService.getAddresses(user.id);
+  getAll(@CurrentUser() user: User) {
+    return this.addressesService.getAll(user.id);
   }
 
   @Serialize(AddressDTO)
   @Post()
-  addAddress(@CurrentUser() user: User, @Body() body: CreateAddressDTO) {
-    return this.addressesService.addAddress(user.id, body);
+  add(@CurrentUser() user: User, @Body() body: CreateAddressDTO) {
+    return this.addressesService.add(user.id, body);
   }
 
   @Serialize(AddressDTO)
   @Patch(':id')
-  updateAddress(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number, @Body() body: UpdateAddressDTO) {
-    return this.addressesService.updateAddress(id, user.id, body);
+  update(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number, @Body() body: UpdateAddressDTO) {
+    return this.addressesService.update(id, user.id, body);
   }
 
   @Serialize(AddressDTO)
   @Patch(':id/default')
-  setDefaultAddress(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number) {
+  setDefault(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number) {
     return this.addressesService.setDefault(id, user.id);
   }
 
   @Delete(':id')
-  deleteAddress(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number) {
-    return this.addressesService.removeAddress(id, user.id);
+  remove(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number) {
+    return this.addressesService.remove(id, user.id);
   }
 
   @Serialize(CityDTO)

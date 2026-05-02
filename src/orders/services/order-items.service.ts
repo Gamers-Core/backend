@@ -14,7 +14,7 @@ import { Order } from '../entities/order.entity';
 export class OrderItemsService {
   constructor(private readonly inventoryService: InventoryService) {}
 
-  async addItems(order: Order, items: AddOrderItemDTO[], manager: EntityManager) {
+  async add(order: Order, items: AddOrderItemDTO[], manager: EntityManager) {
     if (!items.length) throw BadRequestException('orders.itemsRequired');
 
     const itemSnapshotRepo = manager.getRepository(ItemSnapshot);
@@ -41,8 +41,8 @@ export class OrderItemsService {
     return itemSnapshots.reduce((sum, snapshot) => sum + snapshot.lineTotal, 0);
   }
 
-  async updateItem(order: Order, itemId: number, itemDTO: UpdateOrderItemDTO, manager: EntityManager) {
-    const item = this.getItemOrFail(order, itemId);
+  async update(order: Order, itemId: number, itemDTO: UpdateOrderItemDTO, manager: EntityManager) {
+    const item = this.getOneOrFail(order, itemId);
 
     if (itemDTO.quantity === item.quantity) return 0;
 
@@ -61,10 +61,10 @@ export class OrderItemsService {
     return quantityDifference * item.unitPrice;
   }
 
-  async deleteItem(order: Order, itemId: number, manager: EntityManager) {
+  async remove(order: Order, itemId: number, manager: EntityManager) {
     if (order.items.length <= 1) throw BadRequestException('orders.mustContainAtLeastOneItem');
 
-    const item = this.getItemOrFail(order, itemId);
+    const item = this.getOneOrFail(order, itemId);
     const totalDifference = -item.lineTotal;
 
     await this.inventoryService.restoreStock(item.variantExternalId, item.quantity, manager);
@@ -90,7 +90,7 @@ export class OrderItemsService {
     };
   }
 
-  private getItemOrFail(order: Order, itemId: number) {
+  private getOneOrFail(order: Order, itemId: number) {
     const item = order.items.find(({ id }) => id === itemId);
     if (!item) throw NotFoundException('orders.itemNotFound');
 

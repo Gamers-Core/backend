@@ -35,7 +35,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     clearInterval(this.cleanupInterval);
   }
 
-  async create(file: UploadedMediaFile, mediaDTO: UploadMediaDTO) {
+  async upload(file: UploadedMediaFile, mediaDTO: UploadMediaDTO) {
     const result = await this.cloudinaryService.uploadBuffer(file, mediaDTO.folder);
 
     return await this.mediaRepository.save(
@@ -43,7 +43,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
-  async delete(id: number) {
+  async remove(id: number) {
     return this.mediaRepository.manager.transaction(async (manager) => {
       const media = await this.getOneOrFail(id, manager);
 

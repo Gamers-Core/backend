@@ -31,7 +31,7 @@ export class ProductsService {
     private readonly localeContextService: LocaleContextService,
   ) {}
 
-  async create({ brandId, categoryId, mediaIds, variants, ...dto }: CreateProductDTO) {
+  async add({ brandId, categoryId, mediaIds, variants, ...dto }: CreateProductDTO) {
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepo = manager.getRepository(Product);
 
@@ -51,11 +51,11 @@ export class ProductsService {
 
       if (mediaIds !== undefined) await this.productMediaService.sync(product.id, mediaIds, manager);
 
-      return this.findOneOrFail(product.id, manager);
+      return this.getOneOrFail(product.id, manager);
     });
   }
 
-  async findMany(ids: string) {
+  async getMany(ids: string) {
     const uniqueIds = [
       ...new Set(
         ids
@@ -72,8 +72,8 @@ export class ProductsService {
     });
   }
 
-  async findOne(id: number) {
-    return this.findOneOrFail(id);
+  async getOne(id: number) {
+    return this.getOneOrFail(id);
   }
 
   async search(
@@ -222,7 +222,7 @@ export class ProductsService {
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepo = manager.getRepository(Product);
 
-      const product = await this.findOneOrFail(id, manager);
+      const product = await this.getOneOrFail(id, manager);
 
       Object.assign(product, dto);
 
@@ -244,15 +244,15 @@ export class ProductsService {
 
       await productRepo.save(product);
 
-      return this.findOneOrFail(id, manager);
+      return this.getOneOrFail(id, manager);
     });
   }
 
-  async delete(id: number): Promise<void> {
+  async remove(id: number): Promise<void> {
     await this.productsRepository.manager.transaction(async (manager) => {
       const productRepo = manager.getRepository(Product);
 
-      const product = await this.findOneOrFail(id, manager);
+      const product = await this.getOneOrFail(id, manager);
 
       await Promise.all(
         product.variants.filter((v) => v.image).map((v) => this.mediaService.detach(v.image!.id, manager)),
@@ -265,7 +265,7 @@ export class ProductsService {
   }
 
   async getRecommendations(productId: number) {
-    const product = await this.findOneForRecommendationsOrFail(productId);
+    const product = await this.getOneForRecommendationsOrFail(productId);
 
     const recommendationRows = await this.productsRepository
       .createQueryBuilder('product')
@@ -338,7 +338,7 @@ export class ProductsService {
     return shuffled.slice(0, count);
   }
 
-  private findOneOrFail(id: number, manager?: EntityManager): Promise<Product> {
+  private getOneOrFail(id: number, manager?: EntityManager): Promise<Product> {
     return withOptionalManager(manager, this.productsRepository.manager, async (manager) => {
       const repo = manager.getRepository(Product);
 
@@ -353,7 +353,7 @@ export class ProductsService {
     });
   }
 
-  private async findOneForRecommendationsOrFail(id: number): Promise<Product> {
+  private async getOneForRecommendationsOrFail(id: number): Promise<Product> {
     const product = await this.productsRepository.findOne({
       where: { id },
       relations: productBrandCategoryRelations,

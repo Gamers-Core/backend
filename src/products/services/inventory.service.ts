@@ -15,7 +15,7 @@ export class InventoryService {
     private readonly variantRepository: Repository<Variant>,
   ) {}
 
-  async findManyByExternalIds(externalIds: string[], manager?: EntityManager) {
+  async getManyByExternalIds(externalIds: string[], manager?: EntityManager) {
     return withOptionalManager(manager, this.variantRepository.manager, async (manager) => {
       const variantRepo = manager.getRepository(Variant);
 
@@ -54,7 +54,7 @@ export class InventoryService {
 
       if (!result.affected) throw BadRequestException(['products.insufficientStock', { externalId }]);
 
-      return this.findManyByExternalIds([externalId], transactionManager).then(([variant]) => variant);
+      return this.getManyByExternalIds([externalId], transactionManager).then(([variant]) => variant);
     });
   }
 
