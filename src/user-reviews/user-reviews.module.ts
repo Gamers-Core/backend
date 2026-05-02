@@ -3,9 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { MediaModule } from 'src/media/media.module';
 
-import { AdminUserReviewsController } from './admin-user-reviews.controller';
+import { AdminUserReviewsController } from './controllers/admin-user-reviews.controller';
+import { UserReviewsController } from './controllers/user-reviews.controller';
 import { UserReview } from './entities/user-review.entity';
-import { UserReviewsController } from './user-reviews.controller';
 import { UserReviewsService } from './user-reviews.service';
 
 @Module({

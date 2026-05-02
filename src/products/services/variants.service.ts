@@ -4,7 +4,7 @@ import { EntityManager, Repository } from 'typeorm';
 
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
-import { MediaService } from 'src/media/media.service';
+import { MediaService } from 'src/media/services/media.service';
 
 import { CreateVariantDTO } from '../dtos/admin/create-variant.dto';
 import { UpdateVariantDTO } from '../dtos/admin/update-variant.dto';

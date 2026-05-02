@@ -4,10 +4,10 @@ import { EntityManager, Repository } from 'typeorm';
 
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
-import { MediaService } from 'src/media/media.service';
+import { MediaService } from 'src/media/services/media.service';
 
-import { AddUserReviewDTO } from './dto/add-user-review.dto';
-import { UpdateUserReviewDTO } from './dto/update-user-review.dto';
+import { AddUserReviewDTO } from './dto/admin/add-user-review.dto';
+import { UpdateUserReviewDTO } from './dto/admin/update-user-review.dto';
 import { UserReview } from './entities/user-review.entity';
 
 @Injectable()

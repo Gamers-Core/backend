@@ -1,9 +1,9 @@
 import { Expose, Type } from 'class-transformer';
 
-import { BrandDTO } from 'src/brands/dtos/brand.dto';
-import { CategoryDTO } from 'src/categories/dtos/category.dto';
+import { BrandDTO } from 'src/brands/dtos/user/brand.dto';
+import { CategoryDTO } from 'src/categories/dtos/user/category.dto';
 import { Localize } from 'src/i18n/decorators/localize.decorator';
-import { ProductMediaDTO } from 'src/media/dtos/product-media.dto';
+import { ProductMediaDTO } from 'src/media/dtos/user/product-media.dto';
 
 import { VariantDTO } from './variant.dto';
 

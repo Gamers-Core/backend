@@ -5,8 +5,8 @@ import { EntityManager, FindOptionsRelations, Repository } from 'typeorm';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 
-import { AddCategoryDTO } from './dtos/add-category.dto';
-import { UpdateCategoryDTO } from './dtos/update-category.dto';
+import { AddCategoryDTO } from './dtos/admin/add-category.dto';
+import { UpdateCategoryDTO } from './dtos/admin/update-category.dto';
 import { Category } from './entities/category.entity';
 
 @Injectable()

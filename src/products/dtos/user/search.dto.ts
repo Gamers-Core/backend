@@ -1,7 +1,7 @@
 import { Exclude, Expose, Transform, Type } from 'class-transformer';
 
-import { MediaDTO } from 'src/media/dtos/media.dto';
-import { ProductMediaDTO } from 'src/media/dtos/product-media.dto';
+import { MediaDTO } from 'src/media/dtos/user/media.dto';
+import { ProductMediaDTO } from 'src/media/dtos/user/product-media.dto';
 import { Variant } from 'src/products/entities/variant.entity';
 
 import { ProductDTO } from './product.dto';

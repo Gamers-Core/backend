@@ -7,8 +7,8 @@ import { Category } from 'src/categories/entities/category.entity';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 import { LocaleContextService } from 'src/i18n/locale-context.service';
-import { MediaService } from 'src/media/media.service';
-import { ProductMediaService } from 'src/media/product-media.service';
+import { MediaService } from 'src/media/services/media.service';
+import { ProductMediaService } from 'src/media/services/product-media.service';
 
 import { AdminSearchProductsDTO } from '../dtos/admin/admin-search-products.dto';
 import { CreateProductDTO } from '../dtos/admin/create-product.dto';

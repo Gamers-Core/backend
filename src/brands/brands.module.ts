@@ -3,9 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { MediaModule } from 'src/media/media.module';
 
-import { AdminBrandsController } from './admin-brands.controller';
-import { BrandsController } from './brands.controller';
 import { BrandsService } from './brands.service';
+import { AdminBrandsController } from './controllers/admin-brands.controller';
+import { BrandsController } from './controllers/brands.controller';
 import { Brand } from './entities/brand.entity';
 
 @Module({

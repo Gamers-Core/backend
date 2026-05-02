@@ -16,9 +16,9 @@ import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
 import { Serialize } from 'src/interceptors/serialize.interceptor';
 
 import { mediaPolicyMap } from './cloudinary/const';
-import { AdminMediaDTO } from './dtos/admin-media.dto';
-import { UploadMediaDTO } from './dtos/upload-media.dto';
-import { MediaService } from './media.service';
+import { AdminMediaDTO } from './dtos/admin/admin-media.dto';
+import { UploadMediaDTO } from './dtos/admin/upload-media.dto';
+import { MediaService } from './services/media.service';
 import { UploadedMediaFile } from './types';
 
 @Controller('media')

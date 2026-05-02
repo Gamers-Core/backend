@@ -7,8 +7,8 @@ import { withOptionalManager } from 'src/common/with-optional-manager';
 import { Variant } from 'src/products/entities/variant.entity';
 import { featuredVariantRelations } from 'src/products/relations';
 
-import { AddFeaturedVariantDTO } from './dtos/add-featured-variant.dto';
-import { UpdateFeaturedVariantDTO } from './dtos/update-featured-variant.dto';
+import { AddFeaturedVariantDTO } from './dtos/admin/add-featured-variant.dto';
+import { UpdateFeaturedVariantDTO } from './dtos/admin/update-featured-variant.dto';
 import { FeaturedVariant } from './entities/featured-variant.entity';
 
 @Injectable()

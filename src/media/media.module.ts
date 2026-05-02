@@ -6,8 +6,8 @@ import { CloudinaryService } from './cloudinary/cloudinary.service';
 import { Media } from './entities/media.entity';
 import { ProductMedia } from './entities/product-media.entity';
 import { MediaController } from './media.controller';
-import { MediaService } from './media.service';
-import { ProductMediaService } from './product-media.service';
+import { MediaService } from './services/media.service';
+import { ProductMediaService } from './services/product-media.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Media, ProductMedia])],

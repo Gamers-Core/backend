@@ -9,12 +9,12 @@ import { MailService } from 'src/mail/mail.service';
 import { MediaModule } from 'src/media/media.module';
 import { ProductsModule } from 'src/products/products.module';
 
+import { AdminOrdersController } from './controllers/admin-orders.controller';
+import { BostaOrdersController } from './controllers/bosta-orders.controller';
+import { OrdersController } from './controllers/orders.controller';
 import { Order } from './entities/order.entity';
-import { OrderItemsService } from './order-items.service';
-import { OrdersAdminController } from './orders-admin.controller';
-import { OrdersBostaController } from './orders-bosta.controller';
-import { OrdersUserController } from './orders-user.controller';
-import { OrdersService } from './orders.service';
+import { OrderItemsService } from './services/order-items.service';
+import { OrdersService } from './services/orders.service';
 
 @Module({
   imports: [
@@ -26,7 +26,7 @@ import { OrdersService } from './orders.service';
     ProductsModule,
     MediaModule,
   ],
-  controllers: [OrdersUserController, OrdersAdminController, OrdersBostaController],
+  controllers: [OrdersController, AdminOrdersController, BostaOrdersController],
   providers: [OrdersService, OrderItemsService, MailService],
   exports: [OrdersService],
 })

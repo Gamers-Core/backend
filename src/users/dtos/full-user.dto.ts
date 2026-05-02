@@ -1,6 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 
-import { AddressDTO } from 'src/addresses/dtos/address.dto';
+import { AddressDTO } from 'src/addresses/dtos/user/address.dto';
 
 import { BasicUserDTO } from './basic-user.dto';
 

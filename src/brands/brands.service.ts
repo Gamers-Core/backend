@@ -4,10 +4,10 @@ import { EntityManager, FindOptionsRelations, Repository } from 'typeorm';
 
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
-import { MediaService } from 'src/media/media.service';
+import { MediaService } from 'src/media/services/media.service';
 
-import { AddBrandDTO } from './dtos/add-brand.dto';
-import { UpdateBrandDTO } from './dtos/update-brand.dto';
+import { AddBrandDTO } from './dtos/admin/add-brand.dto';
+import { UpdateBrandDTO } from './dtos/admin/update-brand.dto';
 import { Brand } from './entities/brand.entity';
 
 @Injectable()

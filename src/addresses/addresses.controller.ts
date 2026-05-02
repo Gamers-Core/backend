@@ -9,10 +9,10 @@ import { CurrentUser } from 'src/users/decorators/current-user.decorator';
 import { User } from 'src/users/entities/user.entity';
 
 import { AddressesService } from './addresses.service';
-import { AddressDTO } from './dtos/address.dto';
-import { CreateAddressDTO } from './dtos/create-address.dto';
+import { CreateAddressDTO } from './dtos/admin/create-address.dto';
+import { UpdateAddressDTO } from './dtos/admin/update-address.dto';
 import { ShippingFeesResponseDTO } from './dtos/shipping-fees-response.dto';
-import { UpdateAddressDTO } from './dtos/update-address.dto';
+import { AddressDTO } from './dtos/user/address.dto';
 
 @Controller('addresses')
 export class AddressesController {

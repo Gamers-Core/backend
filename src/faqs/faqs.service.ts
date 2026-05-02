@@ -5,8 +5,8 @@ import { EntityManager, Repository } from 'typeorm';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 
-import { AddFAQDTO } from './dtos/add-faq.dto';
-import { UpdateFAQDTO } from './dtos/update-faq.dto';
+import { AddFAQDTO } from './dtos/admin/add-faq.dto';
+import { UpdateFAQDTO } from './dtos/admin/update-faq.dto';
 import { FAQ } from './entities/faq.entity';
 
 @Injectable()
