@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, FindOptionsRelations, Repository } from 'typeorm';
 
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { withOptionalManager } from 'src/common/with-optional-manager';
 
 import { AddCategoryDTO } from './dtos/add-category.dto';
 import { UpdateCategoryDTO } from './dtos/update-category.dto';
@@ -19,38 +20,40 @@ export class CategoriesService {
     return this.repo.find({ order: { id: 'ASC' } });
   }
 
-  async getOne(id: number) {
-    const category = await this.repo.findOne({ where: { id } });
-    if (!category) throw new NotFoundException('products.categoryNotFound');
-
-    return category;
+  getOne(id: number) {
+    return this.findOneOrFail(id);
   }
 
-  add(dto: AddCategoryDTO) {
-    return this.repo.save(this.repo.create(dto));
+  async add(dto: AddCategoryDTO) {
+    const category = await this.repo.save(this.repo.create(dto));
+
+    return this.findOneOrFail(category.id);
   }
 
   async update(id: number, dto: UpdateCategoryDTO) {
-    const category = await this.getOne(id);
-    Object.assign(category, dto);
+    const result = await this.repo.update(id, dto);
+    if (!result.affected) throw new NotFoundException('products.categoryNotFound');
 
-    return this.repo.save(category);
+    return this.findOneOrFail(id);
   }
 
   async delete(id: number) {
-    const category = await this.findOneWithProductsOrFail(id);
-
+    const category = await this.findOneOrFail(id, undefined, { products: true });
     if (category.products.length) throw new BadRequestException('products.categoryHasProducts');
 
-    await this.repo.remove(category);
+    await this.repo.delete(id);
 
     return { deleted: true };
   }
 
-  private async findOneWithProductsOrFail(id: number, repo = this.repo) {
-    const category = await repo.findOne({ where: { id }, relations: { products: true } });
-    if (!category) throw new NotFoundException('products.categoryNotFound');
+  private async findOneOrFail(id: number, manager?: EntityManager, relations?: FindOptionsRelations<Category>) {
+    return withOptionalManager(manager, this.repo.manager, async (manager) => {
+      const repo = manager.getRepository(Category);
 
-    return category;
+      const category = await repo.findOne({ where: { id }, relations });
+      if (!category) throw new NotFoundException('products.categoryNotFound');
+
+      return category;
+    });
   }
 }

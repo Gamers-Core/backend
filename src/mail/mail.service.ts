@@ -47,15 +47,6 @@ export class MailService {
     );
   }
 
-  send({ title, to, subject, html }: SendMailOptions, mail: MailType) {
-    return this.brevo.post('/smtp/email', {
-      sender: { name: title, email: getEmail(mail) },
-      to: [{ email: to }],
-      subject,
-      htmlContent: html,
-    });
-  }
-
   sendTypedMail<T extends MailOptionsType>(
     to: string,
     type: T,
@@ -68,5 +59,14 @@ export class MailService {
     const renderedHtml = renderMailWrapper(t, html(t, values, locale === 'ar'), locale);
 
     return this.send({ ...options, html: renderedHtml, to }, mail);
+  }
+
+  private send({ title, to, subject, html }: SendMailOptions, mail: MailType) {
+    return this.brevo.post('/smtp/email', {
+      sender: { name: title, email: getEmail(mail) },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    });
   }
 }

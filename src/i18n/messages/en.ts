@@ -17,6 +17,8 @@ export default {
 
   'cart.itemNotFound': 'Cart item not found',
   'cart.insufficientStock': 'Insufficient stock for variant {externalId}',
+  'cart.createFailed': 'Failed to create cart. Please try again.',
+  'cart.duplicateExternalIds': 'Duplicate variant externalId detected in cart items',
 
   'media.notFound': 'Media not found',
   'media.required': 'Media is required',
@@ -35,6 +37,7 @@ export default {
   'products.brandHasProducts': 'Cannot delete brand with associated products',
   'products.productNotFound': 'Product not found',
   'products.variantNotFound': 'Variant not found',
+  'products.variantsNotFound': 'Variants not found: {externalIds}',
   'products.invalidIds': 'Invalid product IDs',
   'products.requiredAmountMin': 'requiredAmount must be at least 1',
   'products.insufficientStock': 'Insufficient stock for variant {externalId}',

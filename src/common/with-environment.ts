@@ -6,13 +6,11 @@ export function withEnvironment<T>(
   envs: Environment[],
   env?: Environment,
 ): T;
-
 export function withEnvironment<T>(
   callback: (isValid: boolean, env: Environment) => Promise<T>,
   envs: Environment[],
   env?: Environment,
 ): Promise<T>;
-
 export function withEnvironment<T>(
   callback: (isValid: boolean, env: Environment) => T | Promise<T>,
   envs: Environment[],
