@@ -1,6 +1,6 @@
 import { IsInt, IsUUID, Min } from 'class-validator';
 
-export class CreateCartItemDTO {
+export class SyncCartItemDTO {
   @IsUUID('4')
   externalId: string;
 

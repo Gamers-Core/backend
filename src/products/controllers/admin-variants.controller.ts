@@ -29,11 +29,11 @@ export class AdminVariantsController {
     @Param('variantId', ParseIntPipe) variantId: number,
     @Body() updateVariantDTO: UpdateVariantDTO,
   ) {
-    return this.variantsService.updateOne(productId, variantId, updateVariantDTO);
+    return this.variantsService.update(productId, variantId, updateVariantDTO);
   }
 
   @Delete(':variantId')
   remove(@Param('productId', ParseIntPipe) productId: number, @Param('variantId', ParseIntPipe) variantId: number) {
-    return this.variantsService.removeOne(productId, variantId);
+    return this.variantsService.remove(productId, variantId);
   }
 }

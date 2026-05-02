@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToInstance } from 'class-transformer';
 import { EntityManager, Repository } from 'typeorm';
@@ -8,7 +8,6 @@ import { BostaService } from 'src/bosta/bosta.service';
 import { CartService } from 'src/cart/cart.service';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withEnvironment } from 'src/common/with-environment';
-import { withOptionalManager } from 'src/common/with-optional-manager';
 import { LocaleContextService } from 'src/i18n/locale-context.service';
 import { Locale } from 'src/i18n/types';
 import { getEmail } from 'src/mail/helpers';
@@ -41,7 +40,6 @@ export class OrdersService {
     @InjectRepository(Order) private readonly ordersRepo: Repository<Order>,
     private readonly cartService: CartService,
     private readonly addressService: AddressesService,
-    @Inject(forwardRef(() => BostaService))
     private readonly bostaService: BostaService,
     private readonly orderItemsService: OrderItemsService,
     private readonly mailService: MailService,
@@ -62,7 +60,7 @@ export class OrdersService {
 
   async checkout(userId: number, body: CheckoutOrderDTO) {
     return this.ordersRepo.manager.transaction(async (manager) => {
-      const cart = await this.cartService.getCart(userId, manager);
+      const cart = await this.cartService.getOrCreateCart(userId, manager);
       if (!cart.items.length) throw new BadRequestException('orders.cartEmpty');
 
       const variants = cart.items.map(({ variant, quantity }) => ({ externalId: variant.externalId, quantity }));
@@ -78,8 +76,8 @@ export class OrdersService {
     });
   }
 
-  addItems(orderNumber: string, item: AddOrderItemDTO, manager?: EntityManager) {
-    return this.runWithManager(manager)((manager) =>
+  addItems(orderNumber: string, item: AddOrderItemDTO) {
+    return this.ordersRepo.manager.transaction((manager) =>
       this.mutateItems({ orderNumber }, manager, (order, manager) =>
         this.orderItemsService.addItems(order, [item], manager),
       ),
@@ -102,7 +100,7 @@ export class OrdersService {
     );
   }
 
-  async updateStatus(options: OrderOptions, status: OrderStatus) {
+  updateStatus(options: OrderOptions, status: OrderStatus) {
     return this.updateOrder(options, async (order, manager) => {
       assertValidOrderTransition(order.status, status);
       assertStatusGuards(order, status);
@@ -113,7 +111,7 @@ export class OrdersService {
     });
   }
 
-  async updatePaymentStatus(orderNumber: string, body: UpdateOrderPaymentDTO) {
+  updatePaymentStatus(orderNumber: string, body: UpdateOrderPaymentDTO) {
     return this.updateOrder({ orderNumber }, (order) => {
       assertValidPaymentTransition(order.paymentStatus, body.paymentStatus);
       assertPaymentStatusGuards(order, body.paymentStatus);
@@ -121,7 +119,7 @@ export class OrdersService {
     });
   }
 
-  async updateShipping(orderNumber: string, body: UpdateOrderShippingDTO) {
+  updateShipping(orderNumber: string, body: UpdateOrderShippingDTO) {
     return this.updateOrder({ orderNumber }, (order) => {
       if (nonUpdatableShippingStatuses.includes(order.status))
         throw new BadRequestException('orders.shippingDetailsNotUpdatable');
@@ -139,7 +137,7 @@ export class OrdersService {
 
     const orderRepo = manager.getRepository(Order);
 
-    const address = await this.addressService.getAddress(body.addressId, userId, manager);
+    const address = await this.addressService.getAddressOrFail(body.addressId, userId, manager);
 
     const order = orderRepo.create({
       user: { id: userId },
@@ -161,7 +159,7 @@ export class OrdersService {
     order.subtotal += diff;
     await this.recalculateAndSaveTotals(order, manager);
 
-    if (clearCartAfterCreate) await this.cartService.clearCart(userId, manager);
+    if (clearCartAfterCreate) await this.cartService.sync(userId, [], manager);
 
     const updatedOrder = await this.getOrderOrFail(manager, { orderNumber: order.orderNumber, userId }, true);
 
@@ -190,10 +188,6 @@ export class OrdersService {
     return order;
   }
 
-  private runWithManager(manager?: EntityManager) {
-    return (cb: (m: EntityManager) => Promise<any>) => withOptionalManager(manager, this.ordersRepo.manager, cb);
-  }
-
   private async mutateItems(
     options: OrderOptions,
     manager: EntityManager,
@@ -218,7 +212,9 @@ export class OrdersService {
       const order = await this.getOrderOrFail(manager, options, true);
       await mutate(order, manager);
 
-      const updatedOrder = await manager.getRepository(Order).save({
+      const repo = manager.getRepository(Order);
+
+      const updatedOrder = await repo.save({
         id: order.id,
         status: order.status,
         paymentStatus: order.paymentStatus,
@@ -266,7 +262,7 @@ export class OrdersService {
     };
   }
 
-  private mapToDTO(order: Order, locale: Locale = this.LocaleContextService.locale): OrderDTO {
+  private mapToDTO(order: Order, locale: Locale): OrderDTO {
     return plainToInstance(OrderDTO, this.serializeOrder(order), {
       excludeExtraneousValues: true,
       context: { locale, userId: order.user.id },
@@ -279,7 +275,11 @@ export class OrdersService {
         async (isValid) => {
           if (!isValid) return;
 
-          await this.mailService.sendTypedMail(order.user.email, 'order_confirmation', this.mapToDTO(order));
+          await this.mailService.sendTypedMail(
+            order.user.email,
+            'order_confirmation',
+            this.mapToDTO(order, this.LocaleContextService.locale),
+          );
         },
         ['production'],
       );

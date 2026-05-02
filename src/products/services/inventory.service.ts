@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 
 import { Variant } from '../entities/variant.entity';
+import { variantWithProductBrandCategoryRelations } from '../relations';
 
 @Injectable()
 export class InventoryService {
@@ -14,19 +15,26 @@ export class InventoryService {
     private readonly variantRepository: Repository<Variant>,
   ) {}
 
-  async findByExternalId(
-    externalId: string,
-    manager: EntityManager = this.variantRepository.manager,
-  ): Promise<Variant> {
-    const variantRepo = manager.getRepository(Variant);
-    const variant = await variantRepo.findOne({
-      where: { externalId, isActive: true },
-      relations: ['product'],
+  async findManyByExternalIds(externalIds: string[], manager?: EntityManager) {
+    return withOptionalManager(manager, this.variantRepository.manager, async (manager) => {
+      const variantRepo = manager.getRepository(Variant);
+
+      const uniqueIds = [...new Set(externalIds)];
+
+      const variants = await variantRepo.find({
+        where: { externalId: In(uniqueIds), isActive: true },
+        relations: variantWithProductBrandCategoryRelations,
+      });
+
+      if (variants.length !== uniqueIds.length) {
+        const foundIds = variants.map(({ externalId }) => externalId);
+        const missingIds = uniqueIds.filter((id) => !foundIds.includes(id));
+
+        throw new NotFoundException(['products.variantsNotFound', { externalIds: missingIds.join(',') }]);
+      }
+
+      return variants;
     });
-
-    if (!variant) throw new NotFoundException('products.variantNotFound');
-
-    return variant;
   }
 
   async reserveStock(externalId: string, amount: number, manager?: EntityManager): Promise<Variant> {
@@ -46,13 +54,15 @@ export class InventoryService {
 
       if (!result.affected) throw new BadRequestException(['products.insufficientStock', { externalId }]);
 
-      return this.findByExternalId(externalId, transactionManager);
+      return this.findManyByExternalIds([externalId], transactionManager).then(([variant]) => variant);
     });
   }
 
-  async restoreStock(externalId: string, amount: number, manager: EntityManager = this.variantRepository.manager) {
-    const variantRepo = manager.getRepository(Variant);
+  async restoreStock(externalId: string, amount: number, manager?: EntityManager) {
+    return withOptionalManager(manager, this.variantRepository.manager, async (manager) => {
+      const variantRepo = manager.getRepository(Variant);
 
-    await variantRepo.increment({ externalId }, 'stock', amount);
+      await variantRepo.increment({ externalId }, 'stock', amount);
+    });
   }
 }
