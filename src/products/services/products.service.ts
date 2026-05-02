@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, In, Repository } from 'typeorm';
+import { Brackets, EntityManager, In, Repository } from 'typeorm';
 
 import { Brand } from 'src/brands/entities/brand.entity';
 import { Category } from 'src/categories/entities/category.entity';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { withOptionalManager } from 'src/common/with-optional-manager';
 import { LocaleContextService } from 'src/i18n/locale-context.service';
 import { MediaService } from 'src/media/media.service';
 import { ProductMediaService } from 'src/media/product-media.service';
@@ -50,7 +51,7 @@ export class ProductsService {
 
       if (mediaIds !== undefined) await this.productMediaService.sync(product.id, mediaIds, manager);
 
-      return this.findOneOrFail(product.id, productRepo);
+      return this.findOneOrFail(product.id, manager);
     });
   }
 
@@ -221,7 +222,7 @@ export class ProductsService {
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepo = manager.getRepository(Product);
 
-      const product = await this.findOneOrFail(id, productRepo);
+      const product = await this.findOneOrFail(id, manager);
 
       Object.assign(product, dto);
 
@@ -243,7 +244,7 @@ export class ProductsService {
 
       await productRepo.save(product);
 
-      return this.findOneOrFail(id, productRepo);
+      return this.findOneOrFail(id, manager);
     });
   }
 
@@ -251,7 +252,7 @@ export class ProductsService {
     await this.productsRepository.manager.transaction(async (manager) => {
       const productRepo = manager.getRepository(Product);
 
-      const product = await this.findOneOrFail(id, productRepo);
+      const product = await this.findOneOrFail(id, manager);
 
       await Promise.all(
         product.variants.filter((v) => v.image).map((v) => this.mediaService.detach(v.image!.id, manager)),
@@ -337,18 +338,19 @@ export class ProductsService {
     return shuffled.slice(0, count);
   }
 
-  private async findOneOrFail(
-    id: number,
-    productRepository: Repository<Product> = this.productsRepository,
-  ): Promise<Product> {
-    const product = await productRepository.findOne({
-      where: { id },
-      relations: productFullRelations,
+  private findOneOrFail(id: number, manager?: EntityManager): Promise<Product> {
+    return withOptionalManager(manager, this.productsRepository.manager, async (manager) => {
+      const repo = manager.getRepository(Product);
+
+      const product = await repo.findOne({
+        where: { id },
+        relations: productFullRelations,
+      });
+
+      if (!product) throw NotFoundException('products.productNotFound');
+
+      return product;
     });
-
-    if (!product) throw NotFoundException('products.productNotFound');
-
-    return product;
   }
 
   private async findOneForRecommendationsOrFail(id: number): Promise<Product> {
