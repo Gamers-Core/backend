@@ -61,7 +61,7 @@ export class OrdersService {
   async checkout(userId: number, body: CheckoutOrderDTO) {
     return this.ordersRepo.manager.transaction(async (manager) => {
       const cart = await this.cartService.getOrCreateCart(userId, manager);
-      if (!cart.items.length) throw new BadRequestException('orders.cartEmpty');
+      if (!cart.items.length) throw BadRequestException('orders.cartEmpty');
 
       const variants = cart.items.map(({ variant, quantity }) => ({ externalId: variant.externalId, quantity }));
       return this.createOrderInternal({ userId, ...body, variants }, manager, true);
@@ -122,7 +122,7 @@ export class OrdersService {
   updateShipping(orderNumber: string, body: UpdateOrderShippingDTO) {
     return this.updateOrder({ orderNumber }, (order) => {
       if (nonUpdatableShippingStatuses.includes(order.status))
-        throw new BadRequestException('orders.shippingDetailsNotUpdatable');
+        throw BadRequestException('orders.shippingDetailsNotUpdatable');
 
       if (body.trackingNumber !== undefined) order.trackingNumber = body.trackingNumber;
     });
@@ -133,7 +133,7 @@ export class OrdersService {
     manager: EntityManager,
     clearCartAfterCreate: boolean = false,
   ) {
-    if (!body.variants.length) throw new BadRequestException('orders.mustIncludeAtLeastOneItem');
+    if (!body.variants.length) throw BadRequestException('orders.mustIncludeAtLeastOneItem');
 
     const orderRepo = manager.getRepository(Order);
 
@@ -195,7 +195,7 @@ export class OrdersService {
   ) {
     const order = await this.getOrderOrFail(manager, options, true);
 
-    if (!editableStatuses.includes(order.status)) throw new BadRequestException('orders.notEditableInCurrentStatus');
+    if (!editableStatuses.includes(order.status)) throw BadRequestException('orders.notEditableInCurrentStatus');
 
     const diff = await mutate(order, manager);
 
@@ -237,7 +237,7 @@ export class OrdersService {
       order: includeRelations ? { history: { createdAt: 'ASC' } } : undefined,
     });
 
-    if (!order) throw new NotFoundException('orders.notFound');
+    if (!order) throw NotFoundException('orders.notFound');
 
     return order;
   }

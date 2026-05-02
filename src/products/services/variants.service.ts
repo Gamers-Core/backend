@@ -46,7 +46,7 @@ export class VariantsService {
       const remainingVariants = variant.product.variants.filter(({ id }) => id !== variantId);
 
       if (variant.compareAt && variant.compareAt <= variant.price)
-        throw new BadRequestException('products.compareAtMustBeGreaterThanPrice');
+        throw BadRequestException('products.compareAtMustBeGreaterThanPrice');
 
       Object.assign(variant, dto);
 
@@ -66,7 +66,7 @@ export class VariantsService {
 
       const variant = await this.findVariantOrFail(productId, variantId, manager);
       const remainingVariants = variant.product.variants.filter(({ id }) => id !== variantId);
-      if (!remainingVariants.length) throw new BadRequestException('products.cannotRemoveLastVariant');
+      if (!remainingVariants.length) throw BadRequestException('products.cannotRemoveLastVariant');
 
       if (variant.image) await this.mediaService.detach(variant.image.id, manager);
 
@@ -86,7 +86,7 @@ export class VariantsService {
       where: { id: variantId, product: { id: productId } },
       relations: variantWithProductFullRelations,
     });
-    if (!variant) throw new NotFoundException('products.variantNotFound');
+    if (!variant) throw NotFoundException('products.variantNotFound');
 
     return variant;
   }

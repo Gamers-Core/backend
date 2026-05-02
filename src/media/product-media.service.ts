@@ -49,7 +49,7 @@ export class ProductMediaService {
 
     const mediaRepo = manager.getRepository(Media);
     const mediaNumber = await mediaRepo.countBy({ id: In(mediaIds) });
-    if (mediaNumber !== mediaIds.length) throw new BadRequestException('media.invalid');
+    if (mediaNumber !== mediaIds.length) throw BadRequestException('media.invalid');
 
     const attachmentRepo = manager.getRepository(ProductMedia);
     const attachments = mediaIds.map((mediaId, index) =>

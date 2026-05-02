@@ -19,7 +19,7 @@ export type LanguageTranslations = EN | AR;
 
 export type Translate<K extends I18nKey = I18nKey> = K extends I18nKey
   ? PlaceholderKeys<K> extends never
-    ? [K] | K
+    ? K | [K]
     : [K, { [P in PlaceholderKeys<K>]: string | number }]
   : never;
 

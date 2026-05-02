@@ -46,12 +46,12 @@ export class UsersService {
 
   async update(id: number, updatedUser: DeepPartial<User>) {
     const result = await this.repo.update(id, updatedUser);
-    if (!result.affected) throw new NotFoundException('user.notFound');
+    if (!result.affected) throw NotFoundException('user.notFound');
   }
 
   async remove(id: number) {
     const result = await this.repo.delete(id);
-    if (!result.affected) throw new NotFoundException('user.notFound');
+    if (!result.affected) throw NotFoundException('user.notFound');
   }
 
   private findOneByEmail(email: string) {
@@ -60,7 +60,7 @@ export class UsersService {
 
   private async findOneByEmailOrFail(email: string) {
     const user = await this.findOneByEmail(email);
-    if (!user) throw new NotFoundException('user.notFound');
+    if (!user) throw NotFoundException('user.notFound');
     return user;
   }
 }

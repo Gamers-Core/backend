@@ -61,7 +61,7 @@ export class BrandsService {
       const repo = manager.getRepository(Brand);
 
       const brand = await this.getBrandOrThrow(id, manager, { products: true });
-      if (brand.products.length) throw new BadRequestException('products.brandHasProducts');
+      if (brand.products.length) throw BadRequestException('products.brandHasProducts');
 
       if (brand.image) await this.mediaService.detach(brand.image.id, manager);
 
@@ -80,7 +80,7 @@ export class BrandsService {
       const repo = manager.getRepository(Brand);
 
       const brand = await repo.findOne({ where: { id }, relations: { ...relations, image: true } });
-      if (!brand) throw new NotFoundException('products.brandNotFound');
+      if (!brand) throw NotFoundException('products.brandNotFound');
 
       return brand;
     });

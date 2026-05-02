@@ -34,14 +34,14 @@ export class MediaController {
         fileSize: Math.max(...Object.values(mediaPolicyMap).map((policy) => policy.maxBytes)),
       },
       fileFilter: (req, file, cb) => {
-        if (!file.mimetype?.includes('/')) return cb(new BadRequestException('media.invalidType'), false);
+        if (!file.mimetype?.includes('/')) return cb(BadRequestException('media.invalidType'), false);
 
         cb(null, true);
       },
     }),
   )
   async upload(@Body() body: UploadMediaDTO, @UploadedFile() file: UploadedMediaFile | undefined) {
-    if (!file) throw new BadRequestException('media.required');
+    if (!file) throw BadRequestException('media.required');
 
     return this.mediaService.create(file, body);
   }

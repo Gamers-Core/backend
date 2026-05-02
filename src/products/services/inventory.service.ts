@@ -30,7 +30,7 @@ export class InventoryService {
         const foundIds = variants.map(({ externalId }) => externalId);
         const missingIds = uniqueIds.filter((id) => !foundIds.includes(id));
 
-        throw new NotFoundException(['products.variantsNotFound', { externalIds: missingIds.join(',') }]);
+        throw NotFoundException(['products.variantsNotFound', { externalIds: missingIds.join(',') }]);
       }
 
       return variants;
@@ -38,7 +38,7 @@ export class InventoryService {
   }
 
   async reserveStock(externalId: string, amount: number, manager?: EntityManager): Promise<Variant> {
-    if (amount < 1) throw new BadRequestException('products.requiredAmountMin');
+    if (amount < 1) throw BadRequestException('products.requiredAmountMin');
 
     return withOptionalManager(manager, this.variantRepository.manager, async (transactionManager) => {
       const variantRepo = transactionManager.getRepository(Variant);
@@ -52,7 +52,7 @@ export class InventoryService {
         .andWhere('stock >= :amount', { amount })
         .execute();
 
-      if (!result.affected) throw new BadRequestException(['products.insufficientStock', { externalId }]);
+      if (!result.affected) throw BadRequestException(['products.insufficientStock', { externalId }]);
 
       return this.findManyByExternalIds([externalId], transactionManager).then(([variant]) => variant);
     });

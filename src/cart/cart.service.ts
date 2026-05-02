@@ -31,13 +31,13 @@ export class CartService {
       await cartItemRepo.delete({ cart: { id: cart.id } });
 
       const uniqueExternalIds = [...new Set(items.map((item) => item.externalId))];
-      if (uniqueExternalIds.length !== items.length) throw new BadRequestException('cart.duplicateExternalIds');
+      if (uniqueExternalIds.length !== items.length) throw BadRequestException('cart.duplicateExternalIds');
 
       const variants = await this.inventoryService.findManyByExternalIds(uniqueExternalIds, manager);
 
       items.forEach((item, i) => {
         if (item.quantity > variants[i].stock)
-          throw new BadRequestException(['cart.insufficientStock', { externalId: variants[i].externalId }]);
+          throw BadRequestException(['cart.insufficientStock', { externalId: variants[i].externalId }]);
       });
 
       const cartItems = items.map((item, i) =>
@@ -62,7 +62,7 @@ export class CartService {
 
       return cartRepo.save(cartRepo.create({ user: { id: userId }, items: [] })).catch((error) => {
         if (!isUniqueViolation(error)) throw error;
-        if (attempt >= 3) throw new InternalServerErrorException('cart.createFailed');
+        if (attempt >= 3) throw InternalServerErrorException('cart.createFailed');
 
         return this.getOrCreateCart(userId, manager, attempt + 1);
       });

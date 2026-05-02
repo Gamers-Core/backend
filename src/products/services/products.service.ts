@@ -39,8 +39,8 @@ export class ProductsService {
         manager.getRepository(Category).existsBy({ id: categoryId }),
       ]);
 
-      if (!brandExists) throw new NotFoundException('products.brandNotFound');
-      if (!categoryExists) throw new NotFoundException('products.categoryNotFound');
+      if (!brandExists) throw NotFoundException('products.brandNotFound');
+      if (!categoryExists) throw NotFoundException('products.categoryNotFound');
 
       const product = await productRepo.save(
         productRepo.create({ ...dto, brand: { id: brandId }, category: { id: categoryId } }),
@@ -63,7 +63,7 @@ export class ProductsService {
           .filter((n) => Number.isInteger(n) && n > 0),
       ),
     ];
-    if (!uniqueIds.length) throw new BadRequestException('products.invalidIds');
+    if (!uniqueIds.length) throw BadRequestException('products.invalidIds');
 
     return this.productsRepository.find({
       where: { id: In(uniqueIds) },
@@ -229,14 +229,14 @@ export class ProductsService {
 
       if (brandId) {
         const brandExists = await manager.getRepository(Brand).existsBy({ id: brandId });
-        if (!brandExists) throw new NotFoundException('products.brandNotFound');
+        if (!brandExists) throw NotFoundException('products.brandNotFound');
 
         product.brand = { id: brandId } as Brand;
       }
 
       if (categoryId) {
         const categoryExists = await manager.getRepository(Category).existsBy({ id: categoryId });
-        if (!categoryExists) throw new NotFoundException('products.categoryNotFound');
+        if (!categoryExists) throw NotFoundException('products.categoryNotFound');
 
         product.category = { id: categoryId } as Category;
       }
@@ -346,7 +346,7 @@ export class ProductsService {
       relations: productFullRelations,
     });
 
-    if (!product) throw new NotFoundException('products.productNotFound');
+    if (!product) throw NotFoundException('products.productNotFound');
 
     return product;
   }
@@ -357,7 +357,7 @@ export class ProductsService {
       relations: productBrandCategoryRelations,
     });
 
-    if (!product) throw new NotFoundException('products.productNotFound');
+    if (!product) throw NotFoundException('products.productNotFound');
 
     return product;
   }

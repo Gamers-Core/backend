@@ -35,9 +35,9 @@ export class CloudinaryService {
           timeout: 100_000,
         },
         (error: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
-          if (error?.http_code === 499) return reject(new BadRequestException('media.requestTimeout'));
+          if (error?.http_code === 499) return reject(BadRequestException('media.requestTimeout'));
 
-          if (error || !result) return reject(new BadRequestException('media.uploadFailed'));
+          if (error || !result) return reject(BadRequestException('media.uploadFailed'));
 
           return resolve(result);
         },
@@ -63,16 +63,16 @@ export class CloudinaryService {
     const policy = mediaPolicyMap[folder];
 
     if (file.size > policy.maxBytes)
-      throw new BadRequestException(['media.tooLarge', { maxSize: policy.maxBytes / 1024 / 1024 }]);
+      throw BadRequestException(['media.tooLarge', { maxSize: policy.maxBytes / 1024 / 1024 }]);
 
     const fileType = getFileType(file);
 
     const isSupportedType = mediaTypes.includes(fileType);
-    if (!isSupportedType) throw new BadRequestException('media.unsupportedType');
+    if (!isSupportedType) throw BadRequestException('media.unsupportedType');
 
     if (policy.allowedType === 'all') return;
 
     if (fileType !== policy.allowedType)
-      throw new BadRequestException(['media.invalidTypeWithAllowed', { allowedTypes: policy.allowedType }]);
+      throw BadRequestException(['media.invalidTypeWithAllowed', { allowedTypes: policy.allowedType }]);
   }
 }

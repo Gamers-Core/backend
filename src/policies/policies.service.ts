@@ -45,7 +45,7 @@ export class PoliciesService {
         return policy;
       });
     } catch (error) {
-      if (isUniqueViolation(error)) throw new ConflictException('policies.concurrentUpdate');
+      if (isUniqueViolation(error)) throw ConflictException('policies.concurrentUpdate');
       throw error;
     }
   }

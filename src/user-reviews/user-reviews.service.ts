@@ -27,7 +27,7 @@ export class UserReviewsService {
       const repo = manager.getRepository(UserReview);
 
       const count = await repo.count();
-      if (count >= 3) throw new BadRequestException('userReviews.maxCount');
+      if (count >= 3) throw BadRequestException('userReviews.maxCount');
 
       const image = await this.mediaService.attach(imageId, manager);
       await repo.save(repo.create({ ...dto, position: count + 1, image }));
@@ -41,7 +41,7 @@ export class UserReviewsService {
       const repo = manager.getRepository(UserReview);
 
       const review = await repo.findOne({ where: { position } });
-      if (!review) throw new NotFoundException('userReviews.notFound');
+      if (!review) throw NotFoundException('userReviews.notFound');
 
       Object.assign(review, dto);
 
@@ -58,10 +58,10 @@ export class UserReviewsService {
       const reviews = await this.findAllWithRelations(manager);
 
       const uniqueIds = new Set(ids);
-      if (reviews.length !== uniqueIds.size) throw new BadRequestException('userReviews.invalidIds');
+      if (reviews.length !== uniqueIds.size) throw BadRequestException('userReviews.invalidIds');
 
       const reviewById = new Map(reviews.map((review) => [review.id, review]));
-      if (ids.some((id) => !reviewById.has(id))) throw new BadRequestException('userReviews.invalidIds');
+      if (ids.some((id) => !reviewById.has(id))) throw BadRequestException('userReviews.invalidIds');
 
       const ordered = ids.map((id) => reviewById.get(id)!);
       await this.reorderInternal(ordered, manager);
@@ -75,7 +75,7 @@ export class UserReviewsService {
       const repo = manager.getRepository(UserReview);
 
       const result = await repo.delete({ position });
-      if (!result.affected) throw new NotFoundException('userReviews.notFound');
+      if (!result.affected) throw NotFoundException('userReviews.notFound');
 
       const remaining = await this.findAllWithRelations(manager);
       await this.reorderInternal(remaining, manager);

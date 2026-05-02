@@ -65,7 +65,7 @@ export class AddressesService {
       const repo = manager.getRepository(Address);
 
       const exists = await repo.existsBy({ id, user: { id: userId } });
-      if (!exists) throw new NotFoundException('address.notFound');
+      if (!exists) throw NotFoundException('address.notFound');
 
       await repo
         .createQueryBuilder()
@@ -108,7 +108,7 @@ export class AddressesService {
         where: { id, user: { id: userId } },
       });
 
-      if (!address) throw new NotFoundException('address.notFound');
+      if (!address) throw NotFoundException('address.notFound');
 
       return address;
     });
@@ -134,11 +134,11 @@ export class AddressesService {
   }
 
   private async resolveLocationUpdate(dto: UpdateAddressDTO, current: Address): Promise<BostaLocation> {
-    if (dto.cityId && !dto.districtId) throw new BadRequestException('address.districtRequiredOnCityChange');
+    if (dto.cityId && !dto.districtId) throw BadRequestException('address.districtRequiredOnCityChange');
 
     if (dto.districtId && !dto.cityId) {
       const district = await this.bostaService.getDistrict(dto.districtId, current.cityId);
-      if (!district) throw new BadRequestException('address.districtNotAvailableForCity');
+      if (!district) throw BadRequestException('address.districtNotAvailableForCity');
     }
 
     return this.getAddressLocationData(dto.cityId ?? current.cityId, dto.districtId ?? current.districtId);
@@ -150,8 +150,8 @@ export class AddressesService {
       this.bostaService.getDistrict(districtId, cityId),
     ]);
 
-    if (!city) throw new BadRequestException('address.cityInvalid');
-    if (!district) throw new BadRequestException('address.districtInvalid');
+    if (!city) throw BadRequestException('address.cityInvalid');
+    if (!district) throw BadRequestException('address.districtInvalid');
 
     return {
       cityId: city._id,

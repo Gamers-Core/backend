@@ -41,7 +41,7 @@ export class FAQsService {
       const repo = manager.getRepository(FAQ);
 
       const result = await repo.update(id, dto);
-      if (!result.affected) throw new NotFoundException('faqs.notFound');
+      if (!result.affected) throw NotFoundException('faqs.notFound');
 
       return this.getAllOrdered(manager);
     });
@@ -52,7 +52,7 @@ export class FAQsService {
       const repo = manager.getRepository(FAQ);
 
       const result = await repo.delete(id);
-      if (!result.affected) throw new NotFoundException('faqs.notFound');
+      if (!result.affected) throw NotFoundException('faqs.notFound');
 
       const remaining = await this.getAllOrdered(manager);
       await this.reorderWithPositions(remaining, manager);
@@ -66,10 +66,10 @@ export class FAQsService {
       const faqs = await this.getAllOrdered(manager);
 
       const uniqueIds = new Set(ids);
-      if (faqs.length !== uniqueIds.size) throw new BadRequestException('faqs.invalidIds');
+      if (faqs.length !== uniqueIds.size) throw BadRequestException('faqs.invalidIds');
 
       const faqById = new Map(faqs.map((faq) => [faq.id, faq]));
-      if (ids.some((id) => !faqById.has(id))) throw new BadRequestException('faqs.invalidIds');
+      if (ids.some((id) => !faqById.has(id))) throw BadRequestException('faqs.invalidIds');
 
       const ordered = ids.map((id) => faqById.get(id)!);
       await this.reorderWithPositions(ordered, manager);

@@ -29,7 +29,7 @@ export class BostaWebhookAuthGuard implements CanActivate {
         const expectedSecret = this.configService.get('BOSTA_WEBHOOK_SECRET')!;
         const providedSecret = (req.headers['x-bosta-secret'] as string) ?? '';
 
-        if (!safeCompare(providedSecret, expectedSecret)) throw new UnauthorizedException('unauthorized');
+        if (!safeCompare(providedSecret, expectedSecret)) throw UnauthorizedException('unauthorized');
 
         return true;
       },

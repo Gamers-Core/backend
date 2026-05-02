@@ -32,14 +32,14 @@ export class CategoriesService {
 
   async update(id: number, dto: UpdateCategoryDTO) {
     const result = await this.repo.update(id, dto);
-    if (!result.affected) throw new NotFoundException('products.categoryNotFound');
+    if (!result.affected) throw NotFoundException('products.categoryNotFound');
 
     return this.findOneOrFail(id);
   }
 
   async delete(id: number) {
     const category = await this.findOneOrFail(id, undefined, { products: true });
-    if (category.products.length) throw new BadRequestException('products.categoryHasProducts');
+    if (category.products.length) throw BadRequestException('products.categoryHasProducts');
 
     await this.repo.delete(id);
 
@@ -51,7 +51,7 @@ export class CategoriesService {
       const repo = manager.getRepository(Category);
 
       const category = await repo.findOne({ where: { id }, relations });
-      if (!category) throw new NotFoundException('products.categoryNotFound');
+      if (!category) throw NotFoundException('products.categoryNotFound');
 
       return category;
     });

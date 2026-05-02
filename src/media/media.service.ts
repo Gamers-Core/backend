@@ -81,7 +81,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
       const result = await repo.update({ id: mediaId }, { expiresAt: this.getDraftExpiryDate() });
       if (result.affected) return;
 
-      throw new NotFoundException('media.notFound');
+      throw NotFoundException('media.notFound');
     });
   }
 
@@ -100,7 +100,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
       const repo = manager.getRepository(Media);
 
       const media = await repo.findOneBy({ id });
-      if (!media) throw new NotFoundException('media.notFound');
+      if (!media) throw NotFoundException('media.notFound');
 
       return media;
     });

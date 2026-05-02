@@ -42,7 +42,7 @@ export class MailService {
 
         this.logger.error(`Brevo API request failed${status ? ` (status: ${status})` : ''}: ${upstreamMessage}`);
 
-        throw new ServiceUnavailableException('mail.unavailable');
+        throw ServiceUnavailableException('mail.unavailable');
       },
     );
   }

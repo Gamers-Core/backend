@@ -30,7 +30,7 @@ export class FeaturedVariantsService {
 
       const variant = await this.getActiveVariantOrFail(variantId, manager);
       const existing = await repo.findOne({ where: { variant: { id: variantId } } });
-      if (existing) throw new ConflictException('featuredVariants.alreadyFeatured');
+      if (existing) throw ConflictException('featuredVariants.alreadyFeatured');
 
       const maxRaw = await repo
         .createQueryBuilder('featuredVariant')
@@ -62,7 +62,7 @@ export class FeaturedVariantsService {
         const variant = await this.getActiveVariantOrFail(variantId, manager);
 
         const existing = await this.repo.findOne({ where: { variant: { id: variant.id } } });
-        if (existing && existing.id !== id) throw new ConflictException('featuredVariants.alreadyFeatured');
+        if (existing && existing.id !== id) throw ConflictException('featuredVariants.alreadyFeatured');
 
         featured.variant = variant;
       }
@@ -78,7 +78,7 @@ export class FeaturedVariantsService {
       const repo = manager.getRepository(FeaturedVariant);
 
       const result = await repo.delete(id);
-      if (!result.affected) throw new NotFoundException('featuredVariants.notFound');
+      if (!result.affected) throw NotFoundException('featuredVariants.notFound');
 
       const remaining = await this.getAllOrdered(manager);
       await this.reorderWithPositions(remaining, manager);
@@ -92,7 +92,7 @@ export class FeaturedVariantsService {
       const featured = await this.getAllOrdered(manager);
 
       const uniqueIds = new Set(ids);
-      if (featured.length !== uniqueIds.size) throw new BadRequestException('featuredVariants.invalidIds');
+      if (featured.length !== uniqueIds.size) throw BadRequestException('featuredVariants.invalidIds');
 
       const featuredById = new Map(featured.map((item) => [item.id, item]));
       const ordered = ids.map((id) => featuredById.get(id)!);
@@ -132,7 +132,7 @@ export class FeaturedVariantsService {
         where: { id, variant: { deletedAt: IsNull(), isActive: true } },
         relations: featuredVariantRelations,
       });
-      if (!featured) throw new NotFoundException('featuredVariants.notFound');
+      if (!featured) throw NotFoundException('featuredVariants.notFound');
 
       return featured;
     });
@@ -144,7 +144,7 @@ export class FeaturedVariantsService {
     const variant = await variantRepo.findOne({
       where: { id: variantId, isActive: true, deletedAt: IsNull() },
     });
-    if (!variant) throw new NotFoundException('products.variantNotFound');
+    if (!variant) throw NotFoundException('products.variantNotFound');
 
     return variant;
   }
