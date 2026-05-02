@@ -2,8 +2,6 @@ import { Body, Controller, Post, Req, Session } from '@nestjs/common';
 import type { Request } from 'express';
 
 import { Serialize } from 'src/interceptors/serialize.interceptor';
-import { CurrentUser } from 'src/users/decorators/current-user.decorator';
-import { User } from 'src/users/entities/user.entity';
 
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
@@ -45,7 +43,7 @@ export class AuthController {
   }
 
   @Post('resend-otp')
-  resendOtp(@CurrentUser() user: User | undefined, @Body() body: ResendOTPDTO) {
-    return this.authService.resendOTP(body, user?.locale);
+  resendOtp(@Body() body: ResendOTPDTO) {
+    return this.authService.resendOTP(body);
   }
 }

@@ -5,7 +5,6 @@ import Redis from 'ioredis';
 
 import { BadRequestException } from 'src/common/exceptions';
 import { withEnvironment } from 'src/common/with-environment';
-import { Locale } from 'src/i18n/types';
 import { MailService } from 'src/mail/mail.service';
 import { REDIS_CLIENT } from 'src/redis/redis.module';
 
@@ -57,10 +56,12 @@ export class OtpSessionService {
     };
   }
 
-  async createSession<P extends AuthPurpose>(
-    { purpose, email, data, ttlSeconds = OTP_DEFAULT_TTL_SECONDS }: CreateSessionOptions<P>,
-    locale?: Locale,
-  ) {
+  async createSession<P extends AuthPurpose>({
+    purpose,
+    email,
+    data,
+    ttlSeconds = OTP_DEFAULT_TTL_SECONDS,
+  }: CreateSessionOptions<P>) {
     const sessionId = randomBytes(16).toString('hex');
     const key = getSessionKey(sessionId);
 
@@ -88,7 +89,7 @@ export class OtpSessionService {
       async (isValid) => {
         if (!isValid) return;
 
-        await this.mailService.sendTypedMail(email, purpose, { otp }, locale);
+        await this.mailService.sendTypedMail(email, purpose, { otp });
       },
       ['staging', 'production'],
     );
@@ -126,14 +127,11 @@ export class OtpSessionService {
     return [session.email, session.purpose, session.data];
   }
 
-  async resendSession(
-    {
-      sessionId,
-      maxResends = OTP_DEFAULT_MAX_RESENDS,
-      minResendIntervalMs = OTP_DEFAULT_MIN_RESEND_INTERVAL_MS,
-    }: ResendSessionOptions,
-    locale?: Locale,
-  ) {
+  async resendSession({
+    sessionId,
+    maxResends = OTP_DEFAULT_MAX_RESENDS,
+    minResendIntervalMs = OTP_DEFAULT_MIN_RESEND_INTERVAL_MS,
+  }: ResendSessionOptions) {
     const key = getSessionKey(sessionId);
     const session = await this.readSession(sessionId);
 
@@ -156,6 +154,6 @@ export class OtpSessionService {
     const ttl = await this.redis.ttl(key);
     if (ttl > 0) await this.redis.expire(key, ttl);
 
-    await this.mailService.sendTypedMail(session.email, session.purpose, { otp }, locale);
+    await this.mailService.sendTypedMail(session.email, session.purpose, { otp });
   }
 }
