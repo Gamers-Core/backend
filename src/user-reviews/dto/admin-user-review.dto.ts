@@ -1,6 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 
-import { MediaDTO } from 'src/media/dtos/media.dto';
+import { AdminMediaDTO } from 'src/media/dtos/admin-media.dto';
 
 export class AdminUserReviewDTO {
   @Expose()
@@ -13,6 +13,6 @@ export class AdminUserReviewDTO {
   facebookURL: string;
 
   @Expose()
-  @Type(() => MediaDTO)
-  image: MediaDTO | null;
+  @Type(() => AdminMediaDTO)
+  image: AdminMediaDTO | null;
 }

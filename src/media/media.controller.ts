@@ -16,7 +16,7 @@ import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
 import { Serialize } from 'src/interceptors/serialize.interceptor';
 
 import { mediaPolicyMap } from './cloudinary/const';
-import { MediaDTO } from './dtos/media.dto';
+import { AdminMediaDTO } from './dtos/admin-media.dto';
 import { UploadMediaDTO } from './dtos/upload-media.dto';
 import { MediaService } from './media.service';
 import { UploadedMediaFile } from './types';
@@ -26,7 +26,7 @@ import { UploadedMediaFile } from './types';
 export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
 
-  @Serialize(MediaDTO)
+  @Serialize(AdminMediaDTO)
   @Post()
   @UseInterceptors(
     FileInterceptor('file', {

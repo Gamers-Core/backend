@@ -3,6 +3,7 @@ import { Expose, Transform, Type } from 'class-transformer';
 import { BrandDTO } from 'src/brands/dtos/brand.dto';
 import { CategoryDTO } from 'src/categories/dtos/category.dto';
 import { Localize } from 'src/i18n/decorators/localize.decorator';
+import { MediaDTO } from 'src/media/dtos/media.dto';
 
 class CartProductDTO {
   @Expose()
@@ -31,7 +32,8 @@ class CartProductVariantDTO {
   name: string | null;
 
   @Expose()
-  imageURL: string;
+  @Type(() => MediaDTO)
+  image: MediaDTO;
 
   @Expose()
   externalId: string;

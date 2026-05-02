@@ -2,9 +2,15 @@ import { Expose } from 'class-transformer';
 
 import type { MediaType } from '../types';
 
-export class MediaDTO {
+export class AdminMediaDTO {
+  @Expose()
+  id: number;
+
   @Expose()
   src: string;
+
+  @Expose()
+  publicId: string;
 
   @Expose()
   type: MediaType;

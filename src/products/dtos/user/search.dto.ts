@@ -1,7 +1,7 @@
-import { Exclude, Expose, Transform } from 'class-transformer';
+import { Exclude, Expose, Transform, Type } from 'class-transformer';
 
+import { MediaDTO } from 'src/media/dtos/media.dto';
 import { ProductMediaDTO } from 'src/media/dtos/product-media.dto';
-import { Product } from 'src/products/entities/product.entity';
 import { Variant } from 'src/products/entities/variant.entity';
 
 import { ProductDTO } from './product.dto';
@@ -18,13 +18,9 @@ export class SearchDTO extends ProductDTO {
   declare media: ProductMediaDTO[];
 
   @Expose()
-  @Transform(({ obj }) => {
-    const product = obj as Product;
-    const mainVariant = product.variants[0];
-
-    return mainVariant?.image?.src ?? product.media?.[0]?.media?.src ?? null;
-  })
-  imageURL: string;
+  @Type(() => MediaDTO)
+  @Transform(({ obj }) => obj.variants[0].image)
+  image: MediaDTO;
 
   @Expose()
   @Transform(({ obj }) => {
