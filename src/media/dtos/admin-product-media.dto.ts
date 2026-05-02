@@ -1,8 +1,8 @@
 import { Expose, Transform } from 'class-transformer';
 
-import { MediaAttachmentDTO } from './media-attachment.dto';
+import { ProductMediaDTO } from './product-media.dto';
 
-export class AdminMediaAttachmentDTO extends MediaAttachmentDTO {
+export class AdminProductMediaDTO extends ProductMediaDTO {
   @Expose()
   @Transform(({ obj, value }) => obj.media?.id ?? obj.id ?? value)
   id: number;

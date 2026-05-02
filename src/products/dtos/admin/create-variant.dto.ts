@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsInt, IsOptional, Min } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, Min } from 'class-validator';
 
 import { IsGreaterThan } from 'src/common/validators/is-greater-than.validator';
 import { IsLocalized } from 'src/i18n/decorators/is-localized.decorator';
@@ -20,6 +20,10 @@ export class CreateVariantDTO {
   price: number;
 
   @IsInt()
+  @Min(1)
+  imageId: number;
+
+  @IsInt()
   @Min(0)
   costPerItem: number;
 
@@ -27,9 +31,4 @@ export class CreateVariantDTO {
   @IsInt()
   @IsGreaterThan('price')
   compareAt: number | null;
-
-  @IsArray()
-  @IsInt({ each: true })
-  @Min(1, { each: true })
-  mediaIds: number[];
 }

@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
-import { MediaAttachment } from 'src/media/entities/media-attachment.entity';
-import { MediaAttachmentService } from 'src/media/media-attachment.service';
+import { withOptionalManager } from 'src/common/with-optional-manager';
+import { MediaService } from 'src/media/media.service';
 
 import { AddUserReviewDTO } from './dto/add-user-review.dto';
 import { UpdateUserReviewDTO } from './dto/update-user-review.dto';
@@ -15,27 +15,22 @@ export class UserReviewsService {
   constructor(
     @InjectRepository(UserReview)
     private readonly repo: Repository<UserReview>,
-    private readonly attachmentService: MediaAttachmentService,
+    private readonly mediaService: MediaService,
   ) {}
 
-  async getAll() {
-    const reviews = await this.repo.find({ order: { position: 'ASC' } });
-    return this.attachMedia(reviews);
+  getAll() {
+    return this.findAllWithRelations();
   }
 
-  async add(dto: AddUserReviewDTO) {
+  async add({ imageId, ...dto }: AddUserReviewDTO) {
     return this.repo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(UserReview);
 
       const count = await repo.count();
       if (count >= 3) throw new BadRequestException('userReviews.maxCount');
 
-      const review = await repo.save(repo.create({ ...dto, position: count + 1 }));
-
-      await this.attachmentService.sync(
-        { entityId: review.id, entityType: 'user-review', mediaIds: [dto.imageId] },
-        manager,
-      );
+      const image = await this.mediaService.attach(imageId, manager);
+      await repo.save(repo.create({ ...dto, position: count + 1, image }));
 
       return this.findAllWithRelations(manager);
     });
@@ -49,84 +44,62 @@ export class UserReviewsService {
       if (!review) throw new NotFoundException('userReviews.notFound');
 
       Object.assign(review, dto);
+
+      if (imageId) review.image = await this.mediaService.swapImage(imageId, review.image?.id, manager);
+
       await repo.save(review);
 
-      if (imageId)
-        await this.attachmentService.sync(
-          { entityId: review.id, entityType: 'user-review', mediaIds: [imageId] },
-          manager,
-        );
-
       return this.findAllWithRelations(manager);
     });
   }
 
-  async reorder(orderedIds: number[]) {
+  reorder(ids: number[]) {
     return this.repo.manager.transaction(async (manager) => {
-      const repo = manager.getRepository(UserReview);
+      const reviews = await this.findAllWithRelations(manager);
 
-      const reviews = await repo.find({ order: { position: 'ASC' } });
-
-      if (reviews.length !== orderedIds.length) throw new BadRequestException('userReviews.invalidIds');
-
-      const uniqueIds = new Set(orderedIds);
-      if (uniqueIds.size !== orderedIds.length) throw new BadRequestException('userReviews.invalidIds');
+      const uniqueIds = new Set(ids);
+      if (reviews.length !== uniqueIds.size) throw new BadRequestException('userReviews.invalidIds');
 
       const reviewById = new Map(reviews.map((review) => [review.id, review]));
-      if (orderedIds.some((id) => !reviewById.has(id))) throw new BadRequestException('userReviews.invalidIds');
+      if (ids.some((id) => !reviewById.has(id))) throw new BadRequestException('userReviews.invalidIds');
 
-      const orderedReviews = orderedIds.map((id) => reviewById.get(id)!);
-      await this.reorderInternal(orderedReviews, manager);
+      const ordered = ids.map((id) => reviewById.get(id)!);
+      await this.reorderInternal(ordered, manager);
 
       return this.findAllWithRelations(manager);
     });
   }
 
-  async delete(position: number) {
+  delete(position: number) {
     return this.repo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(UserReview);
 
-      const review = await repo.findOne({ where: { position } });
-      if (!review) throw new NotFoundException('userReviews.notFound');
+      const result = await repo.delete({ position });
+      if (!result.affected) throw new NotFoundException('userReviews.notFound');
 
-      await repo.remove(review);
-
-      const remaining = await repo.find({ order: { position: 'ASC' } });
+      const remaining = await this.findAllWithRelations(manager);
       await this.reorderInternal(remaining, manager);
 
       return this.findAllWithRelations(manager);
     });
   }
 
-  private static readonly POSITION_OFFSET = 1000;
   private async reorderInternal(reviews: UserReview[], manager: EntityManager) {
     const repo = manager.getRepository(UserReview);
     if (!reviews.length) return;
 
-    await repo.save(reviews.map((r) => ({ ...r, position: r.position + UserReviewsService.POSITION_OFFSET })));
-    await repo.save(reviews.map((r, index) => ({ ...r, position: index + 1 })));
+    await repo.save(reviews.map((review, i) => ({ ...review, position: -(i + 1) })));
+    await repo.save(reviews.map((review, i) => ({ ...review, position: i + 1 })));
   }
 
-  private async findAllWithRelations(manager: EntityManager) {
-    const repo = manager.getRepository(UserReview);
-    const attachmentRepo = manager.getRepository(MediaAttachment);
+  private async findAllWithRelations(manager?: EntityManager) {
+    return withOptionalManager(manager, this.repo.manager, async (manager) => {
+      const repo = manager.getRepository(UserReview);
 
-    const reviews = await repo.find({ order: { position: 'ASC' } });
-    return this.attachMedia(reviews, attachmentRepo);
-  }
-
-  private async attachMedia(reviews: UserReview[], attachmentRepo?: Repository<MediaAttachment>) {
-    if (!reviews.length) return [];
-
-    const attachments = await this.attachmentService.getBulkMedia(
-      reviews.map(({ id }) => id),
-      'user-review',
-      attachmentRepo,
-    );
-
-    return reviews.map((review) => ({
-      ...review,
-      image: attachments[review.id]?.[0] ?? null,
-    }));
+      return repo.find({
+        order: { position: 'ASC' },
+        relations: { image: true },
+      });
+    });
   }
 }

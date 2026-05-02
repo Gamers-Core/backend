@@ -7,7 +7,7 @@ export class MediaDTO {
   id: number;
 
   @Expose()
-  url: string;
+  src: string;
 
   @Expose()
   publicId: string;

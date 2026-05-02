@@ -1,7 +1,7 @@
 import { Expose, Type } from 'class-transformer';
 
 import { Localize } from 'src/i18n/decorators/localize.decorator';
-import { MediaAttachmentDTO } from 'src/media/dtos/media-attachment.dto';
+import { MediaDTO } from 'src/media/dtos/media.dto';
 
 export class VariantDTO {
   @Expose()
@@ -21,6 +21,6 @@ export class VariantDTO {
   stock: number;
 
   @Expose()
-  @Type(() => MediaAttachmentDTO)
-  media: MediaAttachmentDTO[];
+  @Type(() => MediaDTO)
+  image: MediaDTO | null;
 }

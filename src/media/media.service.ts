@@ -1,14 +1,14 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 
-import { NotFoundException, InternalServerErrorException } from 'src/common/exceptions';
+import { NotFoundException } from 'src/common/exceptions';
+import { withOptionalManager } from 'src/common/with-optional-manager';
 
 import { CloudinaryService } from './cloudinary/cloudinary.service';
-import { mediaTypesMap } from './cloudinary/const';
 import { UploadMediaDTO } from './dtos/upload-media.dto';
-import { MediaAttachment } from './entities/media-attachment.entity';
 import { Media } from './entities/media.entity';
+import { mapToMedia } from './helpers';
 import { UploadedMediaFile } from './types';
 
 @Injectable()
@@ -26,10 +26,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
   onModuleInit() {
     void this.runExpiredDraftCleanup();
 
-    this.cleanupInterval = setInterval(
-      () => void this.runExpiredDraftCleanup(),
-      60 * 60 * 1000, // Run cleanup every hour
-    );
+    this.cleanupInterval = setInterval(() => void this.runExpiredDraftCleanup(), 60 * 60 * 1000);
   }
 
   onModuleDestroy() {
@@ -41,144 +38,77 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
   async create(file: UploadedMediaFile, mediaDTO: UploadMediaDTO) {
     const result = await this.cloudinaryService.uploadBuffer(file, mediaDTO.folder);
 
-    const media = this.mediaRepository.create({
-      publicId: result.public_id,
-      url: result.secure_url,
-      type: mediaTypesMap[result.resource_type],
-      width: result.width,
-      height: result.height,
-      format: result.format,
-      bytes: result.bytes,
-      expiresAt: this.getDraftExpiryDate(),
-    });
-
-    try {
-      return await this.mediaRepository.save(media);
-    } catch (error) {
-      try {
-        await this.cloudinaryService.destroy(result.public_id, media.type);
-      } catch (destroyError) {
-        this.logger.warn(
-          `Media DB save failed and Cloudinary cleanup failed for ${result.public_id}: ${destroyError instanceof Error ? destroyError.message : String(destroyError)}`,
-        );
-      }
-
-      this.logger.error(
-        `Failed to save media record for publicId ${result.public_id}: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error.stack : String(error),
-      );
-
-      throw new InternalServerErrorException('media.saveFailed');
-    }
+    return await this.mediaRepository.save(
+      this.mediaRepository.create({ ...mapToMedia(result), expiresAt: this.getDraftExpiryDate() }),
+    );
   }
 
   async delete(id: number) {
-    const media = await this.mediaRepository.findOne({
-      where: { id },
-      select: { publicId: true },
-    });
+    return this.mediaRepository.manager.transaction(async (manager) => {
+      const media = await this.getOneOrFail(id, manager);
 
-    if (!media) throw new NotFoundException('media.notFound');
-
-    try {
-      await this.cloudinaryService.destroy(media.publicId, media.type);
-    } catch (error) {
-      this.logger.error(
-        `Failed to delete media with publicId ${media.publicId} from Cloudinary during media deletion: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error.stack : String(error),
-      );
-
-      throw error;
-    }
-
-    await this.mediaRepository.delete(id);
-  }
-
-  async cleanupExpiredDraftMedia() {
-    const now = new Date();
-
-    try {
-      const expiredDraftMedia = await this.mediaRepository
-        .createQueryBuilder('m')
-        .select(['m.id', 'm.public_id', 'm.type'])
-        .where('m.expires_at IS NOT NULL')
-        .andWhere('m.expires_at < :now', { now })
-        .andWhere('m.is_deleted = :isDeleted', { isDeleted: false })
-        .andWhere((qb) => {
-          const subQuery = qb.subQuery().select('1').from(MediaAttachment, 'ma').where('ma.media_id = m.id').getQuery();
-
-          return `NOT EXISTS ${subQuery}`;
-        })
-        .getMany();
-
-      if (!expiredDraftMedia.length) return;
-
-      const softDeletedMedia: Media[] = [];
-
-      await Promise.all(
-        expiredDraftMedia.map(async (media) => {
-          const updateResult = await this.mediaRepository
-            .createQueryBuilder()
-            .update(Media)
-            .set({ isDeleted: true })
-            .where('id = :id', { id: media.id })
-            .andWhere('is_deleted = :isDeleted', { isDeleted: false })
-            .andWhere('expires_at IS NOT NULL')
-            .andWhere('expires_at < :now', { now })
-            .andWhere('NOT EXISTS (SELECT 1 FROM media_attachment ma WHERE ma.media_id = :id)', { id: media.id })
-            .execute();
-
-          if (updateResult.affected) {
-            softDeletedMedia.push(media);
-          }
-        }),
-      );
-
-      if (!softDeletedMedia.length) return;
-
-      void this.cleanupSoftDeletedMedia(softDeletedMedia);
-    } catch (error) {
-      this.logger.error('Failed to cleanup expired draft media', error instanceof Error ? error.stack : String(error));
-    }
-  }
-
-  private async cleanupSoftDeletedMedia(mediaList: Media[]) {
-    if (!mediaList.length) return;
-
-    try {
-      const cleanupResults = await Promise.allSettled(
-        mediaList.map(async (media) => {
-          await this.cloudinaryService.destroy(media.publicId, media.type);
-
-          await this.mediaRepository
-            .createQueryBuilder()
-            .delete()
-            .from(Media)
-            .where('id = :id', { id: media.id })
-            .andWhere('is_deleted = :isDeleted', { isDeleted: true })
-            .andWhere('NOT EXISTS (SELECT 1 FROM media_attachment ma WHERE ma.media_id = :id)', { id: media.id })
-            .execute();
-        }),
-      );
-
-      cleanupResults.forEach((result, index) => {
-        if (result.status === 'fulfilled') return;
-
-        const media = mediaList[index];
-        this.logger.warn(
-          `Failed to clean up soft-deleted media id=${media.id}, publicId=${media.publicId}: ${result.reason instanceof Error ? result.reason.message : String(result.reason)}`,
+      try {
+        await this.cloudinaryService.destroy(media.publicId, media.type);
+      } catch (error) {
+        this.logger.error(
+          `Failed to delete media ${media.publicId} from Cloudinary: ${error instanceof Error ? error.message : String(error)}`,
+          error instanceof Error ? error.stack : String(error),
         );
-      });
-    } catch (error) {
-      this.logger.error(
-        'Failed to hard-delete soft-deleted media',
-        error instanceof Error ? error.stack : String(error),
-      );
-    }
+
+        throw error;
+      }
+
+      await this.mediaRepository.delete(id);
+    });
   }
 
-  getDraftExpiryDate() {
+  async attach(mediaId: number, manager?: EntityManager): Promise<Media> {
+    return withOptionalManager(manager, this.mediaRepository.manager, async (manager) => {
+      const repo = manager.getRepository(Media);
+
+      const media = await this.getOneOrFail(mediaId, manager);
+
+      await repo.update({ id: media.id }, { expiresAt: null });
+
+      return media;
+    });
+  }
+
+  async detach(mediaId: number, manager?: EntityManager): Promise<void> {
+    return withOptionalManager(manager, this.mediaRepository.manager, async (manager) => {
+      const repo = manager.getRepository(Media);
+
+      const result = await repo.update({ id: mediaId }, { expiresAt: this.getDraftExpiryDate() });
+      if (result.affected) return;
+
+      throw new NotFoundException('media.notFound');
+    });
+  }
+
+  async swapImage(newMediaId: number, oldMediaId: number | undefined, manager?: EntityManager): Promise<Media> {
+    return withOptionalManager(manager, this.mediaRepository.manager, async (manager) => {
+      const newMedia = await this.attach(newMediaId, manager);
+
+      if (oldMediaId && oldMediaId !== newMediaId) await this.detach(oldMediaId, manager);
+
+      return newMedia;
+    });
+  }
+
+  private getOneOrFail(id: number, manager?: EntityManager) {
+    return withOptionalManager(manager, this.mediaRepository.manager, async (manager) => {
+      const repo = manager.getRepository(Media);
+
+      const media = await repo.findOneBy({ id });
+      if (!media) throw new NotFoundException('media.notFound');
+
+      return media;
+    });
+  }
+
+  private getDraftExpiryDate() {
     const expiresAt = new Date();
+
     expiresAt.setHours(expiresAt.getHours() + 24);
 
     return expiresAt;
@@ -194,5 +124,86 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     } finally {
       this.isCleanupRunning = false;
     }
+  }
+
+  private async cleanupExpiredDraftMedia() {
+    const now = new Date();
+
+    try {
+      const expiredDraftMedia = await this.mediaRepository
+        .createQueryBuilder('m')
+        .select(['m.id', 'm.publicId', 'm.type'])
+        .where('m.expires_at IS NOT NULL')
+        .andWhere('m.expires_at < :now', { now })
+        .andWhere('m.is_deleted = false')
+        .andWhere(this.notReferencedCondition())
+        .getMany();
+
+      if (!expiredDraftMedia.length) return;
+
+      const orphaned = expiredDraftMedia.filter((m) => m.isOrphaned);
+      if (!orphaned.length) return;
+
+      const ids = orphaned.map((m) => m.id);
+
+      await this.mediaRepository
+        .createQueryBuilder()
+        .update(Media)
+        .set({ isDeleted: true })
+        .where('id IN (:...ids)', { ids })
+        .andWhere('is_deleted = false')
+        .andWhere(this.notReferencedCondition('id'))
+        .execute();
+
+      const softDeleted = await this.mediaRepository.findBy({
+        id: In(ids),
+        isDeleted: true,
+      });
+
+      if (!softDeleted.length) return;
+
+      void this.cleanupSoftDeletedMedia(softDeleted);
+    } catch (error) {
+      this.logger.error('Failed to cleanup expired draft media', error instanceof Error ? error.stack : String(error));
+    }
+  }
+
+  private async cleanupSoftDeletedMedia(mediaList: Media[]) {
+    if (!mediaList.length) return;
+
+    const results = await Promise.allSettled(
+      mediaList.map(async (media) => {
+        await this.cloudinaryService.destroy(media.publicId, media.type);
+
+        await this.mediaRepository
+          .createQueryBuilder()
+          .delete()
+          .from(Media)
+          .where('id = :id', { id: media.id })
+          .andWhere('is_deleted = true')
+          .andWhere(this.notReferencedCondition(':id'), { id: media.id })
+          .execute();
+      }),
+    );
+
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') return;
+
+      const media = mediaList[index];
+
+      this.logger.warn(
+        `Failed to clean up media id=${media.id}, publicId=${media.publicId}: ${result.reason instanceof Error ? result.reason.message : String(result.reason)}`,
+      );
+    });
+  }
+
+  private notReferencedCondition(idRef = 'm.id') {
+    return `
+      NOT EXISTS (SELECT 1 FROM product_media pm WHERE pm.media_id = ${idRef})
+      AND NOT EXISTS (SELECT 1 FROM brand b WHERE b.image_id = ${idRef})
+      AND NOT EXISTS (SELECT 1 FROM product_variant_entity v WHERE v.image_id = ${idRef})
+      AND NOT EXISTS (SELECT 1 FROM user_review r WHERE r.image_id = ${idRef})
+      AND NOT EXISTS (SELECT 1 FROM item_snapshot s WHERE s.media_id = ${idRef})
+    `;
   }
 }

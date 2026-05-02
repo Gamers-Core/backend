@@ -13,6 +13,7 @@ import { Brand } from 'src/brands/entities/brand.entity';
 import { Category } from 'src/categories/entities/category.entity';
 import { parse } from 'src/common/transformers/parse.transformer';
 import type { Localized } from 'src/i18n/types';
+import { ProductMedia } from 'src/media/entities/product-media.entity';
 
 import { productStatuses } from '../const';
 import type { ProductStatus } from '../types';
@@ -35,6 +36,9 @@ export class Product {
 
   @Column('enum', { default: 'unlisted', enum: productStatuses })
   status: ProductStatus;
+
+  @OneToMany(() => ProductMedia, (a) => a.product, { cascade: true })
+  media: ProductMedia[];
 
   @OneToMany(() => Variant, (variant) => variant.product, {
     cascade: true,

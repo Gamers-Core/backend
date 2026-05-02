@@ -10,12 +10,12 @@ export class Media {
   id: number;
 
   @Column()
-  url: string;
+  src: string;
 
   @Column({ unique: true })
   publicId: string;
 
-  @Column('enum', { enum: mediaTypes, default: 'auto' })
+  @Column('enum', { enum: mediaTypes })
   type: MediaType;
 
   @Column()
@@ -38,4 +38,12 @@ export class Media {
 
   @Column('timestamp', { nullable: true })
   expiresAt: Date | null;
+
+  get isDraft(): boolean {
+    return this.expiresAt !== null;
+  }
+
+  get isOrphaned(): boolean {
+    return this.expiresAt !== null && this.expiresAt < new Date();
+  }
 }

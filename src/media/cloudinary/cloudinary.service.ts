@@ -28,10 +28,16 @@ export class CloudinaryService {
 
     return new Promise<UploadApiResponse>((resolve, reject) => {
       const stream: UploadStream = this.cloudinary.uploader.upload_stream(
-        { folder: folderPath, resource_type: mediaTypesMap[fileType], transformation: policy.transformation },
+        {
+          folder: folderPath,
+          resource_type: mediaTypesMap[fileType],
+          transformation: policy.transformation,
+          timeout: 100_000,
+        },
         (error: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
-          if (error) return reject(new Error(error.message));
-          if (!result) return reject(new BadRequestException('media.uploadFailed'));
+          if (error?.http_code === 499) return reject(new BadRequestException('media.requestTimeout'));
+
+          if (error || !result) return reject(new BadRequestException('media.uploadFailed'));
 
           return resolve(result);
         },

@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, FindOptionsRelations, Repository } from 'typeorm';
 
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
-import { MediaAttachment } from 'src/media/entities/media-attachment.entity';
-import { MediaAttachmentService } from 'src/media/media-attachment.service';
+import { withOptionalManager } from 'src/common/with-optional-manager';
+import { MediaService } from 'src/media/media.service';
 
 import { AddBrandDTO } from './dtos/add-brand.dto';
 import { UpdateBrandDTO } from './dtos/update-brand.dto';
@@ -15,98 +15,74 @@ export class BrandsService {
   constructor(
     @InjectRepository(Brand)
     private readonly repo: Repository<Brand>,
-    private readonly attachmentService: MediaAttachmentService,
+    private readonly mediaService: MediaService,
   ) {}
 
-  async getAll() {
-    const brands = await this.repo.find({ order: { id: 'ASC' } });
-
-    const attachments = await this.attachmentService.getBulkMedia(
-      brands.map(({ id }) => id),
-      'brand',
-      this.repo.manager.getRepository(MediaAttachment),
-    );
-
-    return brands.map((brand) => ({ ...brand, image: attachments[brand.id][0] || null }));
+  getAll() {
+    return this.repo.find({
+      order: { id: 'ASC' },
+      relations: { image: true },
+    });
   }
 
-  async getOne(id: number) {
-    const brand = await this.repo.findOne({ where: { id } });
-    if (!brand) throw new NotFoundException('products.brandNotFound');
-
-    const attachments = await this.attachmentService.getBulkMedia(
-      [brand.id],
-      'brand',
-      this.repo.manager.getRepository(MediaAttachment),
-    );
-
-    return { ...brand, image: attachments[brand.id][0] || null };
+  getOne(id: number) {
+    return this.getBrandOrThrow(id);
   }
 
   add({ imageId, ...dto }: AddBrandDTO) {
     return this.repo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(Brand);
 
-      const brand = await repo.save(repo.create(dto));
+      const image = await this.mediaService.attach(imageId, manager);
+      const brand = await repo.save(repo.create({ ...dto, image }));
 
-      await this.attachmentService.sync({ entityId: brand.id, entityType: 'brand', mediaIds: [imageId] }, manager);
-
-      return this.findAllWithMedia(manager);
+      return this.getBrandOrThrow(brand.id, manager);
     });
   }
 
-  async update(id: number, { imageId, ...dto }: UpdateBrandDTO) {
+  update(id: number, { imageId, ...dto }: UpdateBrandDTO) {
     return this.repo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(Brand);
 
-      const brand = await repo.findOne({ where: { id } });
-      if (!brand) throw new NotFoundException('products.brandNotFound');
+      const brand = await this.getBrandOrThrow(id, manager);
 
       Object.assign(brand, dto);
+
+      if (imageId) brand.image = await this.mediaService.swapImage(imageId, brand.image?.id, manager);
+
       await repo.save(brand);
 
-      if (imageId)
-        await this.attachmentService.sync({ entityId: brand.id, entityType: 'brand', mediaIds: [imageId] }, manager);
-
-      return this.findOneWithProductsOrFail(id, repo);
+      return this.getBrandOrThrow(brand.id, manager);
     });
   }
 
-  async delete(id: number) {
-    const brand = await this.findOneWithProductsOrFail(id);
+  delete(id: number) {
+    return this.repo.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(Brand);
 
-    if (brand.products.length) throw new BadRequestException('products.brandHasProducts');
+      const brand = await this.getBrandOrThrow(id, manager, { products: true });
+      if (brand.products.length) throw new BadRequestException('products.brandHasProducts');
 
-    await this.repo.remove(brand);
+      if (brand.image) await this.mediaService.detach(brand.image.id, manager);
 
-    return { deleted: true };
+      await repo.delete(brand.id);
+
+      return { deleted: true };
+    });
   }
 
-  async findOneWithProductsOrFail(id: number, repo = this.repo) {
-    const brand = await repo.findOne({ where: { id }, relations: { products: true } });
-    if (!brand) throw new NotFoundException('products.brandNotFound');
+  private getBrandOrThrow(
+    id: number,
+    manager?: EntityManager,
+    relations?: FindOptionsRelations<Brand>,
+  ): Promise<Brand> {
+    return withOptionalManager(manager, this.repo.manager, async (manager) => {
+      const repo = manager.getRepository(Brand);
 
-    const attachments = await this.attachmentService.getBulkMedia(
-      [brand.id],
-      'brand',
-      repo.manager.getRepository(MediaAttachment),
-    );
+      const brand = await repo.findOne({ where: { id }, relations: { ...relations, image: true } });
+      if (!brand) throw new NotFoundException('products.brandNotFound');
 
-    return { ...brand, image: attachments[brand.id][0] || null };
-  }
-
-  private async findAllWithMedia(manager: EntityManager) {
-    const repo = manager.getRepository(Brand);
-    const attachmentsRepo = manager.getRepository(MediaAttachment);
-
-    const brands = await repo.find({ order: { id: 'ASC' } });
-
-    const attachments = await this.attachmentService.getBulkMedia(
-      brands.map(({ id }) => id),
-      'brand',
-      attachmentsRepo,
-    );
-
-    return brands.map((brand) => ({ ...brand, image: attachments[brand.id][0] || null }));
+      return brand;
+    });
   }
 }

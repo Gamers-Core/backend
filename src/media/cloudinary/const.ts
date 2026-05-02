@@ -26,7 +26,7 @@ export const mediaPolicyMap = {
       { width: 500, height: 500, crop: 'limit', aspect_ratio: '16:9' },
     ],
   }),
-  'user-review': definePolicy({
+  userReview: definePolicy({
     allowedType: 'image',
     maxBytes: 10 * 1024 * 1024,
     transformation: [
@@ -37,6 +37,7 @@ export const mediaPolicyMap = {
 } satisfies Record<MediaEntityType, MediaPolicy<MediaFormat>>;
 
 export const mediaTypesMap = {
+  raw: 'raw',
   image: 'image',
   video: 'video',
   audio: 'video',

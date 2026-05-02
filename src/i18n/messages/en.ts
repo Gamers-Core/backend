@@ -27,6 +27,7 @@ export default {
   'media.tooLarge': 'File size exceeds the maximum allowed size of {maxSize} mb',
   'media.uploadFailed': 'Media upload failed',
   'media.unsupportedType': 'Unsupported media type',
+  'media.requestTimeout': 'Media upload timed out. Please try again.',
 
   'products.brandNotFound': 'Brand not found',
   'products.categoryNotFound': 'Category not found',

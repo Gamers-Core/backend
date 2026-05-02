@@ -27,6 +27,7 @@ export default {
   'media.tooLarge': 'حجم الملف يتجاوز الحد الأقصى المسموح به {maxSize} ميجابايت',
   'media.uploadFailed': 'فشل في رفع الوسائط',
   'media.unsupportedType': 'نوع الوسائط غير مدعوم',
+  'media.requestTimeout': 'انتهت مهلة رفع الوسائط. يرجى المحاولة مرة أخرى.',
 
   'products.brandNotFound': 'العلامة التجارية غير موجودة',
   'products.categoryNotFound': 'الفئة غير موجودة',

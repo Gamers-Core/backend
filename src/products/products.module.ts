@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { MediaAttachment } from 'src/media/entities/media-attachment.entity';
 import { Media } from 'src/media/entities/media.entity';
+import { ProductMedia } from 'src/media/entities/product-media.entity';
 import { MediaModule } from 'src/media/media.module';
 
 import { AdminProductsController } from './controllers/admin-products.controller';
@@ -15,7 +15,7 @@ import { ProductsService } from './services/products.service';
 import { VariantsService } from './services/variants.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Product, Media, MediaAttachment, Variant]), MediaModule],
+  imports: [TypeOrmModule.forFeature([Product, Media, ProductMedia, Variant]), MediaModule],
   controllers: [UserProductsController, AdminProductsController, AdminVariantsController],
   providers: [ProductsService, VariantsService, InventoryService],
   exports: [InventoryService],

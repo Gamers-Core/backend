@@ -2,10 +2,10 @@ import { Expose, Transform } from 'class-transformer';
 
 import type { MediaType } from '../types';
 
-export class MediaAttachmentDTO {
+export class ProductMediaDTO {
   @Expose()
-  @Transform(({ obj, value }) => obj.media?.url ?? obj.url ?? value)
-  url: string;
+  @Transform(({ obj, value }) => obj.media?.src ?? obj.src ?? value)
+  src: string;
 
   @Expose()
   @Transform(({ obj, value }) => obj.media?.type ?? obj.type ?? value)

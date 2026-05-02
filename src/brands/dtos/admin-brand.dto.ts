@@ -1,7 +1,7 @@
 import { Expose, Type } from 'class-transformer';
 
 import type { Localized } from 'src/i18n/types';
-import { MediaAttachmentDTO } from 'src/media/dtos/media-attachment.dto';
+import { MediaDTO } from 'src/media/dtos/media.dto';
 
 export class AdminBrandDTO {
   @Expose()
@@ -11,6 +11,6 @@ export class AdminBrandDTO {
   name: Localized;
 
   @Expose()
-  @Type(() => MediaAttachmentDTO)
-  image: MediaAttachmentDTO;
+  @Type(() => MediaDTO)
+  image: MediaDTO | null;
 }

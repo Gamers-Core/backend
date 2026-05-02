@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -14,6 +15,7 @@ import {
 
 import { parse } from 'src/common/transformers/parse.transformer';
 import type { Localized } from 'src/i18n/types';
+import { Media } from 'src/media/entities/media.entity';
 
 import { Product } from './product.entity';
 
@@ -43,6 +45,10 @@ export class Variant {
 
   @Column('int', { name: 'compare_at', nullable: true, default: null })
   compareAt: number | null;
+
+  @ManyToOne(() => Media, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn()
+  image: Media | null;
 
   @ManyToOne(() => Product, (product) => product.variants, {
     onDelete: 'CASCADE',

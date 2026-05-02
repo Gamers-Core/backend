@@ -4,8 +4,6 @@ import { EntityManager, IsNull, Repository } from 'typeorm';
 
 import { BadRequestException, ConflictException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
-import { MediaAttachment } from 'src/media/entities/media-attachment.entity';
-import { MediaAttachmentService } from 'src/media/media-attachment.service';
 import { Variant } from 'src/products/entities/variant.entity';
 import { featuredVariantRelations } from 'src/products/relations';
 
@@ -20,52 +18,18 @@ export class FeaturedVariantsService {
     private readonly repo: Repository<FeaturedVariant>,
     @InjectRepository(Variant)
     private readonly variantRepo: Repository<Variant>,
-    private readonly attachmentService: MediaAttachmentService,
   ) {}
 
-  async getAll() {
-    const featuredVariants = await this.repo.find({
-      order: { position: 'ASC' },
-      relations: featuredVariantRelations,
-      where: { variant: { deletedAt: IsNull() } },
-    });
-
-    const variantIds = featuredVariants.map(({ variant }) => variant.id);
-    const variantMedia = await this.attachmentService.getBulkMedia(variantIds, 'variant');
-
-    const variantProductIds = featuredVariants.map(({ variant }) => variant.product.id);
-    const variantProductMedia = await this.attachmentService.getBulkMedia(variantProductIds, 'product');
-    const brandIds = Array.from(new Set(featuredVariants.map(({ variant }) => variant.product.brand.id)));
-    const brandMedia = await this.attachmentService.getBulkMedia(brandIds, 'brand');
-
-    return featuredVariants.map((featured) => ({
-      ...featured,
-      variant: {
-        ...featured.variant,
-        media: variantMedia[featured.variant.id] ?? [],
-        product: {
-          ...featured.variant.product,
-          media: variantProductMedia[featured.variant.product.id] ?? [],
-          brand: {
-            ...featured.variant.product.brand,
-            image: brandMedia[featured.variant.product.brand.id]?.[0] ?? null,
-          },
-        },
-      },
-    }));
+  getAll() {
+    return this.getAllOrdered();
   }
 
-  async add(dto: AddFeaturedVariantDTO) {
+  async add({ variantId, ...dto }: AddFeaturedVariantDTO) {
     return this.repo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(FeaturedVariant);
-      const variantRepo = manager.getRepository(Variant);
 
-      const variant = await variantRepo.findOne({
-        where: { id: dto.variantId, isActive: true, deletedAt: IsNull() },
-      });
-      if (!variant) throw new NotFoundException('products.variantNotFound');
-
-      const existing = await repo.findOne({ where: { variant: { id: dto.variantId } } });
+      const variant = await this.getActiveVariantOrFail(variantId, manager);
+      const existing = await repo.findOne({ where: { variant: { id: variantId } } });
       if (existing) throw new ConflictException('featuredVariants.alreadyFeatured');
 
       const maxRaw = await repo
@@ -77,109 +41,111 @@ export class FeaturedVariantsService {
       const saved = await repo.save(
         repo.create({
           ...dto,
-          variant: { id: dto.variantId },
+          variant: { id: variant.id },
           position: maxPosition + 1,
         }),
       );
 
-      return this.findOneWithRelationsOrFail(saved.id, manager);
+      return this.getOneOrFail(saved.id, manager);
     });
   }
 
   async update(id: number, { variantId, ...dto }: UpdateFeaturedVariantDTO) {
-    const featured = await this.repo.findOne({ where: { id } });
-    if (!featured) throw new NotFoundException('featuredVariants.notFound');
+    return this.repo.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(FeaturedVariant);
 
-    Object.assign(featured, dto);
-    if (variantId) {
-      const variant = await this.variantRepo.findOne({ where: { id: variantId, isActive: true, deletedAt: IsNull() } });
-      if (!variant) throw new NotFoundException('products.variantNotFound');
+      const featured = await this.getOneOrFail(id, manager);
 
-      const existing = await this.repo.findOne({ where: { variant: { id: variantId } } });
-      if (existing && existing.id !== id) throw new ConflictException('featuredVariants.alreadyFeatured');
+      Object.assign(featured, dto);
 
-      featured.variant = variant;
-    }
+      if (variantId) {
+        const variant = await this.getActiveVariantOrFail(variantId, manager);
 
-    const saved = await this.repo.save(featured);
+        const existing = await this.repo.findOne({ where: { variant: { id: variant.id } } });
+        if (existing && existing.id !== id) throw new ConflictException('featuredVariants.alreadyFeatured');
 
-    return this.findOneWithRelationsOrFail(saved.id);
+        featured.variant = variant;
+      }
+
+      const saved = await repo.save(featured);
+
+      return this.getOneOrFail(saved.id, manager);
+    });
   }
 
   async remove(id: number) {
-    const featured = await this.repo.findOne({ where: { id } });
-    if (!featured) throw new NotFoundException('featuredVariants.notFound');
+    return this.repo.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(FeaturedVariant);
 
-    await this.repo.remove(featured);
+      const result = await repo.delete(id);
+      if (!result.affected) throw new NotFoundException('featuredVariants.notFound');
 
-    return { deleted: true };
-  }
+      const remaining = await this.getAllOrdered(manager);
+      await this.reorderWithPositions(remaining, manager);
 
-  async reorder(orderedIds: number[]) {
-    const featured = await this.repo.find({
-      relations: featuredVariantRelations,
-      where: { variant: { deletedAt: IsNull() } },
-      order: { position: 'ASC' },
+      return this.getAllOrdered(manager);
     });
-
-    if (featured.length !== orderedIds.length) throw new BadRequestException('featuredVariants.invalidIds');
-
-    const orderedIdsSet = new Set(orderedIds);
-    if (orderedIdsSet.size !== orderedIds.length) throw new BadRequestException('featuredVariants.invalidIds');
-
-    const featuredById = new Map(featured.map((item) => [item.id, item]));
-    const hasUnknownId = orderedIds.some((id) => !featuredById.has(id));
-    if (hasUnknownId) throw new BadRequestException('featuredVariants.invalidIds');
-
-    await this.repo.save(
-      orderedIds.map((id, index) => {
-        const item = featuredById.get(id)!;
-        item.position = index + 1;
-
-        return item;
-      }),
-    );
-
-    return { updated: true };
   }
 
-  private async findOneWithRelationsOrFail(id: number, manager?: EntityManager) {
+  async reorder(ids: number[]) {
+    return this.repo.manager.transaction(async (manager) => {
+      const featured = await this.getAllOrdered(manager);
+
+      const uniqueIds = new Set(ids);
+      if (featured.length !== uniqueIds.size) throw new BadRequestException('featuredVariants.invalidIds');
+
+      const featuredById = new Map(featured.map((item) => [item.id, item]));
+      const ordered = ids.map((id) => featuredById.get(id)!);
+
+      await this.reorderWithPositions(ordered, manager);
+
+      return this.getAllOrdered(manager);
+    });
+  }
+
+  private async reorderWithPositions(featured: FeaturedVariant[], manager: EntityManager): Promise<void> {
+    if (!featured.length) return;
+
+    const repo = manager.getRepository(FeaturedVariant);
+
+    await repo.save(featured.map((item, i) => ({ ...item, position: -(i + 1) })));
+    await repo.save(featured.map((item, i) => ({ ...item, position: i + 1 })));
+  }
+
+  private getAllOrdered(manager?: EntityManager): Promise<FeaturedVariant[]> {
     return withOptionalManager(manager, this.repo.manager, async (manager) => {
       const repo = manager.getRepository(FeaturedVariant);
-      const attachmentRepo = manager.getRepository(MediaAttachment);
+
+      return await repo.find({
+        relations: featuredVariantRelations,
+        where: { variant: { deletedAt: IsNull(), isActive: true } },
+        order: { position: 'ASC' },
+      });
+    });
+  }
+
+  private getOneOrFail(id: number, manager?: EntityManager) {
+    return withOptionalManager(manager, this.repo.manager, async (manager) => {
+      const repo = manager.getRepository(FeaturedVariant);
 
       const featured = await repo.findOne({
-        where: { id, variant: { deletedAt: IsNull() } },
+        where: { id, variant: { deletedAt: IsNull(), isActive: true } },
         relations: featuredVariantRelations,
       });
-
       if (!featured) throw new NotFoundException('featuredVariants.notFound');
 
-      const media = await this.attachmentService.getMedia(
-        { entityId: featured.variant.id, entityType: 'variant' },
-        attachmentRepo,
-      );
-      const productMedia = await this.attachmentService.getMedia(
-        { entityId: featured.variant.product.id, entityType: 'product' },
-        attachmentRepo,
-      );
-      const brandMedia = await this.attachmentService.getMedia(
-        { entityId: featured.variant.product.brand.id, entityType: 'brand' },
-        attachmentRepo,
-      );
-
-      return {
-        ...featured,
-        variant: {
-          ...featured.variant,
-          media,
-          product: {
-            ...featured.variant.product,
-            media: productMedia,
-            brand: { ...featured.variant.product.brand, image: brandMedia[0] ?? null },
-          },
-        },
-      };
+      return featured;
     });
+  }
+
+  private async getActiveVariantOrFail(variantId: number, manager: EntityManager) {
+    const variantRepo = manager.getRepository(Variant);
+
+    const variant = await variantRepo.findOne({
+      where: { id: variantId, isActive: true, deletedAt: IsNull() },
+    });
+    if (!variant) throw new NotFoundException('products.variantNotFound');
+
+    return variant;
   }
 }

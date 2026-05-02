@@ -8,20 +8,23 @@ import { Product } from './entities/product.entity';
 import { Variant } from './entities/variant.entity';
 
 export const productBrandCategoryRelations = {
-  brand: true,
+  brand: { image: true },
   category: true,
+  media: { media: true },
 } as const satisfies FindOptionsRelations<Product>;
 
 export const productFullRelations = {
-  variants: true,
+  variants: { image: true },
   ...productBrandCategoryRelations,
 } as const satisfies FindOptionsRelations<Product>;
 
 export const variantWithProductBrandCategoryRelations = {
+  image: true,
   product: productBrandCategoryRelations,
 } as const satisfies FindOptionsRelations<Variant>;
 
 export const variantWithProductFullRelations = {
+  image: true,
   product: productFullRelations,
 } as const satisfies FindOptionsRelations<Variant>;
 

@@ -3,7 +3,7 @@ import { Expose, Type } from 'class-transformer';
 import { AdminBrandDTO } from 'src/brands/dtos/admin-brand.dto';
 import { AdminCategoryDTO } from 'src/categories/dtos/admin-category.dto';
 import type { Localized } from 'src/i18n/types';
-import { AdminMediaAttachmentDTO } from 'src/media/dtos/admin-media-attachment.dto';
+import { AdminProductMediaDTO } from 'src/media/dtos/admin-product-media.dto';
 
 import { AdminVariantDTO } from './admin-variant.dto';
 
@@ -28,8 +28,8 @@ export class AdminProductDTO {
   variants: AdminVariantDTO[];
 
   @Expose()
-  @Type(() => AdminMediaAttachmentDTO)
-  media: AdminMediaAttachmentDTO[];
+  @Type(() => AdminProductMediaDTO)
+  media: AdminProductMediaDTO[];
 
   @Expose()
   @Type(() => AdminBrandDTO)
