@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
-import { BostaService } from 'src/bosta/bosta.service';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 
+import { BostaService } from './bosta/bosta.service';
 import { CreateAddressDTO } from './dtos/admin/create-address.dto';
 import { UpdateAddressDTO } from './dtos/admin/update-address.dto';
 import { Address } from './entities/address.entity';

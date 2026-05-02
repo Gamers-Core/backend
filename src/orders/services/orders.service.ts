@@ -4,7 +4,7 @@ import { plainToInstance } from 'class-transformer';
 import { EntityManager, Repository } from 'typeorm';
 
 import { AddressesService } from 'src/addresses/addresses.service';
-import { BostaService } from 'src/bosta/bosta.service';
+import { BostaService } from 'src/addresses/bosta/bosta.service';
 import { CartService } from 'src/cart/cart.service';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withEnvironment } from 'src/common/with-environment';

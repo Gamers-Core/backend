@@ -3,7 +3,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AddressesModule } from 'src/addresses/addresses.module';
-import { BostaModule } from 'src/bosta/bosta.module';
 import { CartModule } from 'src/cart/cart.module';
 import { MailService } from 'src/mail/mail.service';
 import { MediaModule } from 'src/media/media.module';
@@ -17,15 +16,7 @@ import { OrderItemsService } from './services/order-items.service';
 import { OrdersService } from './services/orders.service';
 
 @Module({
-  imports: [
-    HttpModule,
-    TypeOrmModule.forFeature([Order]),
-    AddressesModule,
-    BostaModule,
-    CartModule,
-    ProductsModule,
-    MediaModule,
-  ],
+  imports: [HttpModule, TypeOrmModule.forFeature([Order]), AddressesModule, CartModule, ProductsModule, MediaModule],
   controllers: [OrdersController, AdminOrdersController, BostaOrdersController],
   providers: [OrdersService, OrderItemsService, MailService],
   exports: [OrdersService],

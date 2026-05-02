@@ -6,18 +6,19 @@ import { BostaPickupLocation } from 'src/addresses/types';
 import { AppCacheService } from 'src/cache/cache.service';
 import { ConfigService } from 'src/config/config.service';
 
-import { ShippingFeesDTO } from './dtos/shipping-fees.dto';
+import { ShippingFeesDTO } from '../dtos/shipping-fees.dto';
+
 import { errorHandler, requestManager } from './helpers';
 import {
-  City,
-  CreateDelivery,
-  CreateDeliveryData,
-  DeliveryResponse,
-  CreateDeliveryType,
-  District,
   Instance,
+  City,
+  District,
   InsuranceFee,
   ShippingFees,
+  CreateDelivery,
+  DeliveryResponse,
+  CreateDeliveryData,
+  CreateDeliveryType,
 } from './types';
 
 @Injectable()

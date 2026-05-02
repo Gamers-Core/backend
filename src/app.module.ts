@@ -9,7 +9,6 @@ import { AddressesModule } from './addresses/addresses.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { BostaModule } from './bosta/bosta.module';
 import { BrandsModule } from './brands/brands.module';
 import { AppCacheModule } from './cache/cache.module';
 import { CartModule } from './cart/cart.module';
@@ -63,7 +62,6 @@ import { UsersModule } from './users/users.module';
     OrdersModule,
     RedisModule,
     UsersModule,
-    BostaModule,
     MediaModule,
     AuthModule,
     CartModule,
