@@ -42,7 +42,7 @@ export class AddressesController {
   @Serialize(AddressDTO)
   @Patch(':id/default')
   setDefaultAddress(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number) {
-    return this.addressesService.setDefaultAddress(id, user.id);
+    return this.addressesService.setDefault(id, user.id);
   }
 
   @Delete(':id')
