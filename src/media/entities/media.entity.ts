@@ -38,12 +38,4 @@ export class Media {
 
   @Column('timestamp', { nullable: true })
   expiresAt: Date | null;
-
-  get isDraft(): boolean {
-    return this.expiresAt !== null;
-  }
-
-  get isOrphaned(): boolean {
-    return this.expiresAt !== null && this.expiresAt < new Date();
-  }
 }

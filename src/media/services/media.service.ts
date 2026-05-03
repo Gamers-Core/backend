@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, In, Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 
 import { NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
@@ -106,35 +106,16 @@ export class MediaService {
     const now = new Date();
 
     try {
-      const expiredDraftMedia = await this.mediaRepository
-        .createQueryBuilder('m')
-        .select(['m.id', 'm.publicId', 'm.type'])
-        .where('m.expires_at IS NOT NULL')
-        .andWhere('m.expires_at < :now', { now })
-        .andWhere('m.is_deleted = false')
-        .andWhere(this.notReferencedCondition())
-        .getMany();
-
-      if (!expiredDraftMedia.length) return;
-
-      const orphaned = expiredDraftMedia.filter((m) => m.isOrphaned);
-      if (!orphaned.length) return;
-
-      const ids = orphaned.map((m) => m.id);
-
-      await this.mediaRepository
+      const { raw: softDeleted } = await this.mediaRepository
         .createQueryBuilder()
         .update(Media)
         .set({ isDeleted: true })
-        .where('id IN (:...ids)', { ids })
+        .where('expires_at IS NOT NULL')
+        .andWhere('expires_at < :now', { now })
         .andWhere('is_deleted = false')
         .andWhere(this.notReferencedCondition('id'))
+        .returning(['id', 'publicId', 'type'])
         .execute();
-
-      const softDeleted = await this.mediaRepository.findBy({
-        id: In(ids),
-        isDeleted: true,
-      });
 
       if (!softDeleted.length) return;
 
@@ -144,7 +125,7 @@ export class MediaService {
     }
   }
 
-  private async cleanupSoftDeletedMedia(mediaList: Media[]) {
+  private async cleanupSoftDeletedMedia(mediaList: Pick<Media, 'id' | 'publicId' | 'type'>[]) {
     if (!mediaList.length) return;
 
     const results = await Promise.allSettled(
