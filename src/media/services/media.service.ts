@@ -1,4 +1,5 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, In, Repository } from 'typeorm';
 
@@ -12,28 +13,14 @@ import { mapToMedia } from '../helpers';
 import { UploadedMediaFile } from '../types';
 
 @Injectable()
-export class MediaService implements OnModuleInit, OnModuleDestroy {
+export class MediaService {
   private readonly logger = new Logger(MediaService.name);
-  private cleanupInterval: NodeJS.Timeout | null = null;
-  private isCleanupRunning = false;
 
   constructor(
     private readonly cloudinaryService: CloudinaryService,
     @InjectRepository(Media)
     private readonly mediaRepository: Repository<Media>,
   ) {}
-
-  onModuleInit() {
-    void this.runExpiredDraftCleanup();
-
-    this.cleanupInterval = setInterval(() => void this.runExpiredDraftCleanup(), 60 * 60 * 1000);
-  }
-
-  onModuleDestroy() {
-    if (!this.cleanupInterval) return;
-
-    clearInterval(this.cleanupInterval);
-  }
 
   async upload(file: UploadedMediaFile, mediaDTO: UploadMediaDTO) {
     const result = await this.cloudinaryService.uploadBuffer(file, mediaDTO.folder);
@@ -114,19 +101,8 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     return expiresAt;
   }
 
-  private async runExpiredDraftCleanup() {
-    if (this.isCleanupRunning) return;
-
-    this.isCleanupRunning = true;
-
-    try {
-      await this.cleanupExpiredDraftMedia();
-    } finally {
-      this.isCleanupRunning = false;
-    }
-  }
-
-  private async cleanupExpiredDraftMedia() {
+  @Cron(CronExpression.EVERY_HOUR, { waitForCompletion: true })
+  async cleanupExpiredDraftMedia() {
     const now = new Date();
 
     try {
@@ -162,7 +138,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
 
       if (!softDeleted.length) return;
 
-      void this.cleanupSoftDeletedMedia(softDeleted);
+      await this.cleanupSoftDeletedMedia(softDeleted);
     } catch (error) {
       this.logger.error('Failed to cleanup expired draft media', error instanceof Error ? error.stack : String(error));
     }
