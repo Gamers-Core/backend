@@ -14,11 +14,11 @@ export class BostaOrdersController {
   @Public()
   @UseGuards(BostaWebhookAuthGuard)
   @Post('webhook')
-  async handleWebhook(@Body() webhookData: OrdersBostaWebhookDTO) {
+  handleWebhook(@Body() webhookData: OrdersBostaWebhookDTO) {
     const state = deliveryStates[webhookData.state];
 
     if (!state || (state === 'delivered' && !webhookData.isConfirmedDelivery) || !webhookData.trackingNumber) return;
 
-    return await this.ordersService.updateStatus({ trackingNumber: webhookData.trackingNumber }, state);
+    return this.ordersService.updateStatus({ trackingNumber: webhookData.trackingNumber }, state);
   }
 }

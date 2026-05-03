@@ -92,7 +92,7 @@ export class UserReviewsService {
     await repo.save(reviews.map((review, i) => ({ ...review, position: i + 1 })));
   }
 
-  private async getAllOrdered(manager?: EntityManager) {
+  private getAllOrdered(manager?: EntityManager) {
     return withOptionalManager(manager, this.repo.manager, async (manager) => {
       const repo = manager.getRepository(UserReview);
 

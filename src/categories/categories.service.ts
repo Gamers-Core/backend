@@ -24,29 +24,39 @@ export class CategoriesService {
     return this.getOneOrFail(id);
   }
 
-  async add(dto: AddCategoryDTO) {
-    const category = await this.repo.save(this.repo.create(dto));
+  add(dto: AddCategoryDTO) {
+    return this.repo.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(Category);
 
-    return this.getOneOrFail(category.id);
+      const category = await repo.save(repo.create(dto));
+
+      return this.getOneOrFail(category.id, manager);
+    });
   }
 
-  async update(id: number, dto: UpdateCategoryDTO) {
-    const result = await this.repo.update(id, dto);
-    if (!result.affected) throw NotFoundException('products.categoryNotFound');
+  update(id: number, dto: UpdateCategoryDTO) {
+    return this.repo.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(Category);
 
-    return this.getOneOrFail(id);
+      const result = await repo.update(id, dto);
+      if (!result.affected) throw NotFoundException('products.categoryNotFound');
+
+      return this.getOneOrFail(id, manager);
+    });
   }
 
   async remove(id: number) {
-    const category = await this.getOneOrFail(id, undefined, { products: true });
-    if (category.products.length) throw BadRequestException('products.categoryHasProducts');
+    await this.repo.manager.transaction(async (manager) => {
+      const category = await this.getOneOrFail(id, manager, { products: true });
+      if (category.products.length) throw BadRequestException('products.categoryHasProducts');
 
-    await this.repo.delete(id);
+      await manager.getRepository(Category).delete(id);
+    });
 
     return { deleted: true };
   }
 
-  private async getOneOrFail(id: number, manager?: EntityManager, relations?: FindOptionsRelations<Category>) {
+  private getOneOrFail(id: number, manager?: EntityManager, relations?: FindOptionsRelations<Category>) {
     return withOptionalManager(manager, this.repo.manager, async (manager) => {
       const repo = manager.getRepository(Category);
 

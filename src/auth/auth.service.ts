@@ -44,7 +44,7 @@ export class AuthService {
 
   resendOTP({ sessionId }: ResendOTPDTO) {
     return withEnvironment(
-      async (isValid) => {
+      (isValid) => {
         if (!isValid) return;
 
         return this.otpSessionService.resendSession({ sessionId });

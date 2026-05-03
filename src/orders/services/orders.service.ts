@@ -253,7 +253,7 @@ export class OrdersService {
     if (Array.isArray(order.history)) order.history.push(entry);
   }
 
-  serializeOrder(order: Order) {
+  private serializeOrder(order: Order) {
     return {
       ...order,
       allowedActions: {

@@ -26,10 +26,10 @@ export class AuthController {
 
   @Serialize(OTPDTO)
   @Post('signin')
-  async signin(@Session() session: AuthSession, @Req() req: Request, @Body() body: SigninDTO) {
+  signin(@Session() session: AuthSession, @Req() req: Request, @Body() body: SigninDTO) {
     if (session.userId) req.session = null;
 
-    return await this.authService.signin(body);
+    return this.authService.signin(body);
   }
 
   @Serialize(VerifyOTPResponseDTO)

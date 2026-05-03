@@ -15,7 +15,7 @@ export class InventoryService {
     private readonly variantRepository: Repository<Variant>,
   ) {}
 
-  async getManyByExternalIds(externalIds: string[], manager?: EntityManager) {
+  getManyByExternalIds(externalIds: string[], manager?: EntityManager) {
     return withOptionalManager(manager, this.variantRepository.manager, async (manager) => {
       const variantRepo = manager.getRepository(Variant);
 
@@ -37,7 +37,7 @@ export class InventoryService {
     });
   }
 
-  async reserveStock(externalId: string, amount: number, manager?: EntityManager): Promise<Variant> {
+  reserveStock(externalId: string, amount: number, manager?: EntityManager): Promise<Variant> {
     if (amount < 1) throw BadRequestException('products.requiredAmountMin');
 
     return withOptionalManager(manager, this.variantRepository.manager, async (transactionManager) => {
@@ -58,7 +58,7 @@ export class InventoryService {
     });
   }
 
-  async restoreStock(externalId: string, amount: number, manager?: EntityManager) {
+  restoreStock(externalId: string, amount: number, manager?: EntityManager) {
     return withOptionalManager(manager, this.variantRepository.manager, async (manager) => {
       const variantRepo = manager.getRepository(Variant);
 

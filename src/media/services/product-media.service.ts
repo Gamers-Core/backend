@@ -18,7 +18,7 @@ export class ProductMediaService {
     private readonly attachmentRepo: Repository<ProductMedia>,
   ) {}
 
-  async sync(productId: number, mediaIds: number[], manager?: EntityManager) {
+  sync(productId: number, mediaIds: number[], manager?: EntityManager) {
     return withOptionalManager(manager, this.attachmentRepo.manager, async (manager) => {
       if (!mediaIds.length) {
         await this.detachAll(productId, manager);
@@ -101,7 +101,7 @@ export class ProductMediaService {
     await repo.save(toSave);
   }
 
-  private async getAllOrdered(manager: EntityManager, where: FindOptionsWhere<ProductMedia>) {
+  private getAllOrdered(manager: EntityManager, where: FindOptionsWhere<ProductMedia>) {
     const repo = manager.getRepository(ProductMedia);
 
     return repo.find({

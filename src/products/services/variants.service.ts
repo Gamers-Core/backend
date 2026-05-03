@@ -19,7 +19,7 @@ export class VariantsService {
     private readonly mediaService: MediaService,
   ) {}
 
-  async add(productId: number, dtos: CreateVariantDTO[], manager?: EntityManager) {
+  add(productId: number, dtos: CreateVariantDTO[], manager?: EntityManager) {
     return withOptionalManager(manager, this.variantRepository.manager, async (manager) => {
       const variantRepo = manager.getRepository(Variant);
       const normalized = this.normalize(dtos);
@@ -38,7 +38,7 @@ export class VariantsService {
     });
   }
 
-  async update(productId: number, variantId: number, { imageId, ...dto }: UpdateVariantDTO) {
+  update(productId: number, variantId: number, { imageId, ...dto }: UpdateVariantDTO) {
     return this.variantRepository.manager.transaction(async (manager) => {
       const variantRepository = manager.getRepository(Variant);
 
@@ -60,7 +60,7 @@ export class VariantsService {
     });
   }
 
-  async remove(productId: number, variantId: number) {
+  remove(productId: number, variantId: number) {
     return this.variantRepository.manager.transaction(async (manager) => {
       const variantRepository = manager.getRepository(Variant);
 

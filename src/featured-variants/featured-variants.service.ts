@@ -24,7 +24,7 @@ export class FeaturedVariantsService {
     return this.getAllOrdered();
   }
 
-  async add({ variantId, ...dto }: AddFeaturedVariantDTO) {
+  add({ variantId, ...dto }: AddFeaturedVariantDTO) {
     return this.repo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(FeaturedVariant);
 
@@ -50,7 +50,7 @@ export class FeaturedVariantsService {
     });
   }
 
-  async update(id: number, { variantId, ...dto }: UpdateFeaturedVariantDTO) {
+  update(id: number, { variantId, ...dto }: UpdateFeaturedVariantDTO) {
     return this.repo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(FeaturedVariant);
 
@@ -73,7 +73,7 @@ export class FeaturedVariantsService {
     });
   }
 
-  async remove(id: number) {
+  remove(id: number) {
     return this.repo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(FeaturedVariant);
 
@@ -87,7 +87,7 @@ export class FeaturedVariantsService {
     });
   }
 
-  async reorder(ids: number[]) {
+  reorder(ids: number[]) {
     return this.repo.manager.transaction(async (manager) => {
       const featured = await this.getAllOrdered(manager);
 

@@ -31,7 +31,7 @@ export class ProductsService {
     private readonly localeContextService: LocaleContextService,
   ) {}
 
-  async add({ brandId, categoryId, mediaIds, variants, ...dto }: CreateProductDTO) {
+  add({ brandId, categoryId, mediaIds, variants, ...dto }: CreateProductDTO) {
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepo = manager.getRepository(Product);
 
@@ -55,7 +55,7 @@ export class ProductsService {
     });
   }
 
-  async getMany(ids: string) {
+  getMany(ids: string) {
     const uniqueIds = [
       ...new Set(
         ids
@@ -72,11 +72,11 @@ export class ProductsService {
     });
   }
 
-  async getOne(id: number) {
+  getOne(id: number) {
     return this.getOneOrFail(id);
   }
 
-  async search(
+  search(
     {
       q,
       brandId,
@@ -218,7 +218,7 @@ export class ProductsService {
     return qb.getMany();
   }
 
-  async update(id: number, { mediaIds, brandId, categoryId, ...dto }: UpdateProductDTO) {
+  update(id: number, { mediaIds, brandId, categoryId, ...dto }: UpdateProductDTO) {
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepo = manager.getRepository(Product);
 
@@ -248,8 +248,8 @@ export class ProductsService {
     });
   }
 
-  async remove(id: number): Promise<void> {
-    await this.productsRepository.manager.transaction(async (manager) => {
+  remove(id: number): Promise<void> {
+    return this.productsRepository.manager.transaction(async (manager) => {
       const productRepo = manager.getRepository(Product);
 
       const product = await this.getOneOrFail(id, manager);
@@ -264,67 +264,71 @@ export class ProductsService {
     });
   }
 
-  async getRecommendations(productId: number) {
-    const product = await this.getOneForRecommendationsOrFail(productId);
+  getRecommendations(productId: number) {
+    return this.productsRepository.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(Product);
 
-    const recommendationRows = await this.productsRepository
-      .createQueryBuilder('product')
-      .select('product.id', 'id')
-      .leftJoin('product.brand', 'brand')
-      .leftJoin('product.category', 'category')
-      .where('product.id != :productId', { productId })
-      .andWhere('product.status = :status', { status: 'active' })
-      .andWhere(
-        new Brackets((qb) => {
-          qb.where('brand.id = :brandId', { brandId: product.brand.id }).orWhere('category.id = :categoryId', {
-            categoryId: product.category.id,
-          });
-        }),
-      )
-      .andWhere((qb) => {
-        const sub = qb
-          .subQuery()
-          .select('1')
-          .from(Variant, 'v')
-          .where('v.product = product.id')
-          .andWhere('v.isActive = :active', { active: true })
-          .andWhere('v.stock > 0')
-          .andWhere('v.deletedAt IS NULL')
-          .getQuery();
-        return `EXISTS ${sub}`;
-      })
-      .orderBy(
-        `
+      const product = await this.getOneForRecommendationsOrFail(productId, manager);
+
+      const recommendationRows = await repo
+        .createQueryBuilder('product')
+        .select('product.id', 'id')
+        .leftJoin('product.brand', 'brand')
+        .leftJoin('product.category', 'category')
+        .where('product.id != :productId', { productId })
+        .andWhere('product.status = :status', { status: 'active' })
+        .andWhere(
+          new Brackets((qb) => {
+            qb.where('brand.id = :brandId', { brandId: product.brand.id }).orWhere('category.id = :categoryId', {
+              categoryId: product.category.id,
+            });
+          }),
+        )
+        .andWhere((qb) => {
+          const sub = qb
+            .subQuery()
+            .select('1')
+            .from(Variant, 'v')
+            .where('v.product = product.id')
+            .andWhere('v.isActive = :active', { active: true })
+            .andWhere('v.stock > 0')
+            .andWhere('v.deletedAt IS NULL')
+            .getQuery();
+          return `EXISTS ${sub}`;
+        })
+        .orderBy(
+          `
       CASE
         WHEN brand.id = :brandId AND category.id = :categoryId THEN 0
         WHEN brand.id = :brandId OR category.id = :categoryId THEN 1
         ELSE 2
       END
     `,
-        'ASC',
-      )
-      .addOrderBy('product.updatedAt', 'DESC')
-      .limit(10)
-      .getRawMany<{ id: string }>();
+          'ASC',
+        )
+        .addOrderBy('product.updatedAt', 'DESC')
+        .limit(10)
+        .getRawMany<{ id: string }>();
 
-    const recommendationIds = this.pickRandom(
-      recommendationRows.map(({ id }) => Number(id)),
-      4,
-    );
+      const recommendationIds = this.pickRandom(
+        recommendationRows.map(({ id }) => Number(id)),
+        4,
+      );
 
-    if (!recommendationIds.length) return [];
+      if (!recommendationIds.length) return [];
 
-    const recommendations = await this.productsRepository.find({
-      where: { id: In(recommendationIds) },
-      relations: productFullRelations,
+      const recommendations = await repo.find({
+        where: { id: In(recommendationIds) },
+        relations: productFullRelations,
+      });
+
+      const recommendationsById = new Map(recommendations.map((item) => [item.id, item]));
+      const orderedRecommendations = recommendationIds
+        .map((id) => recommendationsById.get(id))
+        .filter((item): item is Product => !!item);
+
+      return orderedRecommendations;
     });
-
-    const recommendationsById = new Map(recommendations.map((item) => [item.id, item]));
-    const orderedRecommendations = recommendationIds
-      .map((id) => recommendationsById.get(id))
-      .filter((item): item is Product => !!item);
-
-    return orderedRecommendations;
   }
 
   private pickRandom<T>(items: T[], count: number): T[] {
@@ -353,14 +357,18 @@ export class ProductsService {
     });
   }
 
-  private async getOneForRecommendationsOrFail(id: number): Promise<Product> {
-    const product = await this.productsRepository.findOne({
-      where: { id },
-      relations: productBrandCategoryRelations,
+  private getOneForRecommendationsOrFail(id: number, manager?: EntityManager): Promise<Product> {
+    return withOptionalManager(manager, this.productsRepository.manager, async (manager) => {
+      const repo = manager.getRepository(Product);
+
+      const product = await repo.findOne({
+        where: { id },
+        relations: productBrandCategoryRelations,
+      });
+
+      if (!product) throw NotFoundException('products.productNotFound');
+
+      return product;
     });
-
-    if (!product) throw NotFoundException('products.productNotFound');
-
-    return product;
   }
 }

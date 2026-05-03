@@ -43,7 +43,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
-  async remove(id: number) {
+  remove(id: number) {
     return this.mediaRepository.manager.transaction(async (manager) => {
       const media = await this.getOneOrFail(id, manager);
 
@@ -62,7 +62,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  async attach(mediaId: number, manager?: EntityManager): Promise<Media> {
+  attach(mediaId: number, manager?: EntityManager): Promise<Media> {
     return withOptionalManager(manager, this.mediaRepository.manager, async (manager) => {
       const repo = manager.getRepository(Media);
 
@@ -74,7 +74,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  async detach(mediaId: number, manager?: EntityManager): Promise<void> {
+  detach(mediaId: number, manager?: EntityManager): Promise<void> {
     return withOptionalManager(manager, this.mediaRepository.manager, async (manager) => {
       const repo = manager.getRepository(Media);
 
@@ -85,7 +85,7 @@ export class MediaService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  async swapImage(newMediaId: number, oldMediaId: number | undefined, manager?: EntityManager): Promise<Media> {
+  swapImage(newMediaId: number, oldMediaId: number | undefined, manager?: EntityManager): Promise<Media> {
     return withOptionalManager(manager, this.mediaRepository.manager, async (manager) => {
       const newMedia = await this.attach(newMediaId, manager);
 

@@ -23,7 +23,7 @@ export class CartService {
     return this.getOrCreateCart(userId);
   }
 
-  async sync(userId: number, items: SyncCartItemDTO[], manager?: EntityManager) {
+  sync(userId: number, items: SyncCartItemDTO[], manager?: EntityManager) {
     return withOptionalManager(manager, this.cartRepo.manager, async (manager) => {
       const cart = await this.getOrCreateCart(userId, manager);
       const cartItemRepo = manager.getRepository(CartItem);
@@ -50,7 +50,7 @@ export class CartService {
     });
   }
 
-  async getOrCreateCart(userId: number, manager?: EntityManager, attempt = 0): Promise<Cart> {
+  getOrCreateCart(userId: number, manager?: EntityManager, attempt = 0): Promise<Cart> {
     return withOptionalManager(manager, this.cartRepo.manager, async (manager) => {
       const cartRepo = manager.getRepository(Cart);
 

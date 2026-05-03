@@ -18,7 +18,7 @@ export class CloudinaryService {
     private readonly configService: ConfigService,
   ) {}
 
-  async uploadBuffer(file: UploadedMediaFile, folder: MediaEntityType): Promise<UploadApiResponse> {
+  uploadBuffer(file: UploadedMediaFile, folder: MediaEntityType): Promise<UploadApiResponse> {
     this.validateFile(file, folder);
 
     const fileType = getFileType(file);

@@ -40,7 +40,7 @@ export class MediaController {
       },
     }),
   )
-  async upload(@Body() body: UploadMediaDTO, @UploadedFile() file: UploadedMediaFile | undefined) {
+  upload(@Body() body: UploadMediaDTO, @UploadedFile() file: UploadedMediaFile | undefined) {
     if (!file) throw BadRequestException('media.required');
 
     return this.mediaService.upload(file, body);

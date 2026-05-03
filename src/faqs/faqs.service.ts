@@ -55,7 +55,7 @@ export class FAQsService {
       if (!result.affected) throw NotFoundException('faqs.notFound');
 
       const remaining = await this.getAllOrdered(manager);
-      await this.reorderWithPositions(remaining, manager);
+      await this.reorderInternal(remaining, manager);
 
       return this.getAllOrdered(manager);
     });
@@ -72,13 +72,13 @@ export class FAQsService {
       if (ids.some((id) => !faqById.has(id))) throw BadRequestException('faqs.invalidIds');
 
       const ordered = ids.map((id) => faqById.get(id)!);
-      await this.reorderWithPositions(ordered, manager);
+      await this.reorderInternal(ordered, manager);
 
       return this.getAllOrdered(manager);
     });
   }
 
-  private async reorderWithPositions(faqs: FAQ[], manager: EntityManager): Promise<void> {
+  private async reorderInternal(faqs: FAQ[], manager: EntityManager): Promise<void> {
     if (!faqs.length) return;
 
     const repo = manager.getRepository(FAQ);

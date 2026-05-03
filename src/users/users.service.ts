@@ -46,7 +46,6 @@ export class UsersService {
 
   async update(id: number, updatedUser: DeepPartial<User>) {
     const result = await this.repo.update(id, updatedUser);
-
     if (!result.affected) throw NotFoundException('user.notFound');
   }
 
@@ -62,6 +61,7 @@ export class UsersService {
   private async getOneByEmailOrFail(email: string) {
     const user = await this.getOneByEmail(email);
     if (!user) throw NotFoundException('user.notFound');
+
     return user;
   }
 }
