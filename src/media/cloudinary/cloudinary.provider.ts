@@ -1,11 +1,13 @@
+import { FactoryProvider } from '@nestjs/common';
 import { v2 as cloudinary } from 'cloudinary';
 
 import { ConfigService } from 'src/config/config.service';
 
 export const CLOUDINARY = Symbol('CLOUDINARY');
 
-export const CloudinaryProvider = {
+export const CloudinaryProvider: FactoryProvider<typeof cloudinary> = {
   provide: CLOUDINARY,
+  inject: [ConfigService],
   useFactory: (configService: ConfigService) => {
     const cloud_name = configService.get('CLOUDINARY_CLOUD_NAME');
     const api_key = configService.get('CLOUDINARY_API_KEY');
@@ -15,5 +17,4 @@ export const CloudinaryProvider = {
 
     return cloudinary;
   },
-  inject: [ConfigService],
 };
