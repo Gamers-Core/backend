@@ -42,6 +42,7 @@ export default defineConfig(
         },
       ],
       'import/no-cycle': 'error',
+      'import/no-named-as-default': 'off',
     },
   },
   {

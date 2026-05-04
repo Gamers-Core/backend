@@ -12,7 +12,6 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { AuthGuard } from './auth/guards/auth.guard';
 import { BrandsModule } from './brands/brands.module';
-import { AppCacheModule } from './cache/cache.module';
 import { CartModule } from './cart/cart.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ValidationException } from './common/exceptions';
@@ -29,6 +28,7 @@ import { MediaModule } from './media/media.module';
 import { OrdersModule } from './orders/orders.module';
 import { PoliciesModule } from './policies/policies.module';
 import { ProductsModule } from './products/products.module';
+import { CacheModule } from './redis/cache.module';
 import { RedisModule } from './redis/redis.module';
 import { UserReviewsModule } from './user-reviews/user-reviews.module';
 import { UsersModule } from './users/users.module';
@@ -57,12 +57,12 @@ import { UsersModule } from './users/users.module';
     CategoriesModule,
     AddressesModule,
     ProductsModule,
-    AppCacheModule,
     PoliciesModule,
     ConfigModule,
     BrandsModule,
     OrdersModule,
     RedisModule,
+    CacheModule,
     UsersModule,
     MediaModule,
     AuthModule,
