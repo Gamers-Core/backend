@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, ParseEnumPipe, Put, UseGuards } from '@nestjs/common';
 
-import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
+import { IsAdminAuthGuard } from 'src/auth/guards/is-admin-auth.guard';
 import { Serialize } from 'src/interceptors/serialize.interceptor';
 
 import { policyTypes } from '../const';
