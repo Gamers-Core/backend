@@ -6,7 +6,7 @@ import Redis from 'ioredis';
 import { BadRequestException } from 'src/common/exceptions';
 import { withEnvironment } from 'src/common/with-environment';
 import { MailService } from 'src/mail/mail.service';
-import { REDIS_CLIENT } from 'src/redis/redis.module';
+import { REDIS_CLIENT } from 'src/redis/redis.provider';
 
 import { authPurposes } from '../auth/const';
 import { AuthPurpose, OtpDataByPurpose } from '../auth/types';
