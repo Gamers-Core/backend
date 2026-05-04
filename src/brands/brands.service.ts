@@ -5,6 +5,7 @@ import { EntityManager, FindOptionsRelations, Repository } from 'typeorm';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 import { MediaService } from 'src/media/services/media.service';
+import { CacheService } from 'src/redis/cache.service';
 
 import { AddBrandDTO } from './dtos/admin/add-brand.dto';
 import { UpdateBrandDTO } from './dtos/admin/update-brand.dto';
@@ -16,17 +17,24 @@ export class BrandsService {
     @InjectRepository(Brand)
     private readonly repo: Repository<Brand>,
     private readonly mediaService: MediaService,
+    private readonly cacheService: CacheService,
   ) {}
 
+  private readonly CACHE_KEY = 'brands:all';
+  private readonly getBrandCacheKey = (id: number) => `brands:${id}`;
+
   getAll() {
-    return this.repo.find({
-      order: { id: 'ASC' },
-      relations: { image: true },
-    });
+    return this.cacheService.getOrSet(
+      this.CACHE_KEY,
+      () => this.repo.find({ order: { id: 'ASC' }, relations: { image: true } }),
+      { ttlMs: 1000 * 60 * 60 },
+    );
   }
 
   getOne(id: number) {
-    return this.getOneOrFail(id);
+    return this.cacheService.getOrSet(this.getBrandCacheKey(id), () => this.getOneOrFail(id), {
+      ttlMs: 1000 * 60 * 60,
+    });
   }
 
   add({ imageId, ...dto }: AddBrandDTO) {
@@ -35,6 +43,9 @@ export class BrandsService {
 
       const image = await this.mediaService.attach(imageId, manager);
       const brand = await repo.save(repo.create({ ...dto, image }));
+
+      await this.cacheService.delete(this.CACHE_KEY);
+      await this.cacheService.delete(this.getBrandCacheKey(brand.id));
 
       return this.getOneOrFail(brand.id, manager);
     });
@@ -52,6 +63,9 @@ export class BrandsService {
 
       await repo.save(brand);
 
+      await this.cacheService.delete(this.CACHE_KEY);
+      await this.cacheService.delete(this.getBrandCacheKey(brand.id));
+
       return this.getOneOrFail(brand.id, manager);
     });
   }
@@ -66,6 +80,9 @@ export class BrandsService {
       if (brand.image) await this.mediaService.detach(brand.image.id, manager);
 
       await repo.delete(brand.id);
+
+      await this.cacheService.delete(this.CACHE_KEY);
+      await this.cacheService.delete(this.getBrandCacheKey(brand.id));
 
       return { deleted: true };
     });
