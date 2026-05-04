@@ -6,6 +6,7 @@ import { BadRequestException, ConflictException, NotFoundException } from 'src/c
 import { withOptionalManager } from 'src/common/with-optional-manager';
 import { Variant } from 'src/products/entities/variant.entity';
 import { featuredVariantRelations } from 'src/products/relations';
+import { CacheService } from 'src/redis/cache.service';
 
 import { AddFeaturedVariantDTO } from './dtos/admin/add-featured-variant.dto';
 import { UpdateFeaturedVariantDTO } from './dtos/admin/update-featured-variant.dto';
@@ -16,12 +17,13 @@ export class FeaturedVariantsService {
   constructor(
     @InjectRepository(FeaturedVariant)
     private readonly repo: Repository<FeaturedVariant>,
-    @InjectRepository(Variant)
-    private readonly variantRepo: Repository<Variant>,
+    private readonly cacheService: CacheService,
   ) {}
 
+  private readonly CACHE_KEY = 'featuredVariants:all';
+
   getAll() {
-    return this.getAllOrdered();
+    return this.cacheService.getOrSet(this.CACHE_KEY, () => this.getAllOrdered(), { ttlMs: 1000 * 60 * 60 });
   }
 
   add({ variantId, ...dto }: AddFeaturedVariantDTO) {
@@ -46,6 +48,8 @@ export class FeaturedVariantsService {
         }),
       );
 
+      await this.cacheService.delete(this.CACHE_KEY);
+
       return this.getOneOrFail(saved.id, manager);
     });
   }
@@ -69,6 +73,8 @@ export class FeaturedVariantsService {
 
       const saved = await repo.save(featured);
 
+      await this.cacheService.delete(this.CACHE_KEY);
+
       return this.getOneOrFail(saved.id, manager);
     });
   }
@@ -82,6 +88,8 @@ export class FeaturedVariantsService {
 
       const remaining = await this.getAllOrdered(manager);
       await this.reorderInternal(remaining, manager);
+
+      await this.cacheService.delete(this.CACHE_KEY);
 
       return this.getAllOrdered(manager);
     });
@@ -98,6 +106,8 @@ export class FeaturedVariantsService {
       const ordered = ids.map((id) => featuredById.get(id)!);
 
       await this.reorderInternal(ordered, manager);
+
+      await this.cacheService.delete(this.CACHE_KEY);
 
       return this.getAllOrdered(manager);
     });
@@ -145,6 +155,8 @@ export class FeaturedVariantsService {
       where: { id: variantId, isActive: true, deletedAt: IsNull() },
     });
     if (!variant) throw NotFoundException('products.variantNotFound');
+
+    await this.cacheService.delete(this.CACHE_KEY);
 
     return variant;
   }
