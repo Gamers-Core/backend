@@ -5,6 +5,7 @@ import { EntityManager, Repository } from 'typeorm';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 import { MediaService } from 'src/media/services/media.service';
+import { CacheService } from 'src/redis/cache.service';
 
 import { AddUserReviewDTO } from './dto/admin/add-user-review.dto';
 import { UpdateUserReviewDTO } from './dto/admin/update-user-review.dto';
@@ -16,10 +17,13 @@ export class UserReviewsService {
     @InjectRepository(UserReview)
     private readonly repo: Repository<UserReview>,
     private readonly mediaService: MediaService,
+    private readonly cacheService: CacheService,
   ) {}
 
+  private readonly CACHE_KEY = 'userReviews:all';
+
   getAll() {
-    return this.getAllOrdered();
+    return this.cacheService.getOrSet(this.CACHE_KEY, () => this.getAllOrdered(), { ttlMs: 1000 * 60 * 60 });
   }
 
   add({ imageId, ...dto }: AddUserReviewDTO) {
@@ -31,6 +35,8 @@ export class UserReviewsService {
 
       const image = await this.mediaService.attach(imageId, manager);
       await repo.save(repo.create({ ...dto, position: count + 1, image }));
+
+      await this.cacheService.delete(this.CACHE_KEY);
 
       return this.getAllOrdered(manager);
     });
@@ -49,6 +55,8 @@ export class UserReviewsService {
 
       await repo.save(review);
 
+      await this.cacheService.delete(this.CACHE_KEY);
+
       return this.getAllOrdered(manager);
     });
   }
@@ -66,6 +74,8 @@ export class UserReviewsService {
       const ordered = ids.map((id) => reviewById.get(id)!);
       await this.reorderInternal(ordered, manager);
 
+      await this.cacheService.delete(this.CACHE_KEY);
+
       return this.getAllOrdered(manager);
     });
   }
@@ -79,6 +89,8 @@ export class UserReviewsService {
 
       const remaining = await this.getAllOrdered(manager);
       await this.reorderInternal(remaining, manager);
+
+      await this.cacheService.delete(this.CACHE_KEY);
 
       return this.getAllOrdered(manager);
     });
