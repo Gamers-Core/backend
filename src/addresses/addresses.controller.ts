@@ -3,7 +3,7 @@ import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query 
 import { CityDTO } from 'src/addresses/dtos/city.dto';
 import { DistrictDTO } from 'src/addresses/dtos/district.dto';
 import { ShippingFeesDTO } from 'src/addresses/dtos/shipping-fees.dto';
-import { Serialize } from 'src/interceptors/serialize.interceptor';
+import { Serialize } from 'src/common/interceptors/serialize.interceptor';
 import { CurrentUser } from 'src/users/decorators/current-user.decorator';
 import { User } from 'src/users/entities/user.entity';
 

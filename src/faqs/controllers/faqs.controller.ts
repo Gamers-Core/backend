@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 
 import { Public } from 'src/auth/decorators/public.decorator';
-import { Serialize } from 'src/interceptors/serialize.interceptor';
+import { Serialize } from 'src/common/interceptors/serialize.interceptor';
 
 import { FAQDTO } from '../dtos/user/faq.dto';
 import { FAQsService } from '../faqs.service';

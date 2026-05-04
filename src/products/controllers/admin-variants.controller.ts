@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Param, ParseArrayPipe, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 
 import { IsAdminAuthGuard } from 'src/auth/guards/is-admin-auth.guard';
-import { Serialize } from 'src/interceptors/serialize.interceptor';
+import { Serialize } from 'src/common/interceptors/serialize.interceptor';
 
 import { AdminVariantDTO } from '../dtos/admin/admin-variant.dto';
 import { CreateVariantDTO } from '../dtos/admin/create-variant.dto';

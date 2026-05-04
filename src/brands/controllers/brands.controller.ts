@@ -1,7 +1,7 @@
 import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 
 import { Public } from 'src/auth/decorators/public.decorator';
-import { Serialize } from 'src/interceptors/serialize.interceptor';
+import { Serialize } from 'src/common/interceptors/serialize.interceptor';
 
 import { BrandsService } from '../brands.service';
 import { BrandDTO } from '../dtos/user/brand.dto';

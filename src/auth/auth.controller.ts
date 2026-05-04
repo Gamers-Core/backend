@@ -1,7 +1,7 @@
 import { Body, Controller, Post, Req, Session } from '@nestjs/common';
 import type { Request } from 'express';
 
-import { Serialize } from 'src/interceptors/serialize.interceptor';
+import { Serialize } from 'src/common/interceptors/serialize.interceptor';
 
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
