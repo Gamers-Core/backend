@@ -4,6 +4,7 @@ import { EntityManager, Repository } from 'typeorm';
 
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
+import { CacheService } from 'src/redis/cache.service';
 
 import { AddFAQDTO } from './dtos/admin/add-faq.dto';
 import { UpdateFAQDTO } from './dtos/admin/update-faq.dto';
@@ -14,10 +15,13 @@ export class FAQsService {
   constructor(
     @InjectRepository(FAQ)
     private readonly repo: Repository<FAQ>,
+    private readonly cacheService: CacheService,
   ) {}
 
+  private readonly CACHE_KEY = 'faqs:all';
+
   getAll() {
-    return this.getAllOrdered();
+    return this.cacheService.getOrSet(this.CACHE_KEY, () => this.getAllOrdered(), { ttlMs: 1000 * 60 * 60 });
   }
 
   add(dto: AddFAQDTO) {
@@ -32,6 +36,8 @@ export class FAQsService {
 
       await repo.save(repo.create({ ...dto, position: maxPosition + 1 }));
 
+      await this.cacheService.delete(this.CACHE_KEY);
+
       return this.getAllOrdered(manager);
     });
   }
@@ -42,6 +48,8 @@ export class FAQsService {
 
       const result = await repo.update(id, dto);
       if (!result.affected) throw NotFoundException('faqs.notFound');
+
+      await this.cacheService.delete(this.CACHE_KEY);
 
       return this.getAllOrdered(manager);
     });
@@ -56,6 +64,8 @@ export class FAQsService {
 
       const remaining = await this.getAllOrdered(manager);
       await this.reorderInternal(remaining, manager);
+
+      await this.cacheService.delete(this.CACHE_KEY);
 
       return this.getAllOrdered(manager);
     });
@@ -73,6 +83,8 @@ export class FAQsService {
 
       const ordered = ids.map((id) => faqById.get(id)!);
       await this.reorderInternal(ordered, manager);
+
+      await this.cacheService.delete(this.CACHE_KEY);
 
       return this.getAllOrdered(manager);
     });
