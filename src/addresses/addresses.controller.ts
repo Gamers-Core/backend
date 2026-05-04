@@ -1,4 +1,16 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseInterceptors,
+} from '@nestjs/common';
 
 import { CityDTO } from 'src/addresses/dtos/city.dto';
 import { DistrictDTO } from 'src/addresses/dtos/district.dto';
@@ -62,11 +74,15 @@ export class AddressesController {
     return this.bostaService.getDistricts(id);
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(1000 * 60 * 60)
   @Get('insurance-fees/:amount')
   getInsuranceFees(@Param('amount', ParseIntPipe) amount: number) {
     return this.bostaService.getInsuranceFees(amount);
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(1000 * 60 * 60)
   @Serialize(ShippingFeesResponseDTO)
   @Get('shipping-fees')
   getShippingFees(@Query() query: ShippingFeesDTO) {

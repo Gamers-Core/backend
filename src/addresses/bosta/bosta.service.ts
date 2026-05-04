@@ -3,8 +3,8 @@ import { Injectable } from '@nestjs/common';
 
 import { ShippingFeesResponseDTO } from 'src/addresses/dtos/shipping-fees-response.dto';
 import { BostaPickupLocation } from 'src/addresses/types';
-import { AppCacheService } from 'src/cache/cache.service';
 import { ConfigService } from 'src/config/config.service';
+import { CacheService } from 'src/redis/cache.service';
 
 import { ShippingFeesDTO } from '../dtos/shipping-fees.dto';
 
@@ -28,7 +28,7 @@ export class BostaService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
-    private readonly cacheService: AppCacheService,
+    private readonly cacheService: CacheService,
   ) {
     const api = this.httpService.axiosRef.create({ baseURL: 'https://app.bosta.co/api/v2' });
 
@@ -49,6 +49,7 @@ export class BostaService {
     return this.cacheService.getOrSet<City[]>(
       'bosta:cities',
       async () => await this.bosta.get<{ list: City[] }>('/cities').then((res) => res.data.list),
+      { ttlMs: 1000 * 60 * 60 * 24 },
     );
   }
 
@@ -60,6 +61,7 @@ export class BostaService {
     return this.cacheService.getOrSet<District[]>(
       `bosta:districts:${cityId}`,
       async () => await this.bosta.get<District[]>(`/cities/${cityId}/districts`).then((res) => res.data),
+      { ttlMs: 1000 * 60 * 60 * 24 },
     );
   }
 
@@ -105,7 +107,11 @@ export class BostaService {
   }
 
   getPickupLocations() {
-    return this.bosta.get<{ list: BostaPickupLocation[] }>('/pickup-locations').then((res) => res.data.list);
+    return this.cacheService.getOrSet<BostaPickupLocation[]>(
+      'bosta:pickup-locations',
+      () => this.bosta.get<{ list: BostaPickupLocation[] }>('/pickup-locations').then((res) => res.data.list),
+      { ttlMs: 1000 * 60 * 60 * 24 },
+    );
   }
 
   getDefaultPickupLocation() {
