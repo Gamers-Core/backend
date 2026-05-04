@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common';
 
 import { CartService } from 'src/cart/cart.service';
 import { withEnvironment } from 'src/common/with-environment';
+import { OtpSessionService } from 'src/otp-session/otp-session.service';
 import { UsersService } from 'src/users/users.service';
 
 import { ResendOTPDTO } from './dtos/resend-otp.dto';
 import { SigninDTO } from './dtos/signin.dto';
 import { VerifyOTPDTO } from './dtos/verify-otp.dto';
-import { OtpSessionService } from './otp-session/otp-session.service';
 import { AuthPurpose, OtpVerifyHandlers, OtpVerifyResultByPurpose } from './types';
 
 @Injectable()
