@@ -90,12 +90,9 @@ export class AddressesService {
       const exists = await repo.existsBy({ id, user: { id: userId } });
       if (!exists) throw NotFoundException('address.notFound');
 
-      await repo
-        .createQueryBuilder()
-        .update(Address)
-        .set({ isDefault: () => `id = ${id}` })
-        .where('user_id = :userId', { userId })
-        .execute();
+      await repo.update({ user: { id: userId }, isDefault: true }, { isDefault: false });
+
+      await repo.update(id, { isDefault: true });
 
       return { success: true };
     });
