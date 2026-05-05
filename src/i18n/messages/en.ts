@@ -17,6 +17,8 @@ export default {
 
   'cart.itemNotFound': 'Cart item not found',
   'cart.insufficientStock': 'Insufficient stock for variant {externalId}',
+  'cart.createFailed': 'Failed to create cart. Please try again.',
+  'cart.duplicateExternalIds': 'Duplicate variant externalId detected in cart items',
 
   'media.notFound': 'Media not found',
   'media.required': 'Media is required',
@@ -24,6 +26,10 @@ export default {
   'media.invalidType': 'Invalid file type',
   'media.invalidTypeWithAllowed': 'Invalid file type. Allowed types: {allowedTypes}',
   'media.saveFailed': 'Failed to save media record',
+  'media.tooLarge': 'File size exceeds the maximum allowed size of {maxSize} mb',
+  'media.uploadFailed': 'Media upload failed',
+  'media.unsupportedType': 'Unsupported media type',
+  'media.requestTimeout': 'Media upload timed out. Please try again.',
 
   'products.brandNotFound': 'Brand not found',
   'products.categoryNotFound': 'Category not found',
@@ -31,6 +37,7 @@ export default {
   'products.brandHasProducts': 'Cannot delete brand with associated products',
   'products.productNotFound': 'Product not found',
   'products.variantNotFound': 'Variant not found',
+  'products.variantsNotFound': 'Variants not found: {externalIds}',
   'products.invalidIds': 'Invalid product IDs',
   'products.requiredAmountMin': 'requiredAmount must be at least 1',
   'products.insufficientStock': 'Insufficient stock for variant {externalId}',

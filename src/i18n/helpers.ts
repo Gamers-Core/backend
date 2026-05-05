@@ -1,7 +1,7 @@
 import { formatNumber } from 'src/helpers';
 
-import messages from './messages';
 import { defaultLocale, locales } from './const';
+import messages from './messages';
 import type { I18nKey, Locale, Localized, Messages, Translate, TranslateFnWithoutLocale } from './types';
 
 export const translate = <Key extends I18nKey, L extends Locale = Locale>(

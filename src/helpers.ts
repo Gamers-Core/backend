@@ -1,4 +1,5 @@
-import { defaultLocale, type Locale } from './i18n';
+import { defaultLocale } from './i18n/const';
+import { Locale } from './i18n/types';
 
 export const formatNumber =
   (locale: Locale = defaultLocale) =>

@@ -1,13 +1,30 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseInterceptors,
+} from '@nestjs/common';
 
-import { User } from 'src/entity';
-import { Serialize } from 'src/interceptors';
-import { BostaService, CityDTO, DistrictDTO, ShippingFeesDTO } from 'src/bosta';
-
+import { CityDTO } from 'src/addresses/dtos/city.dto';
+import { DistrictDTO } from 'src/addresses/dtos/district.dto';
+import { ShippingFeesDTO } from 'src/addresses/dtos/shipping-fees.dto';
+import { Serialize } from 'src/common/interceptors/serialize.interceptor';
 import { CurrentUser } from 'src/users/decorators/current-user.decorator';
+import { User } from 'src/users/entities/user.entity';
 
-import { AddressDTO, CreateAddressDTO, ShippingFeesResponseDTO, UpdateAddressDTO } from './dtos';
 import { AddressesService } from './addresses.service';
+import { BostaService } from './bosta/bosta.service';
+import { CreateAddressDTO } from './dtos/admin/create-address.dto';
+import { UpdateAddressDTO } from './dtos/admin/update-address.dto';
+import { ShippingFeesResponseDTO } from './dtos/shipping-fees-response.dto';
+import { AddressDTO } from './dtos/user/address.dto';
 
 @Controller('addresses')
 export class AddressesController {
@@ -18,31 +35,31 @@ export class AddressesController {
 
   @Serialize(AddressDTO)
   @Get()
-  getAddresses(@CurrentUser() user: User) {
-    return this.addressesService.getAddresses(user.id);
+  getAll(@CurrentUser() user: User) {
+    return this.addressesService.getAll(user.id);
   }
 
   @Serialize(AddressDTO)
   @Post()
-  addAddress(@CurrentUser() user: User, @Body() body: CreateAddressDTO) {
-    return this.addressesService.addAddress(user.id, body);
+  add(@CurrentUser() user: User, @Body() body: CreateAddressDTO) {
+    return this.addressesService.add(user.id, body);
   }
 
   @Serialize(AddressDTO)
   @Patch(':id')
-  updateAddress(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number, @Body() body: UpdateAddressDTO) {
-    return this.addressesService.updateAddress(id, user.id, body);
+  update(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number, @Body() body: UpdateAddressDTO) {
+    return this.addressesService.update(id, user.id, body);
   }
 
   @Serialize(AddressDTO)
   @Patch(':id/default')
-  setDefaultAddress(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number) {
-    return this.addressesService.setDefaultAddress(id, user.id);
+  setDefault(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number) {
+    return this.addressesService.setDefault(id, user.id);
   }
 
   @Delete(':id')
-  deleteAddress(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number) {
-    return this.addressesService.removeAddress(id, user.id);
+  remove(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number) {
+    return this.addressesService.remove(id, user.id);
   }
 
   @Serialize(CityDTO)
@@ -57,11 +74,15 @@ export class AddressesController {
     return this.bostaService.getDistricts(id);
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(1000 * 60 * 60)
   @Get('insurance-fees/:amount')
   getInsuranceFees(@Param('amount', ParseIntPipe) amount: number) {
     return this.bostaService.getInsuranceFees(amount);
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(1000 * 60 * 60)
   @Serialize(ShippingFeesResponseDTO)
   @Get('shipping-fees')
   getShippingFees(@Query() query: ShippingFeesDTO) {

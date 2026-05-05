@@ -2,23 +2,29 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
-import { BadRequestException, NotFoundException } from 'src/common';
-import { FAQ } from 'src/entity';
+import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { withOptionalManager } from 'src/common/with-optional-manager';
+import { CacheService } from 'src/redis/cache.service';
 
-import { AddFAQDTO, UpdateFAQDTO } from './dtos';
+import { AddFAQDTO } from './dtos/admin/add-faq.dto';
+import { UpdateFAQDTO } from './dtos/admin/update-faq.dto';
+import { FAQ } from './entities/faq.entity';
 
 @Injectable()
 export class FAQsService {
   constructor(
     @InjectRepository(FAQ)
     private readonly repo: Repository<FAQ>,
+    private readonly cacheService: CacheService,
   ) {}
 
-  async getAll() {
-    return this.repo.find({ order: { position: 'ASC' } });
+  private readonly CACHE_KEY = 'faqs:all';
+
+  getAll() {
+    return this.cacheService.getOrSet(this.CACHE_KEY, () => this.getAllOrdered(), { ttlMs: 1000 * 60 * 60 });
   }
 
-  async add(dto: AddFAQDTO) {
+  add(dto: AddFAQDTO) {
     return this.repo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(FAQ);
 
@@ -26,62 +32,65 @@ export class FAQsService {
         .createQueryBuilder('faq')
         .select('MAX(faq.position)', 'max')
         .getRawOne<{ max: string | null }>();
-
       const maxPosition = Number(maxRaw?.max) || 0;
 
       await repo.save(repo.create({ ...dto, position: maxPosition + 1 }));
 
-      return this.findAllSorted(manager);
+      await this.cacheService.delete(this.CACHE_KEY);
+
+      return this.getAllOrdered(manager);
     });
   }
 
-  async update(id: number, dto: UpdateFAQDTO) {
+  update(id: number, dto: UpdateFAQDTO) {
     return this.repo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(FAQ);
 
-      const faq = await repo.findOne({ where: { id } });
-      if (!faq) throw new NotFoundException('faqs.notFound');
+      const result = await repo.update(id, dto);
+      if (!result.affected) throw NotFoundException('faqs.notFound');
 
-      Object.assign(faq, dto);
-      await repo.save(faq);
+      await this.cacheService.delete(this.CACHE_KEY);
 
-      return this.findAllSorted(manager);
+      return this.getAllOrdered(manager);
     });
   }
 
-  async remove(id: number) {
+  remove(id: number) {
     return this.repo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(FAQ);
 
-      const faq = await repo.findOne({ where: { id } });
-      if (!faq) throw new NotFoundException('faqs.notFound');
+      const result = await repo.delete(id);
+      if (!result.affected) throw NotFoundException('faqs.notFound');
 
-      await repo.remove(faq);
+      const remaining = await this.getAllOrdered(manager);
+      await this.reorderInternal(remaining, manager);
 
-      const remaining = await repo.find({ order: { position: 'ASC' } });
-      await this.reorderWithPositions(remaining, manager);
+      await this.cacheService.delete(this.CACHE_KEY);
 
-      return this.findAllSorted(manager);
+      return this.getAllOrdered(manager);
     });
   }
 
   reorder(ids: number[]): Promise<FAQ[]> {
     return this.repo.manager.transaction(async (manager) => {
-      const repo = manager.getRepository(FAQ);
-      const faqs = await repo.find({ order: { position: 'ASC' } });
+      const faqs = await this.getAllOrdered(manager);
 
-      this.validateReorderIds(ids, faqs);
+      const uniqueIds = new Set(ids);
+      if (faqs.length !== uniqueIds.size) throw BadRequestException('faqs.invalidIds');
 
       const faqById = new Map(faqs.map((faq) => [faq.id, faq]));
+      if (ids.some((id) => !faqById.has(id))) throw BadRequestException('faqs.invalidIds');
+
       const ordered = ids.map((id) => faqById.get(id)!);
+      await this.reorderInternal(ordered, manager);
 
-      await this.reorderWithPositions(ordered, manager);
+      await this.cacheService.delete(this.CACHE_KEY);
 
-      return this.findAllSorted(manager);
+      return this.getAllOrdered(manager);
     });
   }
 
-  private async reorderWithPositions(faqs: FAQ[], manager: EntityManager): Promise<void> {
+  private async reorderInternal(faqs: FAQ[], manager: EntityManager): Promise<void> {
     if (!faqs.length) return;
 
     const repo = manager.getRepository(FAQ);
@@ -90,20 +99,11 @@ export class FAQsService {
     await repo.save(faqs.map((faq, i) => ({ ...faq, position: i + 1 })));
   }
 
-  private findAllSorted(manager: EntityManager): Promise<FAQ[]> {
-    return manager.getRepository(FAQ).find({ order: { position: 'ASC' } });
-  }
+  private getAllOrdered(manager?: EntityManager): Promise<FAQ[]> {
+    return withOptionalManager(manager, this.repo.manager, async (manager) => {
+      const repo = manager.getRepository(FAQ);
 
-  private validateReorderIds(ids: number[], faqs: FAQ[]): void {
-    const uniqueIds = new Set(ids);
-
-    if (ids.length !== faqs.length || uniqueIds.size !== ids.length) {
-      throw new BadRequestException('faqs.invalidIds');
-    }
-
-    const existingIds = new Set(faqs.map((f) => f.id));
-    if (ids.some((id) => !existingIds.has(id))) {
-      throw new BadRequestException('faqs.invalidIds');
-    }
+      return repo.find({ order: { position: 'ASC' } });
+    });
   }
 }

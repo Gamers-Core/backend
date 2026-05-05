@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import { ArrayNotEmpty, IsInt, IsUUID, Min, ValidateNested } from 'class-validator';
 
-import { CheckoutOrderDTO } from '../user';
+import { CheckoutOrderDTO } from '../user/checkout-order.dto';
 
 class VariantDTO {
   @IsUUID()

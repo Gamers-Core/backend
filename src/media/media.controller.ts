@@ -11,12 +11,14 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 
-import { Serialize } from 'src/interceptors';
-import { BadRequestException } from 'src/common';
-import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
+import { IsAdminAuthGuard } from 'src/auth/guards/is-admin-auth.guard';
+import { BadRequestException } from 'src/common/exceptions';
+import { Serialize } from 'src/common/interceptors/serialize.interceptor';
 
-import { MediaService } from './media.service';
-import { MediaDTO, UploadMediaDTO } from './dtos';
+import { mediaPolicyMap } from './cloudinary/const';
+import { AdminMediaDTO } from './dtos/admin/admin-media.dto';
+import { UploadMediaDTO } from './dtos/admin/upload-media.dto';
+import { MediaService } from './services/media.service';
 import { UploadedMediaFile } from './types';
 
 @Controller('media')
@@ -24,17 +26,28 @@ import { UploadedMediaFile } from './types';
 export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
 
-  @Serialize(MediaDTO)
+  @Serialize(AdminMediaDTO)
   @Post()
-  @UseInterceptors(FileInterceptor('file'))
-  async upload(@Body() body: UploadMediaDTO, @UploadedFile() file: UploadedMediaFile | undefined) {
-    if (!file) throw new BadRequestException('media.required');
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: Math.max(...Object.values(mediaPolicyMap).map((policy) => policy.maxBytes)),
+      },
+      fileFilter: (req, file, cb) => {
+        if (!file.mimetype?.includes('/')) return cb(BadRequestException('media.invalidType'), false);
 
-    return this.mediaService.create(file, body);
+        cb(null, true);
+      },
+    }),
+  )
+  upload(@Body() body: UploadMediaDTO, @UploadedFile() file: UploadedMediaFile | undefined) {
+    if (!file) throw BadRequestException('media.required');
+
+    return this.mediaService.upload(file, body);
   }
 
   @Delete(':id')
-  delete(@Param('id', ParseIntPipe) id: number) {
-    return this.mediaService.delete(id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.mediaService.remove(id);
   }
 }

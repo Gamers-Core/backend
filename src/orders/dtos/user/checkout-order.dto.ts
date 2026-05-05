@@ -1,6 +1,7 @@
 import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
 
-import { paymentMethods, type PaymentMethod } from 'src/entity';
+import { paymentMethods } from '../../statuses';
+import type { PaymentMethod } from '../../types';
 
 export class CheckoutOrderDTO {
   @IsString()

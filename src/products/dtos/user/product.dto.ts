@@ -1,9 +1,9 @@
 import { Expose, Type } from 'class-transformer';
 
-import { Localize } from 'src/i18n';
-import { MediaAttachmentDTO } from 'src/media';
-import { BrandDTO } from 'src/brands';
-import { CategoryDTO } from 'src/categories';
+import { BrandDTO } from 'src/brands/dtos/user/brand.dto';
+import { CategoryDTO } from 'src/categories/dtos/user/category.dto';
+import { Localize } from 'src/i18n/decorators/localize.decorator';
+import { ProductMediaDTO } from 'src/media/dtos/user/product-media.dto';
 
 import { VariantDTO } from './variant.dto';
 
@@ -28,8 +28,8 @@ export class ProductDTO {
   variants: VariantDTO[];
 
   @Expose()
-  @Type(() => MediaAttachmentDTO)
-  media: MediaAttachmentDTO[];
+  @Type(() => ProductMediaDTO)
+  media: ProductMediaDTO[];
 
   @Expose()
   @Type(() => BrandDTO)

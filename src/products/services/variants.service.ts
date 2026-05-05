@@ -2,11 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
-import { Product, Variant } from 'src/entity';
-import { MediaAttachmentService } from 'src/media';
-import { BadRequestException, NotFoundException, withOptionalManager } from 'src/common';
+import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { withOptionalManager } from 'src/common/with-optional-manager';
+import { MediaService } from 'src/media/services/media.service';
 
-import { CreateVariantDTO, UpdateVariantDTO } from '../dtos/admin';
+import { CreateVariantDTO } from '../dtos/admin/create-variant.dto';
+import { UpdateVariantDTO } from '../dtos/admin/update-variant.dto';
+import { Variant } from '../entities/variant.entity';
 import { variantWithProductFullRelations } from '../relations';
 
 @Injectable()
@@ -14,67 +16,59 @@ export class VariantsService {
   constructor(
     @InjectRepository(Variant)
     private readonly variantRepository: Repository<Variant>,
-    private readonly attachmentService: MediaAttachmentService,
+    private readonly mediaService: MediaService,
   ) {}
 
-  async add(productId: number, dtos: CreateVariantDTO[], manager?: EntityManager) {
+  add(productId: number, dtos: CreateVariantDTO[], manager?: EntityManager) {
     return withOptionalManager(manager, this.variantRepository.manager, async (manager) => {
       const variantRepo = manager.getRepository(Variant);
       const normalized = this.normalize(dtos);
 
-      const product = await manager.getRepository(Product).findOne({ where: { id: productId } });
-      if (!product) throw new NotFoundException('products.productNotFound');
-
-      const pairs = normalized.map(({ mediaIds, ...dto }) => ({
-        variant: variantRepo.create({ ...dto, product }),
-        mediaIds,
-      }));
-
-      const saved = await variantRepo.save(pairs.map(({ variant }) => variant));
-      const savedPairs = saved.map((variant, i) => ({ variant, mediaIds: pairs[i].mediaIds }));
-
-      return Promise.all(
-        savedPairs.map(async ({ variant, mediaIds }) => {
-          const media = await this.attachmentService.sync(
-            { entityId: variant.id, entityType: 'variant', mediaIds },
-            manager,
-          );
-
-          return { ...variant, media };
-        }),
+      const variants = await Promise.all(
+        normalized.map(async ({ imageId, ...dto }) =>
+          variantRepo.create({
+            ...dto,
+            product: { id: productId },
+            image: await this.mediaService.attach(imageId, manager),
+          }),
+        ),
       );
+
+      return variantRepo.save(variants);
     });
   }
 
-  async updateOne(productId: number, variantId: number, { mediaIds, ...dto }: UpdateVariantDTO) {
+  update(productId: number, variantId: number, { imageId, ...dto }: UpdateVariantDTO) {
     return this.variantRepository.manager.transaction(async (manager) => {
       const variantRepository = manager.getRepository(Variant);
 
-      const variant = await this.findVariantOrFail(productId, variantId, manager);
+      const variant = await this.getOneOrFail(productId, variantId, manager);
       const remainingVariants = variant.product.variants.filter(({ id }) => id !== variantId);
+
+      if (variant.compareAt && variant.compareAt <= variant.price)
+        throw BadRequestException('products.compareAtMustBeGreaterThanPrice');
 
       Object.assign(variant, dto);
 
-      if (variant.compareAt && variant.compareAt <= variant.price)
-        throw new BadRequestException('products.compareAtMustBeGreaterThanPrice');
+      if (imageId) variant.image = await this.mediaService.swapImage(imageId, variant.image?.id, manager);
+      else if (variant.image) await this.mediaService.detach(variant.image.id, manager);
 
       const normalized = this.normalize([variant, ...remainingVariants]);
       const savedVariants = await variantRepository.save(normalized);
-
-      if (mediaIds)
-        await this.attachmentService.sync({ entityId: variantId, entityType: 'variant', mediaIds }, manager);
 
       return savedVariants.find(({ id }) => id === variantId)!;
     });
   }
 
-  async removeOne(productId: number, variantId: number) {
+  remove(productId: number, variantId: number) {
     return this.variantRepository.manager.transaction(async (manager) => {
       const variantRepository = manager.getRepository(Variant);
-      const variant = await this.findVariantOrFail(productId, variantId, manager);
 
+      const variant = await this.getOneOrFail(productId, variantId, manager);
       const remainingVariants = variant.product.variants.filter(({ id }) => id !== variantId);
-      if (!remainingVariants.length) throw new BadRequestException('products.cannotRemoveLastVariant');
+      if (!remainingVariants.length) throw BadRequestException('products.cannotRemoveLastVariant');
+
+      if (variant.image) await this.mediaService.detach(variant.image.id, manager);
 
       await variantRepository.softRemove(variant);
 
@@ -85,14 +79,14 @@ export class VariantsService {
     });
   }
 
-  private async findVariantOrFail(productId: number, variantId: number, manager: EntityManager) {
+  private async getOneOrFail(productId: number, variantId: number, manager: EntityManager) {
     const variantRepository = manager.getRepository(Variant);
 
     const variant = await variantRepository.findOne({
       where: { id: variantId, product: { id: productId } },
       relations: variantWithProductFullRelations,
     });
-    if (!variant) throw new NotFoundException('products.variantNotFound');
+    if (!variant) throw NotFoundException('products.variantNotFound');
 
     return variant;
   }

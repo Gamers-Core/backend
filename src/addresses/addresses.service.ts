@@ -1,12 +1,14 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 
-import { BostaService } from 'src/bosta';
-import { Address, User } from 'src/entity';
-import { withOptionalManager, BadRequestException, NotFoundException } from 'src/common';
+import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { withOptionalManager } from 'src/common/with-optional-manager';
 
-import { CreateAddressDTO, UpdateAddressDTO } from './dtos';
+import { BostaService } from './bosta/bosta.service';
+import { CreateAddressDTO } from './dtos/admin/create-address.dto';
+import { UpdateAddressDTO } from './dtos/admin/update-address.dto';
+import { Address } from './entities/address.entity';
 import { BostaLocation } from './types';
 
 @Injectable()
@@ -14,178 +16,140 @@ export class AddressesService {
   constructor(
     @InjectRepository(Address)
     private addressesRepo: Repository<Address>,
-    @Inject(forwardRef(() => BostaService))
     private readonly bostaService: BostaService,
   ) {}
 
-  getAddresses(userId: number, manager?: EntityManager) {
-    return withOptionalManager(manager, this.addressesRepo.manager, (manager) => {
-      const addressRepo = manager.getRepository(Address);
-
-      return addressRepo.find({
-        where: { user: { id: userId } },
-        order: { isDefault: 'DESC', createdAt: 'DESC' },
-        relations: { user: false },
-      });
+  getAll(userId: number) {
+    return this.addressesRepo.find({
+      where: { user: { id: userId } },
+      order: { isDefault: 'DESC', createdAt: 'DESC' },
     });
   }
 
-  async getAddress(id: number, userId: number, manager?: EntityManager) {
-    return withOptionalManager(manager, this.addressesRepo.manager, async (manager) => {
-      const addressRepo = manager.getRepository(Address);
-
-      const address = await addressRepo.findOne({
-        where: { id, user: { id: userId } },
-        relations: { user: false },
-      });
-
-      if (!address) throw new NotFoundException('address.notFound');
-
-      return address;
-    });
-  }
-
-  async addAddress(userId: number, { cityId, districtId, ...createDTO }: CreateAddressDTO) {
+  add(userId: number, { cityId, districtId, ...createDTO }: CreateAddressDTO) {
     return this.addressesRepo.manager.transaction(async (manager) => {
       const addressRepo = manager.getRepository(Address);
-      const userRepo = manager.getRepository(User);
-
-      const user = await userRepo.findOne({ where: { id: userId } });
-      if (!user) throw new NotFoundException('user.notFound');
 
       const locationData = await this.getAddressLocationData(cityId, districtId);
 
-      const address = addressRepo.create({
-        ...createDTO,
-        ...locationData,
-        isDefault: false,
-        user,
-      });
-
+      const address = addressRepo.create({ ...createDTO, ...locationData, user: { id: userId }, isDefault: false });
       const createdAddress = await addressRepo.save(address);
 
-      await this.trySetAddressAsDefault(manager, createdAddress.id, userId);
+      await this.setDefault(createdAddress.id, userId, manager);
 
-      const finalAddress = await addressRepo.findOne({
-        where: { id: createdAddress.id, user: { id: userId } },
-      });
-
-      if (!finalAddress) throw new NotFoundException('address.notFound');
-
-      return finalAddress;
+      return this.getOneOrFail(createdAddress.id, userId, manager);
     });
   }
 
-  async updateAddress(id: number, userId: number, updateDTO: UpdateAddressDTO) {
+  update(id: number, userId: number, dto: UpdateAddressDTO) {
     return this.addressesRepo.manager.transaction(async (manager) => {
       const addressRepo = manager.getRepository(Address);
-      const address = await addressRepo.findOne({
-        where: { id, user: { id: userId } },
-      });
 
-      if (!address) throw new NotFoundException('address.notFound');
+      const address = await this.getOneOrFail(id, userId, manager);
 
-      if (updateDTO.cityId && !updateDTO.districtId)
-        throw new BadRequestException('address.districtRequiredOnCityChange');
-
-      if (updateDTO.districtId && !updateDTO.cityId) {
-        const districtInCurrentCity = await this.bostaService.getDistrict(updateDTO.districtId, address.cityId);
-
-        if (!districtInCurrentCity) throw new BadRequestException('address.districtNotAvailableForCity');
+      if (dto.cityId || dto.districtId) {
+        const locationData = await this.resolveLocationUpdate(dto, address);
+        Object.assign(dto, locationData);
       }
 
-      if (updateDTO.cityId || updateDTO.districtId) {
-        const cityId = updateDTO.cityId || address.cityId;
-        const districtId = updateDTO.districtId || address.districtId;
+      Object.assign(address, dto);
+      const updated = await addressRepo.save(address);
 
-        const locationData = await this.getAddressLocationData(cityId, districtId);
+      await this.ensureDefault(userId, manager);
 
-        Object.assign(updateDTO, locationData);
-      }
-
-      Object.assign(address, updateDTO);
-
-      const updatedAddress = await addressRepo.save(address);
-      await this.ensureDefaultAddress(userId, addressRepo);
-
-      return updatedAddress;
+      return updated;
     });
   }
 
-  async setDefaultAddress(id: number, userId: number) {
+  async remove(id: number, userId: number) {
     await this.addressesRepo.manager.transaction(async (manager) => {
-      const addressRepo = manager.getRepository(Address);
-      const address = await addressRepo.findOne({
-        where: { id, user: { id: userId } },
-      });
+      const repo = manager.getRepository(Address);
 
-      if (!address) throw new NotFoundException('address.notFound');
+      const address = await this.getOneOrFail(id, userId, manager);
 
-      await this.clearDefaultAddress(manager, userId);
-      await this.trySetAddressAsDefault(manager, id, userId);
-    });
-
-    const updatedAddress = await this.addressesRepo.findOne({
-      where: { id, user: { id: userId } },
-    });
-
-    if (!updatedAddress) throw new NotFoundException('address.notFound');
-
-    return updatedAddress;
-  }
-
-  async removeAddress(id: number, userId: number) {
-    const address = await this.addressesRepo.findOne({
-      where: { id, user: { id: userId } },
-    });
-
-    if (!address) throw new NotFoundException('address.notFound');
-
-    await this.addressesRepo.manager.transaction(async (manager) => {
-      await manager.remove(Address, address);
-
+      await repo.delete(address.id);
       if (!address.isDefault) return;
 
-      const addressRepo = manager.getRepository(Address);
-      const nextDefault = await addressRepo.findOne({
+      const nextDefault = await repo.findOne({
         where: { user: { id: userId } },
         order: { createdAt: 'DESC' },
       });
-
       if (!nextDefault) return;
 
       nextDefault.isDefault = true;
-      await addressRepo.save(nextDefault);
+      await repo.save(nextDefault);
     });
 
     return { deleted: true };
   }
 
-  private async ensureDefaultAddress(userId: number, addressRepo: Repository<Address>) {
-    const defaultAddress = await addressRepo.findOne({
-      where: { user: { id: userId }, isDefault: true },
+  setDefault(id: number, userId: number, manager?: EntityManager) {
+    return withOptionalManager(manager, this.addressesRepo.manager, async (manager) => {
+      const repo = manager.getRepository(Address);
+
+      const exists = await repo.existsBy({ id, user: { id: userId } });
+      if (!exists) throw NotFoundException('address.notFound');
+
+      await repo.update({ user: { id: userId }, isDefault: true }, { isDefault: false });
+
+      await repo.update(id, { isDefault: true });
+
+      return { success: true };
+    });
+  }
+
+  getOneOrFail(id: number, userId: number, manager?: EntityManager) {
+    return withOptionalManager(manager, this.addressesRepo.manager, async (manager) => {
+      const addressRepo = manager.getRepository(Address);
+
+      const address = await addressRepo.findOne({
+        where: { id, user: { id: userId } },
+      });
+
+      if (!address) throw NotFoundException('address.notFound');
+
+      return address;
+    });
+  }
+
+  private async ensureDefault(userId: number, manager?: EntityManager) {
+    await withOptionalManager(manager, this.addressesRepo.manager, async (manager) => {
+      const repo = manager.getRepository(Address);
+
+      const hasDefault = await repo.existsBy({ user: { id: userId }, isDefault: true });
+      if (hasDefault) return;
+
+      const fallback = await repo.findOne({
+        where: { user: { id: userId } },
+        order: { createdAt: 'DESC' },
+      });
+      if (!fallback) return;
+
+      await repo.update(fallback.id, { isDefault: true });
     });
 
-    if (defaultAddress) return;
+    return { success: true };
+  }
 
-    const fallbackAddress = await addressRepo.findOne({
-      where: { user: { id: userId } },
-      order: { createdAt: 'DESC' },
-    });
+  private async resolveLocationUpdate(dto: UpdateAddressDTO, current: Address): Promise<BostaLocation> {
+    if (dto.cityId && !dto.districtId) throw BadRequestException('address.districtRequiredOnCityChange');
 
-    if (!fallbackAddress) return;
+    if (dto.districtId && !dto.cityId) {
+      const district = await this.bostaService.getDistrict(dto.districtId, current.cityId);
+      if (!district) throw BadRequestException('address.districtNotAvailableForCity');
+    }
 
-    fallbackAddress.isDefault = true;
-    await addressRepo.save(fallbackAddress);
+    return this.getAddressLocationData(dto.cityId ?? current.cityId, dto.districtId ?? current.districtId);
   }
 
   private async getAddressLocationData(cityId: string, districtId: string): Promise<BostaLocation> {
-    const city = await this.bostaService.getCity(cityId);
-    const district = await this.bostaService.getDistrict(districtId, cityId);
+    const [city, district] = await Promise.all([
+      this.bostaService.getCity(cityId),
+      this.bostaService.getDistrict(districtId, cityId),
+    ]);
 
-    if (!city) throw new BadRequestException('address.cityInvalid');
-
-    if (!district) throw new BadRequestException('address.districtInvalid');
+    if (!city) throw BadRequestException('address.cityInvalid');
+    if (!district) throw BadRequestException('address.districtInvalid');
 
     return {
       cityId: city._id,
@@ -194,34 +158,5 @@ export class AddressesService {
       districtId: district.districtId,
       districtName: district.districtOtherName,
     };
-  }
-
-  private async clearDefaultAddress(manager: EntityManager, userId: number) {
-    return withOptionalManager(manager, this.addressesRepo.manager, async (manager) => {
-      await manager
-        .createQueryBuilder()
-        .update(Address)
-        .set({ isDefault: false })
-        .where('user_id = :userId', { userId })
-        .execute();
-    });
-  }
-
-  private async trySetAddressAsDefault(manager: EntityManager, addressId: number, userId: number) {
-    return withOptionalManager(manager, this.addressesRepo.manager, async (manager) => {
-      await manager
-        .createQueryBuilder()
-        .update(Address)
-        .set({ isDefault: false })
-        .where('user_id = :userId', { userId })
-        .execute();
-
-      await manager
-        .createQueryBuilder()
-        .update(Address)
-        .set({ isDefault: true })
-        .where('id = :addressId AND user_id = :userId', { addressId, userId })
-        .execute();
-    });
   }
 }

@@ -2,18 +2,25 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { ConflictException, isUniqueViolation } from 'src/common';
-import { Policies, Policy, PolicyType } from 'src/entity';
+import { ConflictException } from 'src/common/exceptions';
+import { isUniqueViolation } from 'src/common/helpers/db.helpers';
+import { CacheService } from 'src/redis/cache.service';
 
-import { UpdatePolicyDTO } from './dtos';
+import { UpdatePolicyDTO } from './dtos/admin/update-policy.dto';
+import { Policy } from './entities/policy.entity';
+import { Policies, PolicyType } from './types';
 
 @Injectable()
 export class PoliciesService {
-  constructor(@InjectRepository(Policy) private repo: Repository<Policy>) {}
+  constructor(
+    @InjectRepository(Policy) private repo: Repository<Policy>,
+    private readonly cacheService: CacheService,
+  ) {}
 
   private static readonly POLICY_HISTORY_DEPTH = 2;
+  private readonly CACHE_KEY = 'policies:all';
 
-  async updatePolicy(type: PolicyType, updateDTO: UpdatePolicyDTO): Promise<Policy> {
+  async update(type: PolicyType, updateDTO: UpdatePolicyDTO): Promise<Policy> {
     try {
       return await this.repo.manager.transaction(async (manager) => {
         const policyRepo = manager.getRepository(Policy);
@@ -40,26 +47,34 @@ export class PoliciesService {
           [type, PoliciesService.POLICY_HISTORY_DEPTH],
         );
 
+        await this.cacheService.delete(this.CACHE_KEY);
+
         return policy;
       });
     } catch (error) {
-      if (isUniqueViolation(error)) throw new ConflictException('policies.concurrentUpdate');
+      if (isUniqueViolation(error)) throw ConflictException('policies.concurrentUpdate');
       throw error;
     }
   }
 
-  async getLatestAll(): Promise<Policies> {
-    const rows = await this.repo
-      .createQueryBuilder('p')
-      .distinctOn(['p.type'])
-      .orderBy('p.type')
-      .addOrderBy('p.version', 'DESC')
-      .getMany();
+  async getAll(): Promise<Policies> {
+    return this.cacheService.getOrSet(
+      this.CACHE_KEY,
+      async () => {
+        const rows = await this.repo
+          .createQueryBuilder('p')
+          .distinctOn(['p.type'])
+          .orderBy('p.type')
+          .addOrderBy('p.version', 'DESC')
+          .getMany();
 
-    return rows.reduce((acc, policy) => {
-      acc[policy.type] = policy;
-      return acc;
-    }, {} as Policies);
+        return rows.reduce((acc, policy) => {
+          acc[policy.type] = policy;
+          return acc;
+        }, {} as Policies);
+      },
+      { ttlMs: 1000 * 60 * 60 * 24 },
+    );
   }
 
   async getHistory(type: PolicyType): Promise<Policy[]> {

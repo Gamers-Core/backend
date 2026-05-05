@@ -1,10 +1,12 @@
 import { Body, Controller, Delete, Param, ParseArrayPipe, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
 
-import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
-import { Serialize } from 'src/interceptors';
+import { IsAdminAuthGuard } from 'src/auth/guards/is-admin-auth.guard';
+import { Serialize } from 'src/common/interceptors/serialize.interceptor';
 
-import { AdminVariantDTO, CreateVariantDTO, UpdateVariantDTO } from '../dtos/admin';
-import { VariantsService } from '../services';
+import { AdminVariantDTO } from '../dtos/admin/admin-variant.dto';
+import { CreateVariantDTO } from '../dtos/admin/create-variant.dto';
+import { UpdateVariantDTO } from '../dtos/admin/update-variant.dto';
+import { VariantsService } from '../services/variants.service';
 
 @Controller('admin/products/:productId/variants')
 @UseGuards(IsAdminAuthGuard)
@@ -27,11 +29,11 @@ export class AdminVariantsController {
     @Param('variantId', ParseIntPipe) variantId: number,
     @Body() updateVariantDTO: UpdateVariantDTO,
   ) {
-    return this.variantsService.updateOne(productId, variantId, updateVariantDTO);
+    return this.variantsService.update(productId, variantId, updateVariantDTO);
   }
 
   @Delete(':variantId')
   remove(@Param('productId', ParseIntPipe) productId: number, @Param('variantId', ParseIntPipe) variantId: number) {
-    return this.variantsService.removeOne(productId, variantId);
+    return this.variantsService.remove(productId, variantId);
   }
 }

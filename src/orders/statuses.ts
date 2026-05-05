@@ -1,4 +1,21 @@
-import { OrderStatus, OrderStatusGuard, PaymentStatus } from 'src/entity';
+// eslint-disable-next-line import/no-cycle
+import { OrderStatus, OrderStatusGuard, PaymentStatus } from './types';
+
+export const orderStatuses = [
+  'pending',
+  'confirmed',
+  'on-hold',
+  'on-progress',
+  'shipped',
+  'delivered',
+  'completed',
+  'returned',
+  'cancelled',
+] as const;
+
+export const paymentStatuses = ['unpaid', 'paid', 'refunded'] as const;
+
+export const paymentMethods = ['cod', 'instapay', 'valu', 'card'] as const;
 
 export const orderTransitions: Partial<Record<OrderStatus, OrderStatus[]>> = {
   pending: ['confirmed', 'cancelled'],

@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { FAQ } from 'src/entity';
-
-import { AdminFAQsController } from './admin-faqs.controller';
-import { FAQsController } from './faqs.controller';
+import { AdminFAQsController } from './controllers/admin-faqs.controller';
+import { FAQsController } from './controllers/faqs.controller';
+import { FAQ } from './entities/faq.entity';
 import { FAQsService } from './faqs.service';
 
 @Module({

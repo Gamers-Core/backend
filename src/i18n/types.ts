@@ -1,7 +1,6 @@
-import messages from './messages';
-
 import { defaultLocale, locales } from './const';
 import { translate } from './helpers';
+import messages from './messages';
 
 export type Locale = (typeof locales)[number];
 export type Messages = typeof messages;
@@ -20,7 +19,7 @@ export type LanguageTranslations = EN | AR;
 
 export type Translate<K extends I18nKey = I18nKey> = K extends I18nKey
   ? PlaceholderKeys<K> extends never
-    ? [K] | K
+    ? K | [K]
     : [K, { [P in PlaceholderKeys<K>]: string | number }]
   : never;
 

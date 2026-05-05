@@ -1,10 +1,13 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 
-import { IsAdminAuthGuard } from 'src/guards/is-admin-auth.guard';
-import { Serialize } from 'src/interceptors';
+import { IsAdminAuthGuard } from 'src/auth/guards/is-admin-auth.guard';
+import { Serialize } from 'src/common/interceptors/serialize.interceptor';
 
-import { AdminProductDTO, AdminSearchProductsDTO, CreateProductDTO, UpdateProductDTO } from '../dtos/admin';
-import { ProductsService } from '../services';
+import { AdminProductDTO } from '../dtos/admin/admin-product.dto';
+import { AdminSearchProductsDTO } from '../dtos/admin/admin-search-products.dto';
+import { CreateProductDTO } from '../dtos/admin/create-product.dto';
+import { UpdateProductDTO } from '../dtos/admin/update-product.dto';
+import { ProductsService } from '../services/products.service';
 
 @Controller('admin/products')
 @UseGuards(IsAdminAuthGuard)
@@ -13,20 +16,20 @@ export class AdminProductsController {
 
   @Get(':id')
   @Serialize(AdminProductDTO)
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.productsService.findOne(id);
+  getOne(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.getOne(id);
   }
 
   @Get()
   @Serialize(AdminProductDTO)
-  findAll(@Query() dto: AdminSearchProductsDTO) {
+  search(@Query() dto: AdminSearchProductsDTO) {
     return this.productsService.search(dto, true);
   }
 
   @Post()
   @Serialize(AdminProductDTO)
-  create(@Body() createProductDTO: CreateProductDTO) {
-    return this.productsService.create(createProductDTO);
+  add(@Body() createProductDTO: CreateProductDTO) {
+    return this.productsService.add(createProductDTO);
   }
 
   @Patch(':id')
@@ -36,7 +39,7 @@ export class AdminProductsController {
   }
 
   @Delete(':id')
-  delete(@Param('id', ParseIntPipe) id: number) {
-    return this.productsService.delete(id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.productsService.remove(id);
   }
 }

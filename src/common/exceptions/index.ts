@@ -1,2 +1,2 @@
-export * from './validation.exception';
 export * from './http.exceptions';
+export * from './validation.exception';

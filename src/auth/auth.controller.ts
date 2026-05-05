@@ -1,14 +1,16 @@
 import { Body, Controller, Post, Req, Session } from '@nestjs/common';
-
-import { Serialize } from 'src/interceptors';
-import { CurrentUser } from 'src/users';
-import { User } from 'src/entity';
-
-import { OtpDTO, ResendOTPDTO, SigninDTO, VerifyOTPDTO, VerifyOtpResponseDTO } from './dtos';
-import { AuthService } from './auth.service';
-import { Public } from './decorators';
-import type { AuthSession } from './types';
 import type { Request } from 'express';
+
+import { Serialize } from 'src/common/interceptors/serialize.interceptor';
+
+import { AuthService } from './auth.service';
+import { Public } from './decorators/public.decorator';
+import { OTPDTO } from './dtos/otp.dto';
+import { ResendOTPDTO } from './dtos/resend-otp.dto';
+import { SigninDTO } from './dtos/signin.dto';
+import { VerifyOTPResponseDTO } from './dtos/verify-otp-response.dto';
+import { VerifyOTPDTO } from './dtos/verify-otp.dto';
+import type { AuthSession } from './types';
 
 @Controller('auth')
 @Public()
@@ -22,15 +24,15 @@ export class AuthController {
     return { isLoggedIn: false };
   }
 
-  @Serialize(OtpDTO)
+  @Serialize(OTPDTO)
   @Post('signin')
-  async signin(@Session() session: AuthSession, @Req() req: Request, @Body() body: SigninDTO) {
+  signin(@Session() session: AuthSession, @Req() req: Request, @Body() body: SigninDTO) {
     if (session.userId) req.session = null;
 
-    return await this.authService.signin(body);
+    return this.authService.signin(body);
   }
 
-  @Serialize(VerifyOtpResponseDTO)
+  @Serialize(VerifyOTPResponseDTO)
   @Post('verify-otp')
   async verifyOTP(@Body() body: VerifyOTPDTO, @Session() session: AuthSession) {
     const result = await this.authService.verifyOTP(body);
@@ -41,7 +43,7 @@ export class AuthController {
   }
 
   @Post('resend-otp')
-  resendOtp(@CurrentUser() user: User | undefined, @Body() body: ResendOTPDTO) {
-    return this.authService.resendOTP(body, user?.locale);
+  resendOtp(@Body() body: ResendOTPDTO) {
+    return this.authService.resendOTP(body);
   }
 }

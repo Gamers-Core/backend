@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { FeaturedVariant, Variant } from 'src/entity';
-import { MediaModule } from 'src/media';
+import { MediaModule } from 'src/media/media.module';
+import { Variant } from 'src/products/entities/variant.entity';
 
-import { AdminFeaturedVariantsController } from './admin-featured-variants.controller';
-import { FeaturedVariantsController } from './featured-variants.controller';
+import { AdminFeaturedVariantsController } from './controllers/admin-featured-variants.controller';
+import { FeaturedVariantsController } from './controllers/featured-variants.controller';
+import { FeaturedVariant } from './entities/featured-variant.entity';
 import { FeaturedVariantsService } from './featured-variants.service';
 
 @Module({

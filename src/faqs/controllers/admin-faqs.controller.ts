@@ -1,0 +1,42 @@
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+
+import { IsAdminAuthGuard } from 'src/auth/guards/is-admin-auth.guard';
+import { Serialize } from 'src/common/interceptors/serialize.interceptor';
+
+import { AddFAQDTO } from '../dtos/admin/add-faq.dto';
+import { AdminFAQDTO } from '../dtos/admin/admin-faq.dto';
+import { ReorderFAQsDTO } from '../dtos/admin/reorder-faqs.dto';
+import { UpdateFAQDTO } from '../dtos/admin/update-faq.dto';
+import { FAQsService } from '../faqs.service';
+
+@Controller('admin/faqs')
+@Serialize(AdminFAQDTO)
+@UseGuards(IsAdminAuthGuard)
+export class AdminFAQsController {
+  constructor(private readonly faqsService: FAQsService) {}
+
+  @Get()
+  getAll() {
+    return this.faqsService.getAll();
+  }
+
+  @Post()
+  add(@Body() dto: AddFAQDTO) {
+    return this.faqsService.add(dto);
+  }
+
+  @Patch('reorder')
+  reorder(@Body() dto: ReorderFAQsDTO) {
+    return this.faqsService.reorder(dto.ids);
+  }
+
+  @Patch(':id')
+  update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateFAQDTO) {
+    return this.faqsService.update(id, dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.faqsService.remove(id);
+  }
+}

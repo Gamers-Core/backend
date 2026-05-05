@@ -1,4 +1,5 @@
 import { MailTemplatesMap } from '../types';
+
 import { renderOrderConfirmationHtml } from './order-confirmation.template';
 import { renderOrderReminderHtml } from './order-reminder.template';
 import { renderSigninHtml } from './signin.template';

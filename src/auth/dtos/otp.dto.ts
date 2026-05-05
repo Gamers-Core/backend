@@ -1,6 +1,6 @@
 import { Expose } from 'class-transformer';
 
-export class OtpDTO {
+export class OTPDTO {
   @Expose()
   sessionId: string;
 }

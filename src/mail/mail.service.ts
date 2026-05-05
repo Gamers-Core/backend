@@ -1,13 +1,15 @@
-import { AxiosError, AxiosInstance } from 'axios';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { AxiosError, AxiosInstance } from 'axios';
 
-import { Locale, LocaleContextService, translateWithoutLocale } from 'src/i18n';
-import { ServiceUnavailableException } from 'src/common';
+import { ServiceUnavailableException } from 'src/common/exceptions';
+import { ConfigService } from 'src/config/config.service';
+import { translateWithoutLocale } from 'src/i18n/helpers';
+import { LocaleContextService } from 'src/i18n/locale-context.service';
+import { Locale } from 'src/i18n/types';
 
-import { mailTemplates } from './templates';
 import { getEmail, renderMailWrapper } from './helpers';
+import { mailTemplates } from './templates';
 import { MailOptions, MailOptionsType, MailType, SendMailOptions } from './types';
 
 @Injectable()
@@ -20,14 +22,10 @@ export class MailService {
     private readonly configService: ConfigService,
     private readonly LocaleContextService: LocaleContextService,
   ) {
-    this.brevo = this.httpService.axiosRef.create({
-      baseURL: this.configService.get<string>('BREVO_API_BASE_URL') || 'https://api.brevo.com/v3',
-      timeout: Number(this.configService.get<string>('BREVO_API_TIMEOUT_MS') ?? 10_000),
-    });
+    this.brevo = this.httpService.axiosRef.create({ baseURL: 'https://api.brevo.com/v3', timeout: 10_000 });
 
     this.brevo.interceptors.request.use((config) => {
-      const apiKey = this.configService.get<string>('BREVO_API_KEY');
-      if (!apiKey) throw new ServiceUnavailableException('mail.unavailable');
+      const apiKey = this.configService.get('BREVO_API_KEY');
 
       config.headers['api-key'] = apiKey;
       config.headers.accept = 'application/json';
@@ -44,18 +42,9 @@ export class MailService {
 
         this.logger.error(`Brevo API request failed${status ? ` (status: ${status})` : ''}: ${upstreamMessage}`);
 
-        throw new ServiceUnavailableException('mail.unavailable');
+        throw ServiceUnavailableException('mail.unavailable');
       },
     );
-  }
-
-  send({ title, to, subject, html }: SendMailOptions, mail: MailType) {
-    return this.brevo.post('/smtp/email', {
-      sender: { name: title, email: getEmail(mail) },
-      to: [{ email: to }],
-      subject,
-      htmlContent: html,
-    });
   }
 
   sendTypedMail<T extends MailOptionsType>(
@@ -70,5 +59,14 @@ export class MailService {
     const renderedHtml = renderMailWrapper(t, html(t, values, locale === 'ar'), locale);
 
     return this.send({ ...options, html: renderedHtml, to }, mail);
+  }
+
+  private send({ title, to, subject, html }: SendMailOptions, mail: MailType) {
+    return this.brevo.post('/smtp/email', {
+      sender: { name: title, email: getEmail(mail) },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    });
   }
 }

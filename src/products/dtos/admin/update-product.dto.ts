@@ -1,8 +1,10 @@
 import { IsArray, IsIn, IsInt, IsOptional, Min } from 'class-validator';
 
-import { productStatuses } from 'src/entity';
-import { type ProductStatus } from 'src/entity';
-import { IsLocalized, type Localized } from 'src/i18n';
+import { IsLocalized } from 'src/i18n/decorators/is-localized.decorator';
+import type { Localized } from 'src/i18n/types';
+
+import { productStatuses } from '../../const';
+import type { ProductStatus } from '../../types';
 
 export class UpdateProductDTO {
   @IsOptional()

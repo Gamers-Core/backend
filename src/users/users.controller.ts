@@ -1,12 +1,15 @@
 import { Body, Controller, Get, Param, ParseEnumPipe, Patch } from '@nestjs/common';
 
-import { User } from 'src/entity';
-import { locales, type Locale } from 'src/i18n';
-import { Serialize } from 'src/interceptors';
+import { Serialize } from 'src/common/interceptors/serialize.interceptor';
+import { locales } from 'src/i18n/const';
+import type { Locale } from 'src/i18n/types';
 
-import { CurrentUser } from './decorators';
+import { CurrentUser } from './decorators/current-user.decorator';
+import { BasicUserDTO } from './dtos/basic-user.dto';
+import { FullUserDTO } from './dtos/full-user.dto';
+import { UpdateMeDTO } from './dtos/update-me.dto';
+import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
-import { BasicUserDTO, FullUserDTO, UpdateMeDTO } from './dtos';
 
 @Controller('users')
 export class UsersController {
@@ -27,12 +30,12 @@ export class UsersController {
   @Serialize(FullUserDTO)
   @Get('me/full')
   getFullCurrentUser(@CurrentUser() user: User) {
-    return this.usersService.findFull(user.id);
+    return this.usersService.getFull(user.id);
   }
 
   @Serialize(BasicUserDTO)
   @Patch('me/locale/:locale')
   updateLocale(@CurrentUser() user: User, @Param('locale', new ParseEnumPipe(locales)) locale: Locale) {
-    return this.usersService.updateLocale(user, locale);
+    return this.usersService.updateLocale(user.id, locale);
   }
 }

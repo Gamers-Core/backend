@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
-import { UsersService } from 'src/users';
-import { CartService } from 'src/cart';
-import { withEnvironment } from 'src/common';
-import { Locale, LocaleContextService } from 'src/i18n';
+import { CartService } from 'src/cart/cart.service';
+import { withEnvironment } from 'src/common/with-environment';
+import { OtpSessionService } from 'src/otp-session/otp-session.service';
+import { UsersService } from 'src/users/users.service';
 
-import { ResendOTPDTO, SigninDTO, VerifyOTPDTO } from './dtos';
-import { OtpSessionService } from './otp-session';
+import { ResendOTPDTO } from './dtos/resend-otp.dto';
+import { SigninDTO } from './dtos/signin.dto';
+import { VerifyOTPDTO } from './dtos/verify-otp.dto';
 import { AuthPurpose, OtpVerifyHandlers, OtpVerifyResultByPurpose } from './types';
 
 @Injectable()
@@ -15,24 +16,19 @@ export class AuthService {
     private usersService: UsersService,
     private cartService: CartService,
     private otpSessionService: OtpSessionService,
-    private localeContext: LocaleContextService,
   ) {}
 
   private readonly otpVerifyHandlers: OtpVerifyHandlers = {
     signin: async (email) => {
-      const { user, isNewUser } = await this.usersService.findOrCreate(email);
-      const cart = await this.cartService.getCart(user.id);
+      const { user, isNewUser } = await this.usersService.getOrCreate(email);
+      const cart = await this.cartService.getOrCreateCart(user.id);
 
-      return {
-        user,
-        cart,
-        isNewUser,
-      };
+      return { user, cart, isNewUser };
     },
   };
 
-  async signin({ email }: SigninDTO) {
-    return await this.otpSessionService.createSession({ purpose: 'signin', email }, this.localeContext.locale);
+  signin({ email }: SigninDTO) {
+    return this.otpSessionService.createSession({ purpose: 'signin', email });
   }
 
   async verifyOTP<P extends AuthPurpose>({
@@ -46,11 +42,14 @@ export class AuthService {
     return { purpose, ...res };
   }
 
-  async resendOTP({ sessionId }: ResendOTPDTO, locale?: Locale) {
-    return withEnvironment(['staging', 'production'], async (isValid) => {
-      if (!isValid) return;
+  resendOTP({ sessionId }: ResendOTPDTO) {
+    return withEnvironment(
+      (isValid) => {
+        if (!isValid) return;
 
-      return this.otpSessionService.resendSession({ sessionId }, locale);
-    });
+        return this.otpSessionService.resendSession({ sessionId });
+      },
+      ['staging', 'production'],
+    );
   }
 }

@@ -12,6 +12,6 @@ async function bootstrap() {
     exposedHeaders: ['x-locale', 'x-is-logged-in'],
   });
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 8080);
 }
 void bootstrap();

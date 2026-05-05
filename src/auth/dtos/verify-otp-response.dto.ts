@@ -1,11 +1,11 @@
 import { Expose, Type } from 'class-transformer';
 
-import { BasicUserDTO } from 'src/users';
-import { CartDTO } from 'src/cart';
+import { CartDTO } from 'src/cart/dtos/cart.dto';
+import { BasicUserDTO } from 'src/users/dtos/basic-user.dto';
 
 import { type AuthPurpose } from '../types';
 
-export class VerifyOtpResponseDTO {
+export class VerifyOTPResponseDTO {
   @Expose()
   @Type(() => BasicUserDTO)
   user: BasicUserDTO;

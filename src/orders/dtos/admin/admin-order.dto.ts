@@ -1,11 +1,12 @@
 import { Expose, Transform, Type } from 'class-transformer';
 
-import { BasicUserDTO } from 'src/users';
-import { type PaymentStatus } from 'src/entity';
+import { BasicUserDTO } from 'src/users/dtos/basic-user.dto';
 
-import { OrderDTO } from '../user';
-import { OrderAllowedActionsDTO } from './order-allowed-actions.dto';
+import { type PaymentStatus } from '../../types';
 import { OrderItemDTO } from '../order-item.dto';
+import { OrderDTO } from '../user/order.dto';
+
+import { OrderAllowedActionsDTO } from './order-allowed-actions.dto';
 
 class AdminOrderItemDTO extends OrderItemDTO {
   @Expose()

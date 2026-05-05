@@ -1,7 +1,8 @@
-import { defaultLocale, Locale, TranslateFnWithoutLocale } from 'src/i18n';
+import { defaultLocale } from 'src/i18n/const';
+import { TranslateFnWithoutLocale, Locale } from 'src/i18n/types';
 
-import { MailType } from './types';
 import { MAIL_DOMAIN } from './const';
+import { MailType } from './types';
 
 export const getEmail = <T extends MailType>(mail: T) => `${mail}@${MAIL_DOMAIN}` as const;
 

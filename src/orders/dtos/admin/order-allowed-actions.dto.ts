@@ -1,6 +1,6 @@
 import { Expose } from 'class-transformer';
 
-import { OrderStatus, PaymentStatus } from 'src/entity';
+import { OrderStatus, PaymentStatus } from '../../types';
 
 export class OrderAllowedActionsDTO {
   @Expose()

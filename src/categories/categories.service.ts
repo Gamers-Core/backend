@@ -1,55 +1,87 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, FindOptionsRelations, Repository } from 'typeorm';
 
-import { Category } from 'src/entity';
-import { BadRequestException, NotFoundException } from 'src/common';
+import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { withOptionalManager } from 'src/common/with-optional-manager';
+import { CacheService } from 'src/redis/cache.service';
 
-import { AddCategoryDTO, UpdateCategoryDTO } from './dtos';
+import { AddCategoryDTO } from './dtos/admin/add-category.dto';
+import { UpdateCategoryDTO } from './dtos/admin/update-category.dto';
+import { Category } from './entities/category.entity';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectRepository(Category)
     private readonly repo: Repository<Category>,
+    private readonly cacheService: CacheService,
   ) {}
 
+  private readonly cacheKey = 'categories:all';
+  private readonly getCategoryCacheKey = (id: number) => `categories:${id}`;
+
   getAll() {
-    return this.repo.find({ order: { id: 'ASC' } });
+    return this.cacheService.getOrSet(this.cacheKey, () => this.repo.find({ order: { id: 'ASC' } }), {
+      ttlMs: 1000 * 60 * 60,
+    });
   }
 
-  async getOne(id: number) {
-    const category = await this.repo.findOne({ where: { id } });
-    if (!category) throw new NotFoundException('products.categoryNotFound');
-
-    return category;
+  getOne(id: number) {
+    return this.cacheService.getOrSet(this.getCategoryCacheKey(id), () => this.getOneOrFail(id), {
+      ttlMs: 1000 * 60 * 60,
+    });
   }
 
   add(dto: AddCategoryDTO) {
-    return this.repo.save(this.repo.create(dto));
+    return this.repo.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(Category);
+
+      const category = await repo.save(repo.create(dto));
+
+      await this.cacheService.delete(this.cacheKey);
+      await this.cacheService.delete(this.getCategoryCacheKey(category.id));
+
+      return this.getOneOrFail(category.id, manager);
+    });
   }
 
-  async update(id: number, dto: UpdateCategoryDTO) {
-    const category = await this.getOne(id);
-    Object.assign(category, dto);
+  update(id: number, dto: UpdateCategoryDTO) {
+    return this.repo.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(Category);
 
-    return this.repo.save(category);
+      const result = await repo.update(id, dto);
+      if (!result.affected) throw NotFoundException('products.categoryNotFound');
+
+      await this.cacheService.delete(this.cacheKey);
+      await this.cacheService.delete(this.getCategoryCacheKey(id));
+
+      return this.getOneOrFail(id, manager);
+    });
   }
 
-  async delete(id: number) {
-    const category = await this.findOneWithProductsOrFail(id);
+  async remove(id: number) {
+    await this.repo.manager.transaction(async (manager) => {
+      const category = await this.getOneOrFail(id, manager, { products: true });
+      if (category.products.length) throw BadRequestException('products.categoryHasProducts');
 
-    if (category.products.length) throw new BadRequestException('products.categoryHasProducts');
+      await this.cacheService.delete(this.cacheKey);
+      await this.cacheService.delete(this.getCategoryCacheKey(id));
 
-    await this.repo.remove(category);
+      await manager.getRepository(Category).delete(id);
+    });
 
     return { deleted: true };
   }
 
-  private async findOneWithProductsOrFail(id: number, repo = this.repo) {
-    const category = await repo.findOne({ where: { id }, relations: { products: true } });
-    if (!category) throw new NotFoundException('products.categoryNotFound');
+  private getOneOrFail(id: number, manager?: EntityManager, relations?: FindOptionsRelations<Category>) {
+    return withOptionalManager(manager, this.repo.manager, async (manager) => {
+      const repo = manager.getRepository(Category);
 
-    return category;
+      const category = await repo.findOne({ where: { id }, relations });
+      if (!category) throw NotFoundException('products.categoryNotFound');
+
+      return category;
+    });
   }
 }

@@ -1,6 +1,7 @@
 import { Expose, Transform, Type } from 'class-transformer';
 
-import { Localize, type Localized } from 'src/i18n';
+import { Localize } from 'src/i18n/decorators/localize.decorator';
+import type { Localized } from 'src/i18n/types';
 
 export class PolicyDTO {
   @Expose()

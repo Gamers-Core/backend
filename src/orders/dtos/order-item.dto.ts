@@ -1,7 +1,6 @@
 import { Expose } from 'class-transformer';
 
-import { Localize } from 'src/i18n';
-
+import { Localize } from 'src/i18n/decorators/localize.decorator';
 export class OrderItemDTO {
   @Expose()
   productId: number;

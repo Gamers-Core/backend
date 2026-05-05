@@ -1,6 +1,6 @@
 import { Expose, Transform } from 'class-transformer';
 
-import type { Locale } from 'src/i18n';
+import type { Locale } from 'src/i18n/types';
 
 export class BasicUserDTO {
   @Expose()

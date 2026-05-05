@@ -1,4 +1,4 @@
-import type { Locale } from 'src/i18n';
+import { Locale } from 'src/i18n/types';
 
 declare module 'class-transformer' {
   interface ClassTransformOptions {

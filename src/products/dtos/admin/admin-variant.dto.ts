@@ -1,8 +1,7 @@
 import { Expose, Type } from 'class-transformer';
 
-import type { Localized } from 'src/i18n';
-
-import { AdminMediaAttachmentDTO } from 'src/media';
+import type { Localized } from 'src/i18n/types';
+import { AdminMediaDTO } from 'src/media/dtos/admin/admin-media.dto';
 
 export class AdminVariantDTO {
   @Expose()
@@ -30,6 +29,6 @@ export class AdminVariantDTO {
   compareAt: number | null;
 
   @Expose()
-  @Type(() => AdminMediaAttachmentDTO)
-  media: AdminMediaAttachmentDTO[];
+  @Type(() => AdminMediaDTO)
+  image: AdminMediaDTO | null;
 }

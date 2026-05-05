@@ -1,54 +1,69 @@
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { MiddlewareConsumer, Module, ValidationPipe } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import cookieSession from 'cookie-session';
+import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
-
+import { ScheduleModule } from '@nestjs/schedule';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import cookieSession from 'cookie-session';
 import { getDataSourceOptions } from 'datasource';
 
-import { GlobalExceptionFilter, ValidationException } from './common';
-import { I18nModule, LocaleContextMiddleware } from './i18n';
-import { FeaturedVariantsModule } from './featured-variants';
-import { UserReviewsModule } from './user-reviews';
+import { AddressesModule } from './addresses/addresses.module';
 import { AppController } from './app.controller';
-import { CloudinaryModule } from './cloudinary';
-import { CategoriesModule } from './categories';
-import { AddressesModule } from './addresses';
-import { ProductsModule } from './products';
-import { PoliciesModule } from './policies';
 import { AppService } from './app.service';
-import { AppCacheModule } from './cache';
-import { BrandsModule } from './brands';
-import { OrdersModule } from './orders';
-import { BostaModule } from './bosta';
-import { RedisModule } from './redis';
-import { UsersModule } from './users';
-import { MediaModule } from './media';
-import { AuthGuard } from './guards';
-import { AuthModule } from './auth';
-import { CartModule } from './cart';
-import { FAQsModule } from './faqs';
+import { AuthModule } from './auth/auth.module';
+import { AuthGuard } from './auth/guards/auth.guard';
+import { BrandsModule } from './brands/brands.module';
+import { CartModule } from './cart/cart.module';
+import { CategoriesModule } from './categories/categories.module';
+import { ValidationException } from './common/exceptions';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { ConfigModule } from './config/config.module';
+import { ConfigService } from './config/config.service';
+import { getEnvironment } from './config/helpers';
+import { validate } from './config/validate';
+import { FAQsModule } from './faqs/faqs.module';
+import { FeaturedVariantsModule } from './featured-variants/featured-variants.module';
+import { I18nModule } from './i18n/i18n.module';
+import { LocaleContextMiddleware } from './i18n/locale-context.middleware';
+import { MediaModule } from './media/media.module';
+import { OrdersModule } from './orders/orders.module';
+import { PoliciesModule } from './policies/policies.module';
+import { ProductsModule } from './products/products.module';
+import { CacheModule } from './redis/cache.module';
+import { RedisModule } from './redis/redis.module';
+import { UserReviewsModule } from './user-reviews/user-reviews.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot(getDataSourceOptions()),
-    ConfigModule.forRoot({
+    ScheduleModule.forRoot(),
+    NestConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env.${process.env.NODE_ENV ?? 'development'}`,
+      envFilePath: `.env.${getEnvironment()}`,
+      validate,
+    }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const databaseUrl = configService.get('DATABASE_URL');
+
+        const environment = configService.environment;
+        const isLocal = environment === 'local';
+
+        return getDataSourceOptions(databaseUrl, !isLocal);
+      },
     }),
     FeaturedVariantsModule,
     UserReviewsModule,
-    CloudinaryModule,
     CategoriesModule,
     AddressesModule,
     ProductsModule,
-    AppCacheModule,
     PoliciesModule,
+    ConfigModule,
     BrandsModule,
     OrdersModule,
     RedisModule,
+    CacheModule,
     UsersModule,
-    BostaModule,
     MediaModule,
     AuthModule,
     CartModule,
@@ -82,12 +97,10 @@ export class AppModule {
   ) {}
 
   configure(consumer: MiddlewareConsumer) {
-    const cookieKey = this.configService.get<string>('COOKIE_KEY');
-    if (!cookieKey) throw new Error('COOKIE_KEY is required');
+    const cookieKey = this.configService.get('COOKIE_KEY');
 
-    const env = this.configService.get<string>('NODE_ENV');
-    const isLocal = env === 'local';
-    const cookieDomain = this.configService.get<string>('COOKIE_DOMAIN');
+    const isLocal = this.configService.environment === 'local';
+    const cookieDomain = this.configService.get('COOKIE_DOMAIN');
 
     consumer
       .apply(
@@ -96,7 +109,7 @@ export class AppModule {
           httpOnly: true,
           sameSite: isLocal ? 'lax' : 'none',
           secure: !isLocal,
-          domain: cookieDomain || undefined,
+          domain: cookieDomain,
           path: '/',
           maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
         }),

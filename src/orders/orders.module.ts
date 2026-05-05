@@ -1,31 +1,23 @@
-import { forwardRef, Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { AddressesModule } from 'src/addresses';
-import { BostaModule } from 'src/bosta';
-import { Order } from 'src/entity';
-import { CartModule } from 'src/cart';
-import { ProductsModule } from 'src/products';
-import { MailService } from 'src/mail';
-import { MediaModule } from 'src/media';
+import { AddressesModule } from 'src/addresses/addresses.module';
+import { CartModule } from 'src/cart/cart.module';
+import { MailService } from 'src/mail/mail.service';
+import { MediaModule } from 'src/media/media.module';
+import { ProductsModule } from 'src/products/products.module';
 
-import { OrdersAdminController } from './orders-admin.controller';
-import { OrdersUserController } from './orders-user.controller';
-import { OrderItemsService } from './order-items.service';
-import { OrdersService } from './orders.service';
+import { AdminOrdersController } from './controllers/admin-orders.controller';
+import { BostaOrdersController } from './controllers/bosta-orders.controller';
+import { OrdersController } from './controllers/orders.controller';
+import { Order } from './entities/order.entity';
+import { OrderItemsService } from './services/order-items.service';
+import { OrdersService } from './services/orders.service';
 
 @Module({
-  imports: [
-    HttpModule,
-    TypeOrmModule.forFeature([Order]),
-    forwardRef(() => AddressesModule),
-    forwardRef(() => BostaModule),
-    CartModule,
-    ProductsModule,
-    MediaModule,
-  ],
-  controllers: [OrdersUserController, OrdersAdminController],
+  imports: [HttpModule, TypeOrmModule.forFeature([Order]), AddressesModule, CartModule, ProductsModule, MediaModule],
+  controllers: [OrdersController, AdminOrdersController, BostaOrdersController],
   providers: [OrdersService, OrderItemsService, MailService],
   exports: [OrdersService],
 })

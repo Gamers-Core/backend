@@ -17,6 +17,8 @@ export default {
 
   'cart.itemNotFound': 'العنصر غير موجود في السلة',
   'cart.insufficientStock': 'المخزون غير كافٍ للمنتج {externalId}',
+  'cart.createFailed': 'فشل في إنشاء السلة. يرجى المحاولة مرة أخرى.',
+  'cart.duplicateExternalIds': 'تم اكتشاف معرّف متغير مكرر في عناصر السلة',
 
   'media.notFound': 'الوسائط غير موجودة',
   'media.required': 'الوسائط مطلوبة',
@@ -24,6 +26,10 @@ export default {
   'media.invalidType': 'نوع الملف غير صالح',
   'media.invalidTypeWithAllowed': 'نوع الملف غير صالح. الأنواع المسموح بها: {allowedTypes}',
   'media.saveFailed': 'فشل في حفظ سجل الوسائط',
+  'media.tooLarge': 'حجم الملف يتجاوز الحد الأقصى المسموح به {maxSize} ميجابايت',
+  'media.uploadFailed': 'فشل في رفع الوسائط',
+  'media.unsupportedType': 'نوع الوسائط غير مدعوم',
+  'media.requestTimeout': 'انتهت مهلة رفع الوسائط. يرجى المحاولة مرة أخرى.',
 
   'products.brandNotFound': 'العلامة التجارية غير موجودة',
   'products.categoryNotFound': 'الفئة غير موجودة',
@@ -31,6 +37,7 @@ export default {
   'products.brandHasProducts': 'لا يمكن حذف العلامة التجارية التي تحتوي على منتجات مرتبطة',
   'products.productNotFound': 'المنتج غير موجود',
   'products.variantNotFound': 'المتغير غير موجود',
+  'products.variantsNotFound': 'المتغيرات غير موجودة: {externalIds}',
   'products.invalidIds': 'معرّفات المنتجات غير صالحة',
   'products.requiredAmountMin': 'الكمية المطلوبة يجب أن تكون 1 على الأقل',
   'products.insufficientStock': 'المخزون غير كافٍ للمتغير {externalId}',

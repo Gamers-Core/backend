@@ -1,14 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, In, Repository } from 'typeorm';
+import { Brackets, EntityManager, In, Repository } from 'typeorm';
 
-import { Brand, Category, Product, Variant } from 'src/entity';
-import { MediaAttachmentService } from 'src/media';
-import { BadRequestException, NotFoundException } from 'src/common';
-import { LocaleContextService } from 'src/i18n';
+import { Brand } from 'src/brands/entities/brand.entity';
+import { Category } from 'src/categories/entities/category.entity';
+import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { withOptionalManager } from 'src/common/with-optional-manager';
+import { LocaleContextService } from 'src/i18n/locale-context.service';
+import { MediaService } from 'src/media/services/media.service';
+import { ProductMediaService } from 'src/media/services/product-media.service';
 
-import { AdminSearchProductsDTO, CreateProductDTO, SearchProductsDTO, UpdateProductDTO } from '../dtos';
+import { AdminSearchProductsDTO } from '../dtos/admin/admin-search-products.dto';
+import { CreateProductDTO } from '../dtos/admin/create-product.dto';
+import { UpdateProductDTO } from '../dtos/admin/update-product.dto';
+import { SearchProductsDTO } from '../dtos/user/search-products.dto';
+import { Product } from '../entities/product.entity';
+import { Variant } from '../entities/variant.entity';
 import { productBrandCategoryRelations, productFullRelations } from '../relations';
+
 import { VariantsService } from './variants.service';
 
 @Injectable()
@@ -16,61 +25,58 @@ export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private readonly productsRepository: Repository<Product>,
-    private readonly mediaAttachmentService: MediaAttachmentService,
+    private readonly productMediaService: ProductMediaService,
     private readonly variants: VariantsService,
+    private readonly mediaService: MediaService,
     private readonly localeContextService: LocaleContextService,
   ) {}
 
-  async create({ brandId, categoryId, mediaIds, variants, ...dto }: CreateProductDTO) {
+  add({ brandId, categoryId, mediaIds, variants, ...dto }: CreateProductDTO) {
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepo = manager.getRepository(Product);
-      const brandRepo = manager.getRepository(Brand);
-      const categoryRepo = manager.getRepository(Category);
 
-      const [brand, category] = await Promise.all([
-        this.resolveBrand(brandId, brandRepo),
-        this.resolveCategory(categoryId, categoryRepo),
+      const [brandExists, categoryExists] = await Promise.all([
+        manager.getRepository(Brand).existsBy({ id: brandId }),
+        manager.getRepository(Category).existsBy({ id: categoryId }),
       ]);
 
-      const product = await productRepo.save(productRepo.create({ ...dto, brand, category }));
+      if (!brandExists) throw NotFoundException('products.brandNotFound');
+      if (!categoryExists) throw NotFoundException('products.categoryNotFound');
+
+      const product = await productRepo.save(
+        productRepo.create({ ...dto, brand: { id: brandId }, category: { id: categoryId } }),
+      );
 
       await this.variants.add(product.id, variants, manager);
 
-      if (mediaIds !== undefined)
-        await this.mediaAttachmentService.sync({ entityId: product.id, entityType: 'product', mediaIds }, manager);
+      if (mediaIds !== undefined) await this.productMediaService.sync(product.id, mediaIds, manager);
 
-      return this.findOneWithMediaOrFail(product.id, productRepo);
+      return this.getOneOrFail(product.id, manager);
     });
   }
 
-  async findMany(ids: string) {
-    if (!ids?.trim()) throw new BadRequestException('products.invalidIds');
+  getMany(ids: string) {
+    const uniqueIds = [
+      ...new Set(
+        ids
+          .split(',')
+          .map((s) => Number(s.trim()))
+          .filter((n) => Number.isInteger(n) && n > 0),
+      ),
+    ];
+    if (!uniqueIds.length) throw BadRequestException('products.invalidIds');
 
-    const idSegments = ids.split(',').map((id) => id.trim());
-
-    if (!idSegments.length || idSegments.some((id) => !id || !/^\d+$/.test(id)))
-      throw new BadRequestException('products.invalidIds');
-
-    const idArray = idSegments.map((id) => Number(id));
-
-    if (idArray.some((id) => !Number.isInteger(id) || id <= 0)) throw new BadRequestException('products.invalidIds');
-
-    const uniqueIds = Array.from(new Set(idArray));
-    if (!uniqueIds.length) throw new BadRequestException('products.invalidIds');
-
-    const products = await this.productsRepository.find({
+    return this.productsRepository.find({
       where: { id: In(uniqueIds) },
       relations: productFullRelations,
     });
-
-    return this.attachMediaToProducts(products);
   }
 
-  async findOne(id: number) {
-    return this.findOneWithMediaOrFail(id);
+  getOne(id: number) {
+    return this.getOneOrFail(id);
   }
 
-  async search(
+  search(
     {
       q,
       brandId,
@@ -82,15 +88,25 @@ export class ProductsService {
     }: AdminSearchProductsDTO | SearchProductsDTO = {},
     isAdmin = false,
   ) {
+    const locale = this.localeContextService.locale;
+    const trimmedQ = q?.trim();
+    const { sort = 'created-descending' } = 'sort' in rest ? rest : {};
+    const effectiveSort = sort === 'most-relevant' && !trimmedQ ? 'created-descending' : sort;
+    const variantCondition = isAdmin ? `v."deleted_at" IS NULL` : `v."deleted_at" IS NULL AND v."is_active" = true`;
+
     const qb = this.productsRepository
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.brand', 'brand')
+      .leftJoinAndSelect('brand.image', 'brandImage')
       .leftJoinAndSelect('product.category', 'category')
+      .leftJoinAndSelect('product.media', 'productMedia')
+      .leftJoinAndSelect('productMedia.media', 'productMediaFile')
       .leftJoinAndSelect(
         'product.variants',
         'variant',
         isAdmin ? 'variant.deletedAt IS NULL' : 'variant.deletedAt IS NULL AND variant.isActive = true',
-      );
+      )
+      .leftJoinAndSelect('variant.image', 'variantImage');
 
     if (isAdmin) {
       const status = 'status' in rest ? rest.status : undefined;
@@ -98,15 +114,12 @@ export class ProductsService {
     } else qb.andWhere('product.status = :status', { status: 'active' });
 
     if (brandId) qb.andWhere('brand.id = :brandId', { brandId });
-
     if (categoryId) qb.andWhere('category.id = :categoryId', { categoryId });
 
-    if (q?.trim())
-      qb.andWhere(`(product.name::text ILIKE :q OR product.title::text ILIKE :q OR variant.name::text ILIKE :q)`, {
-        q: `%${q.trim()}%`,
+    if (trimmedQ)
+      qb.andWhere('(product.name::text ILIKE :q OR product.title::text ILIKE :q OR variant.name::text ILIKE :q)', {
+        q: `%${trimmedQ}%`,
       });
-
-    const variantCondition = isAdmin ? `v."deleted_at" IS NULL` : `v."deleted_at" IS NULL AND v."is_active" = true`;
 
     if (minPrice !== undefined)
       qb.andWhere(
@@ -139,7 +152,7 @@ export class ProductsService {
           AND v.stock > 0
       )`,
       );
-    if (stock === 'out-of-stock')
+    else if (stock === 'out-of-stock')
       qb.andWhere(
         `NOT EXISTS (
         SELECT 1 FROM product_variant_entity v
@@ -149,35 +162,33 @@ export class ProductsService {
       )`,
       );
 
-    const { sort = 'created-descending' } = 'sort' in rest ? rest : {};
-
-    const effectiveSort = sort === 'most-relevant' && !q?.trim() ? 'created-descending' : sort;
-
     switch (effectiveSort) {
       case 'most-relevant':
         qb.orderBy(
           `CASE
-                    WHEN product.name->>'${this.localeContextService.locale}' ILIKE :exactQ THEN 0
-                    WHEN product.title->>'${this.localeContextService.locale}' ILIKE :exactQ THEN 1
-                    ELSE 2
-                END`,
+          WHEN product.name->>:locale ILIKE :exactQ THEN 0
+          WHEN product.title->>:locale ILIKE :exactQ THEN 1
+          ELSE 2
+        END`,
           'ASC',
-        ).addOrderBy('product.updatedAt', 'DESC');
-        qb.setParameter('exactQ', q!.trim());
+        )
+          .addOrderBy('product.updatedAt', 'DESC')
+          .setParameter('exactQ', trimmedQ)
+          .setParameter('locale', locale);
         break;
 
       case 'title-ascending':
-        qb.orderBy(`product.title->>'${this.localeContextService.locale}'`, 'ASC');
+        qb.orderBy('product.title->>:locale', 'ASC').setParameter('locale', locale);
         break;
 
       case 'title-descending':
-        qb.orderBy(`product.title->>'${this.localeContextService.locale}'`, 'DESC');
+        qb.orderBy('product.title->>:locale', 'DESC').setParameter('locale', locale);
         break;
 
       case 'price-ascending':
         qb.orderBy(
           `(SELECT MIN(v.price) FROM product_variant_entity v
-                    WHERE v."product_id" = product.id AND ${variantCondition})`,
+          WHERE v."product_id" = product.id AND ${variantCondition})`,
           'ASC',
           'NULLS LAST',
         );
@@ -186,7 +197,7 @@ export class ProductsService {
       case 'price-descending':
         qb.orderBy(
           `(SELECT MAX(v.price) FROM product_variant_entity v
-                    WHERE v."product_id" = product.id AND ${variantCondition})`,
+          WHERE v."product_id" = product.id AND ${variantCondition})`,
           'DESC',
           'NULLS LAST',
         );
@@ -204,116 +215,120 @@ export class ProductsService {
 
     qb.addOrderBy('product.id', 'ASC').addOrderBy('variant.id', 'ASC');
 
-    const products = await qb.getMany();
-
-    return this.attachMediaToProducts(products);
+    return qb.getMany();
   }
 
-  async update(id: number, { mediaIds, brandId, categoryId, ...dto }: UpdateProductDTO) {
+  update(id: number, { mediaIds, brandId, categoryId, ...dto }: UpdateProductDTO) {
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepo = manager.getRepository(Product);
 
-      const product = await this.findOneOrFail(id, productRepo);
-
-      if (mediaIds !== undefined)
-        await this.mediaAttachmentService.sync({ entityId: id, entityType: 'product', mediaIds }, manager);
+      const product = await this.getOneOrFail(id, manager);
 
       Object.assign(product, dto);
 
+      if (mediaIds !== undefined) await this.productMediaService.sync(id, mediaIds, manager);
+
       if (brandId) {
-        const brandRepo = manager.getRepository(Brand);
-        product.brand = await this.resolveBrand(brandId, brandRepo);
+        const brandExists = await manager.getRepository(Brand).existsBy({ id: brandId });
+        if (!brandExists) throw NotFoundException('products.brandNotFound');
+
+        product.brand = { id: brandId } as Brand;
       }
 
       if (categoryId) {
-        const categoryRepo = manager.getRepository(Category);
-        product.category = await this.resolveCategory(categoryId, categoryRepo);
+        const categoryExists = await manager.getRepository(Category).existsBy({ id: categoryId });
+        if (!categoryExists) throw NotFoundException('products.categoryNotFound');
+
+        product.category = { id: categoryId } as Category;
       }
 
       await productRepo.save(product);
 
-      return this.findOneWithMediaOrFail(id, productRepo);
+      return this.getOneOrFail(id, manager);
     });
   }
 
-  async delete(id: number): Promise<void> {
-    await this.productsRepository.manager.transaction(async (manager) => {
+  remove(id: number): Promise<void> {
+    return this.productsRepository.manager.transaction(async (manager) => {
       const productRepo = manager.getRepository(Product);
 
-      await this.mediaAttachmentService.sync({ entityId: id, entityType: 'product', mediaIds: [] }, manager);
+      const product = await this.getOneOrFail(id, manager);
 
-      const product = await this.findOneOrFail(id, productRepo);
       await Promise.all(
-        product.variants.map(async (variant) =>
-          this.mediaAttachmentService.sync({ entityId: variant.id, entityType: 'variant', mediaIds: [] }, manager),
-        ),
+        product.variants.filter((v) => v.image).map((v) => this.mediaService.detach(v.image!.id, manager)),
       );
+
+      await this.productMediaService.sync(id, [], manager);
 
       await productRepo.delete(id);
     });
   }
 
-  async getRecommendations(productId: number) {
-    const product = await this.findOneForRecommendationsOrFail(productId);
+  getRecommendations(productId: number) {
+    return this.productsRepository.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(Product);
 
-    const recommendationRows = await this.productsRepository
-      .createQueryBuilder('product')
-      .select('product.id', 'id')
-      .leftJoin('product.brand', 'brand')
-      .leftJoin('product.category', 'category')
-      .where('product.id != :productId', { productId })
-      .andWhere('product.status = :status', { status: 'active' })
-      .andWhere(
-        new Brackets((qb) => {
-          qb.where('brand.id = :brandId', { brandId: product.brand.id }).orWhere('category.id = :categoryId', {
-            categoryId: product.category.id,
-          });
-        }),
-      )
-      .andWhere((qb) => {
-        const sub = qb
-          .subQuery()
-          .select('1')
-          .from(Variant, 'v')
-          .where('v.product = product.id')
-          .andWhere('v.isActive = :active', { active: true })
-          .andWhere('v.stock > 0')
-          .andWhere('v.deletedAt IS NULL')
-          .getQuery();
-        return `EXISTS ${sub}`;
-      })
-      .orderBy(
-        `
+      const product = await this.getOneForRecommendationsOrFail(productId, manager);
+
+      const recommendationRows = await repo
+        .createQueryBuilder('product')
+        .select('product.id', 'id')
+        .leftJoin('product.brand', 'brand')
+        .leftJoin('product.category', 'category')
+        .where('product.id != :productId', { productId })
+        .andWhere('product.status = :status', { status: 'active' })
+        .andWhere(
+          new Brackets((qb) => {
+            qb.where('brand.id = :brandId', { brandId: product.brand.id }).orWhere('category.id = :categoryId', {
+              categoryId: product.category.id,
+            });
+          }),
+        )
+        .andWhere((qb) => {
+          const sub = qb
+            .subQuery()
+            .select('1')
+            .from(Variant, 'v')
+            .where('v.product = product.id')
+            .andWhere('v.isActive = :active', { active: true })
+            .andWhere('v.stock > 0')
+            .andWhere('v.deletedAt IS NULL')
+            .getQuery();
+          return `EXISTS ${sub}`;
+        })
+        .orderBy(
+          `
       CASE
         WHEN brand.id = :brandId AND category.id = :categoryId THEN 0
         WHEN brand.id = :brandId OR category.id = :categoryId THEN 1
         ELSE 2
       END
     `,
-        'ASC',
-      )
-      .addOrderBy('product.updatedAt', 'DESC')
-      .limit(10)
-      .getRawMany<{ id: string }>();
+          'ASC',
+        )
+        .addOrderBy('product.updatedAt', 'DESC')
+        .limit(10)
+        .getRawMany<{ id: string }>();
 
-    const recommendationIds = this.pickRandom(
-      recommendationRows.map(({ id }) => Number(id)),
-      4,
-    );
+      const recommendationIds = this.pickRandom(
+        recommendationRows.map(({ id }) => Number(id)),
+        4,
+      );
 
-    if (!recommendationIds.length) return [];
+      if (!recommendationIds.length) return [];
 
-    const recommendations = await this.productsRepository.find({
-      where: { id: In(recommendationIds) },
-      relations: productFullRelations,
+      const recommendations = await repo.find({
+        where: { id: In(recommendationIds) },
+        relations: productFullRelations,
+      });
+
+      const recommendationsById = new Map(recommendations.map((item) => [item.id, item]));
+      const orderedRecommendations = recommendationIds
+        .map((id) => recommendationsById.get(id))
+        .filter((item): item is Product => !!item);
+
+      return orderedRecommendations;
     });
-
-    const recommendationsById = new Map(recommendations.map((item) => [item.id, item]));
-    const orderedRecommendations = recommendationIds
-      .map((id) => recommendationsById.get(id))
-      .filter((item): item is Product => !!item);
-
-    return this.attachMediaToProducts(orderedRecommendations);
   }
 
   private pickRandom<T>(items: T[], count: number): T[] {
@@ -327,73 +342,33 @@ export class ProductsService {
     return shuffled.slice(0, count);
   }
 
-  private async findOneWithMediaOrFail(id: number, productRepository: Repository<Product> = this.productsRepository) {
-    const product = await this.findOneOrFail(id, productRepository);
+  private getOneOrFail(id: number, manager?: EntityManager): Promise<Product> {
+    return withOptionalManager(manager, this.productsRepository.manager, async (manager) => {
+      const repo = manager.getRepository(Product);
 
-    const [productWithMedia] = await this.attachMediaToProducts([product]);
+      const product = await repo.findOne({
+        where: { id },
+        relations: productFullRelations,
+      });
 
-    return productWithMedia;
-  }
+      if (!product) throw NotFoundException('products.productNotFound');
 
-  private async attachMediaToProducts(products: Product[]) {
-    if (!products.length) return [];
-
-    const variantIds = products.flatMap((product) => product.variants.map((variant) => variant.id));
-    const brandIds = Array.from(new Set(products.map((product) => product.brand.id)));
-
-    const [mediaMap, variantMediaMap, brandMediaMap] = await Promise.all([
-      this.mediaAttachmentService.getBulkMedia(
-        products.map(({ id }) => id),
-        'product',
-      ),
-      this.mediaAttachmentService.getBulkMedia(variantIds, 'variant'),
-      this.mediaAttachmentService.getBulkMedia(brandIds, 'brand'),
-    ]);
-
-    return products.map((product) => {
-      const variants = product.variants.map((variant) => ({ ...variant, media: variantMediaMap[variant.id] ?? [] }));
-      const brand = { ...product.brand, image: brandMediaMap[product.brand.id]?.[0] ?? null };
-
-      return { ...product, variants, media: mediaMap[product.id] ?? [], brand };
+      return product;
     });
   }
 
-  private async findOneOrFail(
-    id: number,
-    productRepository: Repository<Product> = this.productsRepository,
-  ): Promise<Product> {
-    const product = await productRepository.findOne({
-      where: { id },
-      relations: productFullRelations,
+  private getOneForRecommendationsOrFail(id: number, manager?: EntityManager): Promise<Product> {
+    return withOptionalManager(manager, this.productsRepository.manager, async (manager) => {
+      const repo = manager.getRepository(Product);
+
+      const product = await repo.findOne({
+        where: { id },
+        relations: productBrandCategoryRelations,
+      });
+
+      if (!product) throw NotFoundException('products.productNotFound');
+
+      return product;
     });
-
-    if (!product) throw new NotFoundException('products.productNotFound');
-
-    return product;
-  }
-
-  private async findOneForRecommendationsOrFail(id: number): Promise<Product> {
-    const product = await this.productsRepository.findOne({
-      where: { id },
-      relations: productBrandCategoryRelations,
-    });
-
-    if (!product) throw new NotFoundException('products.productNotFound');
-
-    return product;
-  }
-
-  private async resolveBrand(brandId: number, brandRepo: Repository<Brand>) {
-    const brand = await brandRepo.findOne({ where: { id: brandId } });
-    if (!brand) throw new NotFoundException('products.brandNotFound');
-
-    return brand;
-  }
-
-  private async resolveCategory(categoryId: number, categoryRepo: Repository<Category>) {
-    const category = await categoryRepo.findOne({ where: { id: categoryId } });
-    if (!category) throw new NotFoundException('products.categoryNotFound');
-
-    return category;
   }
 }
