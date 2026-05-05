@@ -47,6 +47,8 @@ export class UsersService {
   async update(id: number, updatedUser: DeepPartial<User>) {
     const result = await this.repo.update(id, updatedUser);
     if (!result.affected) throw NotFoundException('user.notFound');
+
+    return this.getOne(id);
   }
 
   async remove(id: number) {
