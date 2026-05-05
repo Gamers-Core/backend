@@ -9,7 +9,7 @@ import { withOptionalManager } from 'src/common/with-optional-manager';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { UploadMediaDTO } from '../dtos/admin/upload-media.dto';
 import { Media } from '../entities/media.entity';
-import { mapToMedia } from '../helpers';
+import { getBlurDataURL, mapToMedia } from '../helpers';
 import { UploadedMediaFile } from '../types';
 
 @Injectable()
@@ -25,8 +25,11 @@ export class MediaService {
   async upload(file: UploadedMediaFile, mediaDTO: UploadMediaDTO) {
     const result = await this.cloudinaryService.uploadBuffer(file, mediaDTO.folder);
 
+    const media = mapToMedia(result);
+    const blurDataURL = await getBlurDataURL(file, media);
+
     return await this.mediaRepository.save(
-      this.mediaRepository.create({ ...mapToMedia(result), expiresAt: this.getDraftExpiryDate() }),
+      this.mediaRepository.create({ ...media, blurDataURL, expiresAt: this.getDraftExpiryDate() }),
     );
   }
 

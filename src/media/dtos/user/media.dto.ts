@@ -7,6 +7,9 @@ export class MediaDTO {
   src: string;
 
   @Expose()
+  blurDataURL: string | null;
+
+  @Expose()
   type: MediaType;
 
   @Expose()

@@ -12,6 +12,9 @@ export class Media {
   @Column()
   src: string;
 
+  @Column('text', { nullable: true })
+  blurDataURL: string | null;
+
   @Column({ unique: true })
   publicId: string;
 

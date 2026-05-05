@@ -1,4 +1,5 @@
 import { UploadApiResponse } from 'cloudinary';
+import { getPlaiceholder } from 'plaiceholder';
 import { DeepPartial } from 'typeorm';
 
 import { Media } from './entities/media.entity';
@@ -40,4 +41,14 @@ export const mapToMedia = ({
     bytes,
     type,
   };
+};
+
+export const getBlurDataURL = async (file: UploadedMediaFile, media: DeepPartial<Media>) => {
+  if (media.type !== 'image') return null;
+
+  const res = await getPlaiceholder(file.buffer, { size: 16 })
+    .then(({ base64 }) => base64)
+    .catch(() => null);
+
+  return res;
 };
