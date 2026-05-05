@@ -10,6 +10,9 @@ export class AdminMediaDTO {
   src: string;
 
   @Expose()
+  blurDataURL: string | null;
+
+  @Expose()
   publicId: string;
 
   @Expose()
