@@ -43,10 +43,14 @@ export const mapToMedia = ({
   };
 };
 
-export const getBlurDataURL = async (file: UploadedMediaFile, media: DeepPartial<Media>) => {
-  if (media.type !== 'image') return null;
+export const getBlurDataURL = async ({ type, src }: DeepPartial<Media>) => {
+  if (type !== 'image' || !src) return null;
 
-  const res = await getPlaiceholder(file.buffer, { size: 16 })
+  const tinyUrl = src.replace('/upload/', `/upload/w_32/`);
+
+  const res = await fetch(tinyUrl)
+    .then((r) => r.arrayBuffer())
+    .then((buf) => getPlaiceholder(Buffer.from(buf), { size: 32 }))
     .then(({ base64 }) => base64)
     .catch(() => null);
 

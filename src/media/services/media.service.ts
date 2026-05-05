@@ -26,7 +26,7 @@ export class MediaService {
     const result = await this.cloudinaryService.uploadBuffer(file, mediaDTO.folder);
 
     const media = mapToMedia(result);
-    const blurDataURL = await getBlurDataURL(file, media);
+    const blurDataURL = await getBlurDataURL(media);
 
     return await this.mediaRepository.save(
       this.mediaRepository.create({ ...media, blurDataURL, expiresAt: this.getDraftExpiryDate() }),
