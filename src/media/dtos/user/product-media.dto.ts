@@ -8,6 +8,10 @@ export class ProductMediaDTO {
   src: string;
 
   @Expose()
+  @Transform(({ obj, value }) => obj.media?.blurDataURL ?? obj.blurDataURL ?? value)
+  blurDataURL: string | null;
+
+  @Expose()
   @Transform(({ obj, value }) => obj.media?.type ?? obj.type ?? value)
   type: MediaType;
 
