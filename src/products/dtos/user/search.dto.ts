@@ -18,8 +18,8 @@ export class SearchDTO extends ProductDTO {
   declare media: ProductMediaDTO[];
 
   @Expose()
-  @Type(() => MediaDTO)
   @Transform(({ obj }) => obj.variants[0].image)
+  @Type(() => MediaDTO)
   image: MediaDTO;
 
   @Expose()
