@@ -350,6 +350,7 @@ export class OrdersService {
 
     try {
       const staleOrders = await this.ordersRepo.find({
+        select: { orderNumber: true },
         where: { status: 'pending', createdAt: LessThan(cutoff) },
       });
       if (!staleOrders.length) return;
