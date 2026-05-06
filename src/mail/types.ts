@@ -17,6 +17,7 @@ export interface SendMailOptions {
 export type MailOptions = {
   order_reminder: OrderDTO;
   order_confirmation: OrderDTO;
+  order_cancellation: OrderDTO;
 } & { [K in AuthPurpose]: { otp: string } };
 export interface MailOptionsMap<T extends MailOptionsType> extends Omit<SendMailOptions, 'to' | 'html'> {
   type: MailType;

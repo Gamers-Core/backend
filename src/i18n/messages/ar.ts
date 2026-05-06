@@ -99,6 +99,11 @@ export default {
   'mail.common.qty': 'الكمية',
   'mail.common.price': 'السعر',
   'mail.common.automatedEmail': 'Gamers Core • هذه رسالة بريد إلكتروني آلية',
+  'mail.orderCancellation.subject': 'إلغاء الطلب - {orderNumber}',
+  'mail.orderCancellation.header': 'إلغاء الطلب',
+  'mail.orderCancellation.thanksReceipt': 'شكراً لطلبك! إليك تفاصيل الإيصال:',
+  'mail.orderCancellation.summary': 'الملخص',
+  'mail.orderCancellation.shippedNotice': 'إذا تم شحن طلبك بالفعل، سنقوم بإشعارك بالخطوات التالية.',
 
   'userReviews.notFound': 'مراجعة المستخدم غير موجودة',
   'userReviews.maxCount': 'الحد الأقصى للمراجعات هو 3',

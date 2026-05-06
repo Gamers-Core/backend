@@ -314,6 +314,20 @@ export class OrdersService {
     delivered: async (order) => {
       if (order.paymentStatus === 'paid') await this.updateStatus({ orderNumber: order.orderNumber }, 'completed');
     },
+    cancelled: async (order) => {
+      await withEnvironment(
+        async (isValid) => {
+          if (!isValid) return;
+
+          await this.mailService.sendTypedMail(
+            order.user.email,
+            'order_cancellation',
+            this.mapToDTO(order, this.LocaleContextService.locale),
+          );
+        },
+        ['production'],
+      );
+    },
   } as const satisfies Partial<Record<OrderStatus, (order: Order) => void | Promise<void>>>;
 
   @Cron(CronExpression.EVERY_HOUR, { waitForCompletion: true })
