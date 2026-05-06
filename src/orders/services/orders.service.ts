@@ -343,6 +343,7 @@ export class OrdersService {
     },
   } as const satisfies Partial<Record<OrderStatus, (order: Order, manager?: EntityManager) => void | Promise<void>>>;
 
+  private static readonly CANCEL_STALE_ORDERS_BATCH_SIZE = 10;
   @Cron(CronExpression.EVERY_HOUR, { waitForCompletion: true })
   async cancelStalePendingOrders() {
     const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
@@ -353,7 +354,10 @@ export class OrdersService {
       });
       if (!staleOrders.length) return;
 
-      await Promise.allSettled(staleOrders.map(({ orderNumber }) => this.updateStatus({ orderNumber }, 'cancelled')));
+      for (let i = 0; i < staleOrders.length; i += OrdersService.CANCEL_STALE_ORDERS_BATCH_SIZE) {
+        const batch = staleOrders.slice(i, i + OrdersService.CANCEL_STALE_ORDERS_BATCH_SIZE);
+        await Promise.allSettled(batch.map(({ orderNumber }) => this.updateStatus({ orderNumber }, 'cancelled')));
+      }
     } catch (error) {
       this.logger.error('Failed to cancel stale pending orders', error instanceof Error ? error.stack : String(error));
     }
