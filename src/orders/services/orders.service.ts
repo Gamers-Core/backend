@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToInstance } from 'class-transformer';
@@ -40,6 +40,8 @@ import { OrderItemsService } from './order-items.service';
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     @InjectRepository(Order) private readonly ordersRepo: Repository<Order>,
     private readonly cartService: CartService,
@@ -345,11 +347,15 @@ export class OrdersService {
   async cancelStalePendingOrders() {
     const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
 
-    const staleOrders = await this.ordersRepo.find({
-      where: { status: 'pending', createdAt: LessThan(cutoff) },
-    });
-    if (!staleOrders.length) return;
+    try {
+      const staleOrders = await this.ordersRepo.find({
+        where: { status: 'pending', createdAt: LessThan(cutoff) },
+      });
+      if (!staleOrders.length) return;
 
-    await Promise.allSettled(staleOrders.map(({ orderNumber }) => this.updateStatus({ orderNumber }, 'cancelled')));
+      await Promise.allSettled(staleOrders.map(({ orderNumber }) => this.updateStatus({ orderNumber }, 'cancelled')));
+    } catch (error) {
+      this.logger.error('Failed to cancel stale pending orders', error instanceof Error ? error.stack : String(error));
+    }
   }
 }
