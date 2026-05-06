@@ -1,5 +1,6 @@
 import { MailTemplatesMap } from '../types';
 
+import { renderOrderCancellationHtml } from './order-cancellation.template';
 import { renderOrderConfirmationHtml } from './order-confirmation.template';
 import { renderOrderReminderHtml } from './order-reminder.template';
 import { renderSigninHtml } from './signin.template';
@@ -22,5 +23,11 @@ export const mailTemplates: MailTemplatesMap = {
     title: t('mail.supportTitle'),
     subject: t('mail.orderReminder.subject'),
     html: renderOrderReminderHtml,
+  }),
+  order_cancellation: (t, { orderNumber }) => ({
+    type: 'no-reply',
+    title: t('mail.supportTitle'),
+    subject: t(['mail.orderCancellation.subject', { orderNumber }]),
+    html: renderOrderCancellationHtml,
   }),
 };

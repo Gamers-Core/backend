@@ -1,17 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { plainToInstance } from 'class-transformer';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, LessThan, Repository } from 'typeorm';
 
 import { AddressesService } from 'src/addresses/addresses.service';
 import { BostaService } from 'src/addresses/bosta/bosta.service';
 import { CartService } from 'src/cart/cart.service';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withEnvironment } from 'src/common/with-environment';
+import { withOptionalManager } from 'src/common/with-optional-manager';
 import { LocaleContextService } from 'src/i18n/locale-context.service';
 import { Locale } from 'src/i18n/types';
 import { getEmail } from 'src/mail/helpers';
 import { MailService } from 'src/mail/mail.service';
+import { InventoryService } from 'src/products/services/inventory.service';
 
 import { AddOrderItemDTO } from '../dtos/admin/add-order-item.dto';
 import { CreateOrderDTO } from '../dtos/admin/create-order.dto';
@@ -37,6 +40,8 @@ import { OrderItemsService } from './order-items.service';
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     @InjectRepository(Order) private readonly ordersRepo: Repository<Order>,
     private readonly cartService: CartService,
@@ -45,6 +50,7 @@ export class OrdersService {
     private readonly orderItemsService: OrderItemsService,
     private readonly mailService: MailService,
     private readonly LocaleContextService: LocaleContextService,
+    private readonly inventoryService: InventoryService,
   ) {}
 
   getAll(userId?: number) {
@@ -108,7 +114,7 @@ export class OrdersService {
 
       order.status = status;
       await this.appendHistory(order, status, manager);
-      await this.statusHandlers[status]?.(order);
+      await this.statusHandlers[status]?.(order, manager);
     });
   }
 
@@ -313,5 +319,48 @@ export class OrdersService {
     delivered: async (order) => {
       if (order.paymentStatus === 'paid') await this.updateStatus({ orderNumber: order.orderNumber }, 'completed');
     },
-  } as const satisfies Partial<Record<OrderStatus, (order: Order) => void | Promise<void>>>;
+    cancelled: async (order, manager) => {
+      await withOptionalManager(manager, this.ordersRepo.manager, (manager) =>
+        Promise.all(
+          order.items.map(({ variantExternalId, quantity }) =>
+            this.inventoryService.restoreStock(variantExternalId, quantity, manager),
+          ),
+        ),
+      );
+
+      await withEnvironment(
+        async (isValid) => {
+          if (!isValid) return;
+
+          await this.mailService.sendTypedMail(
+            order.user.email,
+            'order_cancellation',
+            this.mapToDTO(order, this.LocaleContextService.locale),
+          );
+        },
+        ['production'],
+      );
+    },
+  } as const satisfies Partial<Record<OrderStatus, (order: Order, manager?: EntityManager) => void | Promise<void>>>;
+
+  private static readonly CANCEL_STALE_ORDERS_BATCH_SIZE = 10;
+  @Cron(CronExpression.EVERY_HOUR, { waitForCompletion: true })
+  async cancelStalePendingOrders() {
+    const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
+    try {
+      const staleOrders = await this.ordersRepo.find({
+        select: { orderNumber: true },
+        where: { status: 'pending', createdAt: LessThan(cutoff) },
+      });
+      if (!staleOrders.length) return;
+
+      for (let i = 0; i < staleOrders.length; i += OrdersService.CANCEL_STALE_ORDERS_BATCH_SIZE) {
+        const batch = staleOrders.slice(i, i + OrdersService.CANCEL_STALE_ORDERS_BATCH_SIZE);
+        await Promise.allSettled(batch.map(({ orderNumber }) => this.updateStatus({ orderNumber }, 'cancelled')));
+      }
+    } catch (error) {
+      this.logger.error('Failed to cancel stale pending orders', error instanceof Error ? error.stack : String(error));
+    }
+  }
 }

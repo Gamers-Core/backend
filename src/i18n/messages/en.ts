@@ -99,6 +99,12 @@ export default {
   'mail.common.qty': 'Qty',
   'mail.common.price': 'Price',
   'mail.common.automatedEmail': 'Gamers Core • This is an automated email',
+  'mail.orderCancellation.subject': 'Order Cancellation - {orderNumber}',
+  'mail.orderCancellation.header': 'Order Cancellation',
+  'mail.orderCancellation.thanksReceipt': "Thank you for your order! Here's the receipt details:",
+  'mail.orderCancellation.summary': 'Summary',
+  'mail.orderCancellation.shippedNotice':
+    'Your order has been canceled. If you have any questions about your cancellation or refund, please contact support.',
 
   'userReviews.notFound': 'User review not found',
   'userReviews.maxCount': 'Maximum of 3 user reviews allowed',
