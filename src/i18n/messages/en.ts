@@ -104,7 +104,7 @@ export default {
   'mail.orderCancellation.thanksReceipt': "Thank you for your order! Here's the receipt details:",
   'mail.orderCancellation.summary': 'Summary',
   'mail.orderCancellation.shippedNotice':
-    'If your order has already been shipped, we will notify you about the next steps.',
+    'Your order has been canceled. If you have any questions about your cancellation or refund, please contact support.',
 
   'userReviews.notFound': 'User review not found',
   'userReviews.maxCount': 'Maximum of 3 user reviews allowed',

@@ -103,7 +103,8 @@ export default {
   'mail.orderCancellation.header': 'إلغاء الطلب',
   'mail.orderCancellation.thanksReceipt': 'شكراً لطلبك! إليك تفاصيل الإيصال:',
   'mail.orderCancellation.summary': 'الملخص',
-  'mail.orderCancellation.shippedNotice': 'إذا تم شحن طلبك بالفعل، سنقوم بإشعارك بالخطوات التالية.',
+  'mail.orderCancellation.shippedNotice':
+    'تم إلغاء طلبك. إذا كان لديك أي أسئلة حول إلغاء الطلب أو استرداد الأموال، يرجى الاتصال بالدعم.',
 
   'userReviews.notFound': 'مراجعة المستخدم غير موجودة',
   'userReviews.maxCount': 'الحد الأقصى للمراجعات هو 3',

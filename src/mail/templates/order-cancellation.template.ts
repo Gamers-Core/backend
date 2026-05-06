@@ -25,8 +25,8 @@ export const renderOrderCancellationHtml: MailTemplateFn<'order_cancellation'> =
     <thead>
       <tr style="background: #eee; text-align: ${isRtl ? 'right' : 'left'};">
         <th>${t('mail.common.item')}</th>
+        <th>${t('mail.common.variant')}</th>
         <th>${t('mail.common.qty')}</th>
-        <th>${t('mail.common.price')}</th>
         <th>${t('mail.common.total')}</th>
       </tr>
     </thead>
