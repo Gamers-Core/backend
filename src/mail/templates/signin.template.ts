@@ -1,6 +1,6 @@
 import { MailTemplateFn } from '../types';
 
-export const renderSigninHtml: MailTemplateFn<'signin'> = (t, { otp }) =>
+export const renderSigninHtml: MailTemplateFn<'signin' | 'admin_signin'> = (t, { otp }) =>
   `
   <h2 style="margin-bottom: 0;">🎮 Gamers Core</h2>
   <p style="margin-top: 4px; color: #555;">${t('mail.signin.subject')}</p>

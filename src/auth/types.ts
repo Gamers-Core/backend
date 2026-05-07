@@ -17,6 +17,7 @@ export type OtpVerifyHandlers = {
 
 export interface OtpDataMap {
   signin: undefined;
+  admin_signin: undefined;
 }
 
 export interface OtpVerifyResultMap {
@@ -24,6 +25,9 @@ export interface OtpVerifyResultMap {
     user: User;
     cart: Cart;
     isNewUser: boolean;
+  };
+  admin_signin: {
+    user: User;
   };
 }
 
