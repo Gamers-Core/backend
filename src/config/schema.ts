@@ -7,13 +7,17 @@ const baseSchema = z.object({
   NODE_ENV: z.enum(environments).default(defaultEnvironment),
   PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.string(),
-  FRONTEND_URL: z.url(),
   COOKIE_KEY: z.string(),
   REDIS_URL: z.string(),
   BOSTA_TOKEN: z.string(),
   CLOUDINARY_CLOUD_NAME: z.string(),
   CLOUDINARY_API_KEY: z.string(),
   CLOUDINARY_API_SECRET: z.string(),
+});
+
+const localSchema = z.object({
+  ...baseSchema.shape,
+  FRONTEND_URL: z.url(),
 });
 
 const developmentSchema = z.object({
@@ -32,7 +36,7 @@ const productionSchema = z.object({
 });
 
 export const envVariablesSchemaMap = {
-  local: baseSchema,
+  local: localSchema,
   development: developmentSchema,
   staging: stagingSchema,
   production: productionSchema,
