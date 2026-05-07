@@ -39,7 +39,9 @@ export class AuthService {
   }
 
   async adminSignin({ email }: SigninDTO) {
-    return this.otpSessionService.createSession({ purpose: 'admin_signin', email });
+    const user = await this.usersService.getAdminByEmail(email);
+
+    return this.otpSessionService.createSession({ purpose: 'admin_signin', email, ignoreMail: !user?.isAdmin });
   }
 
   async verifyOTP<P extends AuthPurpose>({

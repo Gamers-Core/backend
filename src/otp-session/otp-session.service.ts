@@ -59,6 +59,7 @@ export class OtpSessionService {
     purpose,
     email,
     data,
+    ignoreMail = false,
     ttlSeconds = OTP_DEFAULT_TTL_SECONDS,
   }: CreateSessionOptions<P>) {
     const sessionId = randomBytes(16).toString('hex');
@@ -86,7 +87,7 @@ export class OtpSessionService {
 
     await withEnvironment(
       async (isValid) => {
-        if (!isValid) return;
+        if (!isValid || ignoreMail) return;
 
         await this.mailService.sendTypedMail(email, purpose, { otp });
       },
