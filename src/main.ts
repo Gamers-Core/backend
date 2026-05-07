@@ -6,8 +6,14 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
 
+  const cookieDomain = process.env.COOKIE_DOMAIN;
+
+  const origin = cookieDomain
+    ? new RegExp(`^https?:\\/\\/([a-z0-9-]+\\.)*${cookieDomain.replace(/\./g, '\\.')}$`)
+    : process.env.FRONTEND_URL!;
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL,
+    origin,
     credentials: true,
     exposedHeaders: ['x-locale', 'x-is-logged-in'],
   });

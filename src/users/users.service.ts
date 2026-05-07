@@ -40,6 +40,10 @@ export class UsersService {
     return this.repo.findOne({ where: { id }, relations: { addresses: true } });
   }
 
+  getAdminByEmail(email: string) {
+    return this.repo.findOne({ where: { email, isAdmin: true } });
+  }
+
   updateLocale(id: number, locale: Locale) {
     return this.update(id, { locale });
   }

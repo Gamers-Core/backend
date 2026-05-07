@@ -32,6 +32,14 @@ export class AuthController {
     return this.authService.signin(body);
   }
 
+  @Serialize(OTPDTO)
+  @Post('admin/signin')
+  adminSignin(@Session() session: AuthSession, @Req() req: Request, @Body() body: SigninDTO) {
+    if (session.userId) req.session = null;
+
+    return this.authService.adminSignin(body);
+  }
+
   @Serialize(VerifyOTPResponseDTO)
   @Post('verify-otp')
   async verifyOTP(@Body() body: VerifyOTPDTO, @Session() session: AuthSession) {
