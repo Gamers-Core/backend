@@ -10,9 +10,9 @@ export type TranslateFnWithoutLocale = <K extends I18nKey>(options: Translate<K>
 export type EN = Messages['en'];
 export type AR = Messages['ar'];
 
-export type Localized<T extends Locale = Locale> = {
-  en: string;
-} & Partial<Record<Exclude<T, typeof defaultLocale>, string>>;
+export interface Localized extends Partial<Record<Locale, string>> {
+  [defaultLocale]: string;
+}
 
 export type I18nKey = Extract<keyof EN, keyof AR>;
 export type LanguageTranslations = EN | AR;

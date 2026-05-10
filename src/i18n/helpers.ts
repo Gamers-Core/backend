@@ -33,19 +33,18 @@ export const translateWithoutLocale =
     translate(options, locale);
 
 export const localize = (value: Localized, locale: Locale = defaultLocale): string =>
-  value[locale] ?? value[defaultLocale];
+  value[locale] || value[defaultLocale];
 
 export const isLocaleKey = (key: string): key is Locale => locales.includes(key as Locale);
 
 export const isLocalized = (value: unknown): value is Localized => {
-  if (!value || typeof value !== 'object' || !(defaultLocale in value)) return false;
+  if (!value || typeof value !== 'object') return false;
+  if (!(defaultLocale in value)) return false;
 
-  const localized = value as Localized;
-  return Object.entries(localized).every(([key, text]) => {
-    if (!isLocaleKey(key)) return false;
+  const obj = value as Record<string, unknown>;
+  if (typeof obj[defaultLocale] !== 'string' || !obj[defaultLocale].trim()) return false;
 
-    return typeof text === 'string' && text.trim().length >= 2;
-  });
+  return Object.entries(obj).every(([key, val]) => isLocaleKey(key) && (val === undefined || typeof val === 'string'));
 };
 
 export const i18nKeyValidator = <K extends I18nKey>(value: K) => value as unknown as Messages[Locale][K];
