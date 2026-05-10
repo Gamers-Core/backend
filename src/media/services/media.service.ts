@@ -99,7 +99,7 @@ export class MediaService {
   private getDraftExpiryDate() {
     const expiresAt = new Date();
 
-    expiresAt.setHours(expiresAt.getHours() + 24);
+    expiresAt.setHours(expiresAt.getHours() + 2);
 
     return expiresAt;
   }
