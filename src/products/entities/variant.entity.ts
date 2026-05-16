@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -20,6 +21,7 @@ import { Media } from 'src/media/entities/media.entity';
 import { Product } from './product.entity';
 
 @Entity('product_variant_entity')
+@Index('IDX_variant_product_position', ['product', 'position'])
 @Check('CHK_variant_compareAt_gt_price', '"compare_at" IS NULL OR "compare_at" > "price"')
 export class Variant {
   @PrimaryGeneratedColumn()
@@ -45,6 +47,9 @@ export class Variant {
 
   @Column('int', { name: 'compare_at', nullable: true, default: null })
   compareAt: number | null;
+
+  @Column('int')
+  position: number;
 
   @ManyToOne(() => Media, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn()

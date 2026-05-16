@@ -41,6 +41,7 @@ export default {
   'products.invalidIds': 'Invalid product IDs',
   'products.requiredAmountMin': 'requiredAmount must be at least 1',
   'products.insufficientStock': 'Insufficient stock for variant {externalId}',
+  'products.invalidVariantIds': 'Invalid variant IDs',
   'products.invalidVariantExternalId': 'Invalid variant externalId: {externalId}',
   'products.variantNameRequiredForMultiple': 'Variant name is required when a product has multiple variants',
   'products.compareAtMustBeGreaterThanPrice': 'compareAt must be greater than price',

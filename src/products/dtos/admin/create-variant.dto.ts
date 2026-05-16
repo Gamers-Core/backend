@@ -3,6 +3,7 @@ import { IsBoolean, IsInt, IsOptional, Min } from 'class-validator';
 import { IsGreaterThan } from 'src/common/validators/is-greater-than.validator';
 import { IsLocalized } from 'src/i18n/decorators/is-localized.decorator';
 import type { Localized } from 'src/i18n/types';
+
 export class CreateVariantDTO {
   @IsLocalized()
   name: Localized;
@@ -26,6 +27,11 @@ export class CreateVariantDTO {
   @IsInt()
   @Min(0)
   costPerItem: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  position?: number;
 
   @IsOptional()
   @IsInt()

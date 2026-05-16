@@ -69,6 +69,7 @@ export class ProductsService {
     return this.productsRepository.find({
       where: { id: In(uniqueIds) },
       relations: productFullRelations,
+      order: { variants: { position: 'ASC', id: 'ASC' } },
     });
   }
 
@@ -213,7 +214,7 @@ export class ProductsService {
         break;
     }
 
-    qb.addOrderBy('product.id', 'ASC').addOrderBy('variant.id', 'ASC');
+    qb.addOrderBy('product.id', 'ASC').addOrderBy('variant.position', 'ASC').addOrderBy('variant.id', 'ASC');
 
     return qb.getMany();
   }
@@ -320,6 +321,7 @@ export class ProductsService {
       const recommendations = await repo.find({
         where: { id: In(recommendationIds) },
         relations: productFullRelations,
+        order: { variants: { position: 'ASC', id: 'ASC' } },
       });
 
       const recommendationsById = new Map(recommendations.map((item) => [item.id, item]));
@@ -349,6 +351,7 @@ export class ProductsService {
       const product = await repo.findOne({
         where: { id },
         relations: productFullRelations,
+        order: { variants: { position: 'ASC', id: 'ASC' } },
       });
 
       if (!product) throw NotFoundException('products.productNotFound');

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, IsNull, Repository } from 'typeorm';
 
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
@@ -23,9 +23,11 @@ export class VariantsService {
     return withOptionalManager(manager, this.variantRepository.manager, async (manager) => {
       const variantRepo = manager.getRepository(Variant);
       const normalized = this.normalize(dtos);
+      const existing = await this.getActiveVariants(productId, manager);
+      const prepared = this.applyCreatePositions(normalized, existing);
 
       const variants = await Promise.all(
-        normalized.map(async ({ imageId, ...dto }) =>
+        prepared.map(async ({ imageId, ...dto }) =>
           variantRepo.create({
             ...dto,
             product: { id: productId },
@@ -79,6 +81,23 @@ export class VariantsService {
     });
   }
 
+  reorder(productId: number, ids: number[]) {
+    return this.variantRepository.manager.transaction(async (manager) => {
+      const variants = await this.getActiveVariants(productId, manager);
+
+      const uniqueIds = new Set(ids);
+      if (variants.length !== uniqueIds.size) throw BadRequestException('products.invalidVariantIds');
+
+      const variantById = new Map(variants.map((variant) => [variant.id, variant]));
+      if (ids.some((id) => !variantById.has(id))) throw BadRequestException('products.invalidVariantIds');
+
+      const ordered = ids.map((id) => variantById.get(id)!);
+      await this.reorderInternal(ordered, manager);
+
+      return ordered;
+    });
+  }
+
   private async getOneOrFail(productId: number, variantId: number, manager: EntityManager) {
     const variantRepository = manager.getRepository(Variant);
 
@@ -95,5 +114,31 @@ export class VariantsService {
     if (variants.length === 1) return [{ ...variants[0], isActive: true }];
 
     return variants;
+  }
+
+  private applyCreatePositions(dtos: CreateVariantDTO[], existing: Variant[]): CreateVariantDTO[] {
+    const maxPosition = existing.reduce((max, variant) => Math.max(max, variant.position ?? 0), 0);
+
+    return dtos.map((dto, index) => ({
+      ...dto,
+      position: dto.position ?? maxPosition + index + 1,
+    }));
+  }
+
+  private async reorderInternal(variants: Variant[], manager: EntityManager): Promise<void> {
+    if (!variants.length) return;
+
+    const repo = manager.getRepository(Variant);
+    await repo.save(variants.map((variant, i) => ({ ...variant, position: -(i + 1) })));
+    await repo.save(variants.map((variant, i) => ({ ...variant, position: i + 1 })));
+  }
+
+  private getActiveVariants(productId: number, manager: EntityManager): Promise<Variant[]> {
+    const repo = manager.getRepository(Variant);
+
+    return repo.find({
+      where: { product: { id: productId }, deletedAt: IsNull() },
+      relations: { image: true },
+    });
   }
 }

@@ -29,6 +29,9 @@ export class AdminVariantDTO {
   compareAt: number | null;
 
   @Expose()
+  position: number;
+
+  @Expose()
   @Type(() => AdminMediaDTO)
   image: AdminMediaDTO | null;
 }

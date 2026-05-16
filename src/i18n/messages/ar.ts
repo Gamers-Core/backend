@@ -41,6 +41,7 @@ export default {
   'products.invalidIds': 'معرّفات المنتجات غير صالحة',
   'products.requiredAmountMin': 'الكمية المطلوبة يجب أن تكون 1 على الأقل',
   'products.insufficientStock': 'المخزون غير كافٍ للمتغير {externalId}',
+  'products.invalidVariantIds': 'معرّفات المتغيرات غير صالحة',
   'products.invalidVariantExternalId': 'معرّف المتغير غير صالح: {externalId}',
   'products.variantNameRequiredForMultiple': 'اسم المتغير مطلوب عند وجود أكثر من متغير للمنتج',
   'products.compareAtMustBeGreaterThanPrice': 'يجب أن تكون قيمة المقارنة أكبر من السعر',

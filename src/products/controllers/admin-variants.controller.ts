@@ -5,6 +5,7 @@ import { Serialize } from 'src/common/interceptors/serialize.interceptor';
 
 import { AdminVariantDTO } from '../dtos/admin/admin-variant.dto';
 import { CreateVariantDTO } from '../dtos/admin/create-variant.dto';
+import { ReorderVariantsDTO } from '../dtos/admin/reorder-variants.dto';
 import { UpdateVariantDTO } from '../dtos/admin/update-variant.dto';
 import { VariantsService } from '../services/variants.service';
 
@@ -20,6 +21,12 @@ export class AdminVariantsController {
     @Body(new ParseArrayPipe({ items: CreateVariantDTO })) dtos: CreateVariantDTO[],
   ) {
     return this.variantsService.add(productId, dtos);
+  }
+
+  @Patch('reorder')
+  @Serialize(AdminVariantDTO)
+  reorder(@Param('productId', ParseIntPipe) productId: number, @Body() dto: ReorderVariantsDTO) {
+    return this.variantsService.reorder(productId, dto.ids);
   }
 
   @Patch(':variantId')
