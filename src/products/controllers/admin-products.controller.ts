@@ -17,7 +17,7 @@ export class AdminProductsController {
   @Get(':id')
   @Serialize(AdminProductDTO)
   getOne(@Param('id', ParseIntPipe) id: number) {
-    return this.productsService.getOne(id);
+    return this.productsService.getOne(id, true);
   }
 
   @Get()

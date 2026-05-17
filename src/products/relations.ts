@@ -1,6 +1,5 @@
 import { FindOptionsRelations } from 'typeorm';
 
-import { CartItem } from 'src/cart/entities/cart-item.entity';
 import { Cart } from 'src/cart/entities/cart.entity';
 import { FeaturedVariant } from 'src/featured-variants/entities/featured-variant.entity';
 
@@ -13,11 +12,6 @@ export const productBrandCategoryRelations = {
   media: { media: true },
 } as const satisfies FindOptionsRelations<Product>;
 
-export const productFullRelations = {
-  variants: { image: true },
-  ...productBrandCategoryRelations,
-} as const satisfies FindOptionsRelations<Product>;
-
 export const variantWithProductBrandCategoryRelations = {
   image: true,
   product: productBrandCategoryRelations,
@@ -25,7 +19,7 @@ export const variantWithProductBrandCategoryRelations = {
 
 export const variantWithProductFullRelations = {
   image: true,
-  product: productFullRelations,
+  product: { variants: { image: true }, ...productBrandCategoryRelations },
 } as const satisfies FindOptionsRelations<Variant>;
 
 export const featuredVariantRelations = {
@@ -37,7 +31,3 @@ export const cartRelations = {
     variant: variantWithProductBrandCategoryRelations,
   },
 } as const satisfies FindOptionsRelations<Cart>;
-
-export const cartItemRelations = {
-  variant: variantWithProductBrandCategoryRelations,
-} as const satisfies FindOptionsRelations<CartItem>;

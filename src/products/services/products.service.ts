@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, EntityManager, In, Repository } from 'typeorm';
+import { Brackets, EntityManager, Repository } from 'typeorm';
 
 import { Brand } from 'src/brands/entities/brand.entity';
 import { Category } from 'src/categories/entities/category.entity';
@@ -16,7 +16,7 @@ import { UpdateProductDTO } from '../dtos/admin/update-product.dto';
 import { SearchProductsDTO } from '../dtos/user/search-products.dto';
 import { Product } from '../entities/product.entity';
 import { Variant } from '../entities/variant.entity';
-import { productBrandCategoryRelations, productFullRelations } from '../relations';
+import { productBrandCategoryRelations } from '../relations';
 
 import { VariantsService } from './variants.service';
 
@@ -51,7 +51,7 @@ export class ProductsService {
 
       if (mediaIds !== undefined) await this.productMediaService.sync(product.id, mediaIds, manager);
 
-      return this.getOneOrFail(product.id, manager);
+      return this.getOneOrFail(product.id, manager, true);
     });
   }
 
@@ -66,15 +66,11 @@ export class ProductsService {
     ];
     if (!uniqueIds.length) throw BadRequestException('products.invalidIds');
 
-    return this.productsRepository.find({
-      where: { id: In(uniqueIds) },
-      relations: productFullRelations,
-      order: { variants: { position: 'ASC', id: 'ASC' } },
-    });
+    return this.getManyByIds(uniqueIds, false, { filterActive: true, preserveOrder: true });
   }
 
-  getOne(id: number) {
-    return this.getOneOrFail(id);
+  getOne(id: number, isAdmin = false) {
+    return this.getOneOrFail(id, undefined, isAdmin);
   }
 
   search(
@@ -223,7 +219,7 @@ export class ProductsService {
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepo = manager.getRepository(Product);
 
-      const product = await this.getOneOrFail(id, manager);
+      const product = await this.getOneOrFail(id, manager, true);
 
       Object.assign(product, dto);
 
@@ -245,7 +241,7 @@ export class ProductsService {
 
       await productRepo.save(product);
 
-      return this.getOneOrFail(id, manager);
+      return this.getOneOrFail(id, manager, true);
     });
   }
 
@@ -253,7 +249,7 @@ export class ProductsService {
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepo = manager.getRepository(Product);
 
-      const product = await this.getOneOrFail(id, manager);
+      const product = await this.getOneOrFail(id, manager, true);
 
       await Promise.all(
         product.variants.filter((v) => v.image).map((v) => this.mediaService.detach(v.image!.id, manager)),
@@ -318,11 +314,7 @@ export class ProductsService {
 
       if (!recommendationIds.length) return [];
 
-      const recommendations = await repo.find({
-        where: { id: In(recommendationIds) },
-        relations: productFullRelations,
-        order: { variants: { position: 'ASC', id: 'ASC' } },
-      });
+      const recommendations = await this.getManyByIds(recommendationIds, false, { preserveOrder: true }, manager);
 
       const recommendationsById = new Map(recommendations.map((item) => [item.id, item]));
       const orderedRecommendations = recommendationIds
@@ -344,20 +336,59 @@ export class ProductsService {
     return shuffled.slice(0, count);
   }
 
-  private getOneOrFail(id: number, manager?: EntityManager): Promise<Product> {
+  private getOneOrFail(id: number, manager?: EntityManager, isAdmin = false): Promise<Product> {
     return withOptionalManager(manager, this.productsRepository.manager, async (manager) => {
-      const repo = manager.getRepository(Product);
+      const qb = this.buildProductQuery(manager, isAdmin)
+        .where('product.id = :id', { id })
+        .orderBy('variant.position', 'ASC')
+        .addOrderBy('variant.id', 'ASC');
 
-      const product = await repo.findOne({
-        where: { id },
-        relations: productFullRelations,
-        order: { variants: { position: 'ASC', id: 'ASC' } },
-      });
+      if (!isAdmin) qb.andWhere('product.status = :status', { status: 'active' });
+
+      const product = await qb.getOne();
 
       if (!product) throw NotFoundException('products.productNotFound');
 
       return product;
     });
+  }
+
+  private getManyByIds(
+    ids: number[],
+    isAdmin: boolean,
+    { filterActive = false, preserveOrder = false }: { filterActive?: boolean; preserveOrder?: boolean } = {},
+    manager?: EntityManager,
+  ): Promise<Product[]> {
+    if (!ids.length) return Promise.resolve([]);
+
+    return withOptionalManager(manager, this.productsRepository.manager, async (manager) => {
+      const qb = this.buildProductQuery(manager, isAdmin).where('product.id IN (:...ids)', { ids });
+
+      if (filterActive && !isAdmin) qb.andWhere('product.status = :status', { status: 'active' });
+
+      qb.orderBy(preserveOrder ? `array_position(ARRAY[${ids.join(',')}], product.id)` : 'product.id', 'ASC')
+        .addOrderBy('variant.position', 'ASC')
+        .addOrderBy('variant.id', 'ASC');
+
+      return qb.getMany();
+    });
+  }
+
+  private buildProductQuery(manager: EntityManager, isAdmin: boolean) {
+    const variantJoinCondition = isAdmin
+      ? 'variant.deletedAt IS NULL'
+      : 'variant.deletedAt IS NULL AND variant.isActive = true';
+
+    return manager
+      .getRepository(Product)
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.brand', 'brand')
+      .leftJoinAndSelect('brand.image', 'brandImage')
+      .leftJoinAndSelect('product.category', 'category')
+      .leftJoinAndSelect('product.media', 'productMedia')
+      .leftJoinAndSelect('productMedia.media', 'productMediaFile')
+      .leftJoinAndSelect('product.variants', 'variant', variantJoinCondition)
+      .leftJoinAndSelect('variant.image', 'variantImage');
   }
 
   private getOneForRecommendationsOrFail(id: number, manager?: EntityManager): Promise<Product> {
