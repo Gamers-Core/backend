@@ -2,8 +2,7 @@ export const productStatuses = ['active', 'draft', 'unlisted'] as const;
 
 export const stockFilters = ['all', 'in-stock', 'out-of-stock'] as const;
 
-export const sortOption = [
-  'most-relevant',
+export const adminSortOptions = [
   'title-ascending',
   'title-descending',
   'price-ascending',
@@ -11,3 +10,5 @@ export const sortOption = [
   'created-ascending',
   'created-descending',
 ] as const;
+
+export const sortOption = ['most-relevant', ...adminSortOptions] as const;

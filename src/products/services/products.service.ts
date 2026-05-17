@@ -85,13 +85,13 @@ export class ProductsService {
       minPrice,
       maxPrice,
       stock = 'all',
+      sort = 'created-descending',
       ...rest
     }: AdminSearchProductsDTO | SearchProductsDTO = {},
     isAdmin = false,
   ) {
     const locale = this.localeContextService.locale;
     const trimmedQ = q?.trim();
-    const { sort = 'created-descending' } = 'sort' in rest ? rest : {};
     const effectiveSort = sort === 'most-relevant' && !trimmedQ ? 'created-descending' : sort;
     const variantCondition = isAdmin ? `v."deleted_at" IS NULL` : `v."deleted_at" IS NULL AND v."is_active" = true`;
 

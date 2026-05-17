@@ -1,8 +1,8 @@
 import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
 
-import { productStatuses, stockFilters } from '../../const';
-import type { ProductStatus, StockFilter } from '../../types';
+import { adminSortOptions, productStatuses, stockFilters } from '../../const';
+import type { AdminSortOption, ProductStatus, StockFilter } from '../../types';
 
 export class AdminSearchProductsDTO {
   @IsOptional()
@@ -40,4 +40,8 @@ export class AdminSearchProductsDTO {
   @IsOptional()
   @IsIn(productStatuses)
   status?: ProductStatus;
+
+  @IsOptional()
+  @IsIn(adminSortOptions)
+  sort?: AdminSortOption;
 }
