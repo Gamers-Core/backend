@@ -14,7 +14,7 @@ export class OrderItemDTO {
 
   @Expose()
   @Localize()
-  variantName: string;
+  variantName: string | null;
 
   @Expose()
   imageURL: string | null;

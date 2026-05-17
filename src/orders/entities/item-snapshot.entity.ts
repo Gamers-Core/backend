@@ -19,8 +19,8 @@ export class ItemSnapshot {
   @Column('jsonb', { transformer: parse })
   productTitle: Localized;
 
-  @Column('jsonb', { transformer: parse })
-  variantName: Localized;
+  @Column('jsonb', { transformer: parse, nullable: true })
+  variantName: Localized | null;
 
   @Column('int', { nullable: true })
   mediaId: number | null;

@@ -27,8 +27,26 @@ export class OrderItemsService {
       reservedVariants.push({ variant, quantity });
     }
 
+    const productIds = [...new Set(reservedVariants.map(({ variant }) => variant.product.id))];
+    const siblingCounts = productIds.length
+      ? await manager
+          .getRepository(Variant)
+          .createQueryBuilder('variant')
+          .select('variant.product_id', 'productId')
+          .addSelect('COUNT(*)', 'count')
+          .where('variant.product_id IN (:...productIds)', { productIds })
+          .groupBy('variant.product_id')
+          .getRawMany<{ productId: number; count: string }>()
+      : [];
+
+    const siblingsByProductId = new Map(
+      siblingCounts.map(({ productId, count }) => [Number(productId), Number(count)]),
+    );
+
     for (const { variant, quantity } of reservedVariants) {
-      const snapshot = this.snapshot(variant, quantity);
+      const siblingsCount = siblingsByProductId.get(variant.product.id) ?? 0;
+      const hasSiblings = siblingsCount > 1;
+      const snapshot = this.snapshot(variant, quantity, hasSiblings);
 
       itemSnapshots.push({ ...snapshot, order });
     }
@@ -73,7 +91,7 @@ export class OrderItemsService {
     return totalDifference;
   }
 
-  private snapshot(variant: Variant, quantity: number): Omit<ItemSnapshot, 'id' | 'order'> {
+  private snapshot(variant: Variant, quantity: number, hasSiblings: boolean): Omit<ItemSnapshot, 'id' | 'order'> {
     const unitPrice = variant.price;
     const lineTotal = unitPrice * quantity;
 
@@ -81,7 +99,7 @@ export class OrderItemsService {
       productId: variant.product.id,
       variantExternalId: variant.externalId,
       productTitle: { ...variant.product.title },
-      variantName: { ...(variant.name ?? variant.product.title) },
+      variantName: hasSiblings ? variant.name : null,
       mediaId: variant.image?.id ?? null,
       imageURL: variant.image?.src ?? null,
       quantity,
