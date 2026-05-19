@@ -90,15 +90,15 @@ export class ProductMediaService {
     const all = await this.getAllOrdered(manager, { product: { id: productId } });
     const map = new Map(all.map((a) => [a.media.id, a]));
 
-    const toSave = mediaIds.map((mediaId, index) => {
-      const attachment = map.get(mediaId)!;
+    const missingIds = mediaIds.filter((id) => !map.has(id));
+    if (missingIds.length) {
+      throw BadRequestException('media.notAttachedToProduct');
+    }
 
-      attachment.order = index + 1;
+    const ordered = mediaIds.map((mediaId) => map.get(mediaId)!);
 
-      return attachment;
-    });
-
-    await repo.save(toSave);
+    await repo.save(ordered.map((attachment, i) => ({ ...attachment, order: -(i + 1) })));
+    await repo.save(ordered.map((attachment, i) => ({ ...attachment, order: i + 1 })));
   }
 
   private getAllOrdered(manager: EntityManager, where: FindOptionsWhere<ProductMedia>) {
