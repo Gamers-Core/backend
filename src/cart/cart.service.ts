@@ -25,7 +25,7 @@ export class CartService {
 
   sync(userId: number, items: SyncCartItemDTO[], manager?: EntityManager) {
     return withOptionalManager(manager, this.cartRepo.manager, async (manager) => {
-      const cart = await this.stripInactiveItems(await this.getOrCreateCart(userId, manager), manager);
+      const cart = await this.getOrCreateCart(userId, manager);
       const cartItemRepo = manager.getRepository(CartItem);
 
       await cartItemRepo.delete({ cart: { id: cart.id } });
@@ -74,9 +74,9 @@ export class CartService {
     if (!inactiveItems.length) return cart;
 
     const cartItemRepo = manager.getRepository(CartItem);
-    await cartItemRepo.delete(inactiveItems.map((item) => item.id));
+    await cartItemRepo.delete(inactiveItems.map(({ id }) => id));
 
-    cart.items = cart.items.filter((item) => item.variant?.isActive);
+    cart.items = cart.items.filter(({ variant }) => variant?.isActive);
 
     return cart;
   }
