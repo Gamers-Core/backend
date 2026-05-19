@@ -47,7 +47,7 @@ export class ProductsService {
         productRepo.create({ ...dto, brand: { id: brandId }, category: { id: categoryId } }),
       );
 
-      await this.variants.add(product.id, variants, manager);
+      await this.variants.sync(product.id, variants, manager);
 
       if (mediaIds !== undefined) await this.productMediaService.sync(product.id, mediaIds, manager);
 
@@ -215,15 +215,13 @@ export class ProductsService {
     return qb.getMany();
   }
 
-  update(id: number, { mediaIds, brandId, categoryId, ...dto }: UpdateProductDTO) {
+  update(id: number, { mediaIds, brandId, categoryId, variants, ...dto }: UpdateProductDTO) {
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepo = manager.getRepository(Product);
 
       const product = await this.getOneOrFail(id, manager, true);
 
       Object.assign(product, dto);
-
-      if (mediaIds !== undefined) await this.productMediaService.sync(id, mediaIds, manager);
 
       if (brandId) {
         const brandExists = await manager.getRepository(Brand).existsBy({ id: brandId });
@@ -241,6 +239,10 @@ export class ProductsService {
 
       await productRepo.save(product);
 
+      if (mediaIds !== undefined) await this.productMediaService.sync(id, mediaIds, manager);
+
+      if (variants) await this.variants.sync(id, variants, manager);
+
       return this.getOneOrFail(id, manager, true);
     });
   }
@@ -252,7 +254,7 @@ export class ProductsService {
       const product = await this.getOneOrFail(id, manager, true);
 
       await Promise.all(
-        product.variants.filter((v) => v.image).map((v) => this.mediaService.detach(v.image!.id, manager)),
+        product.variants.filter(({ image }) => image).map(({ image }) => this.mediaService.detach(image!.id, manager)),
       );
 
       await this.productMediaService.sync(id, [], manager);

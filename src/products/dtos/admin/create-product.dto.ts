@@ -7,7 +7,7 @@ import type { Localized } from 'src/i18n/types';
 import { productStatuses } from '../../const';
 import type { ProductStatus } from '../../types';
 
-import { CreateVariantDTO } from './create-variant.dto';
+import { SyncVariantDTO } from './sync-variant.dto';
 
 export class CreateProductDTO {
   @IsOptional()
@@ -17,8 +17,8 @@ export class CreateProductDTO {
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
-  @Type(() => CreateVariantDTO)
-  variants: CreateVariantDTO[];
+  @Type(() => SyncVariantDTO)
+  variants: SyncVariantDTO[];
 
   @IsOptional()
   @IsArray()
