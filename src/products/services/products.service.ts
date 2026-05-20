@@ -342,7 +342,8 @@ export class ProductsService {
     return withOptionalManager(manager, this.productsRepository.manager, async (manager) => {
       const qb = this.buildProductQuery(manager, isAdmin)
         .where('product.id = :id', { id })
-        .orderBy('variant.position', 'ASC')
+        .orderBy('productMedia.order', 'ASC')
+        .addOrderBy('variant.position', 'ASC')
         .addOrderBy('variant.id', 'ASC');
 
       if (!isAdmin) qb.andWhere('product.status = :status', { status: 'active' });
@@ -369,6 +370,7 @@ export class ProductsService {
       if (filterActive && !isAdmin) qb.andWhere('product.status = :status', { status: 'active' });
 
       qb.orderBy(preserveOrder ? `array_position(ARRAY[${ids.join(',')}], product.id)` : 'product.id', 'ASC')
+        .addOrderBy('productMedia.order', 'ASC')
         .addOrderBy('variant.position', 'ASC')
         .addOrderBy('variant.id', 'ASC');
 
@@ -400,6 +402,10 @@ export class ProductsService {
       const product = await repo.findOne({
         where: { id },
         relations: productBrandCategoryRelations,
+        order: {
+          media: { order: 'ASC' },
+          variants: { position: 'ASC' },
+        },
       });
 
       if (!product) throw NotFoundException('products.productNotFound');
