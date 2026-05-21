@@ -58,7 +58,7 @@ export class CartService {
         where: { user: { id: userId } },
         relations: cartRelations,
       });
-      if (existing) return existing;
+      if (existing) return this.stripInactiveItems(existing, manager);
 
       return cartRepo.save(cartRepo.create({ user: { id: userId }, items: [] })).catch((error) => {
         if (!isUniqueViolation(error)) throw error;
@@ -67,5 +67,17 @@ export class CartService {
         return this.getOrCreateCart(userId, manager, attempt + 1);
       });
     });
+  }
+
+  private async stripInactiveItems(cart: Cart, manager: EntityManager): Promise<Cart> {
+    const inactiveItems = cart.items.filter((item) => !item.variant?.isActive);
+    if (!inactiveItems.length) return cart;
+
+    const cartItemRepo = manager.getRepository(CartItem);
+    await cartItemRepo.delete(inactiveItems.map(({ id }) => id));
+
+    cart.items = cart.items.filter(({ variant }) => variant?.isActive);
+
+    return cart;
   }
 }

@@ -2,14 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, IsNull, Repository } from 'typeorm';
 
-import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { BadRequestException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 import { MediaService } from 'src/media/services/media.service';
 
-import { CreateVariantDTO } from '../dtos/admin/create-variant.dto';
-import { UpdateVariantDTO } from '../dtos/admin/update-variant.dto';
+import { SyncVariantDTO } from '../dtos/admin/sync-variant.dto';
 import { Variant } from '../entities/variant.entity';
-import { variantWithProductFullRelations } from '../relations';
 
 @Injectable()
 export class VariantsService {
@@ -19,118 +17,77 @@ export class VariantsService {
     private readonly mediaService: MediaService,
   ) {}
 
-  add(productId: number, dtos: CreateVariantDTO[], manager?: EntityManager) {
+  sync(productId: number, dtos: SyncVariantDTO[], manager?: EntityManager) {
     return withOptionalManager(manager, this.variantRepository.manager, async (manager) => {
-      const variantRepo = manager.getRepository(Variant);
-      const normalized = this.normalize(dtos);
-      const existing = await this.getActiveVariants(productId, manager);
-      const prepared = this.applyCreatePositions(normalized, existing);
+      if (!dtos.length) throw BadRequestException('products.cannotRemoveLastVariant');
 
-      const variants = await Promise.all(
-        prepared.map(async ({ imageId, ...dto }) =>
-          variantRepo.create({
+      const repo = manager.getRepository(Variant);
+      const existing = await this.getActiveVariants(productId, manager);
+      const existingById = new Map(existing.map((v) => [v.id, v]));
+
+      const requestedIds = dtos.map(({ id }) => id).filter((id): id is number => !!id);
+      const uniqueIds = new Set(requestedIds);
+
+      if (requestedIds.length !== uniqueIds.size) throw BadRequestException('products.invalidVariantIds');
+      if (requestedIds.some((id) => !existingById.has(id))) throw BadRequestException('products.invalidVariantIds');
+
+      const toRemove = existing.filter(({ id }) => !uniqueIds.has(id));
+      if (toRemove.length) {
+        await Promise.all(
+          toRemove.filter(({ image }) => image).map(({ image }) => this.mediaService.detach(image!.id, manager)),
+        );
+        await repo.softRemove(toRemove);
+      }
+
+      const prepared: Variant[] = [];
+      for (let index = 0; index < dtos.length; index += 1) {
+        const { id, imageId, ...dto } = dtos[index];
+        const position = index + 1;
+
+        if (id) {
+          const variant = existingById.get(id)!;
+          Object.assign(variant, dto, { position });
+
+          if (imageId !== undefined)
+            variant.image = await this.mediaService.swapImage(imageId, variant.image?.id, manager);
+
+          if (variant.compareAt && variant.compareAt <= variant.price)
+            throw BadRequestException('products.compareAtMustBeGreaterThanPrice');
+
+          prepared.push(variant);
+        } else {
+          const variant = repo.create({
             ...dto,
+            position,
             product: { id: productId },
             image: await this.mediaService.attach(imageId, manager),
-          }),
-        ),
-      );
+          });
 
-      return variantRepo.save(variants);
+          if (variant.compareAt && variant.compareAt <= variant.price)
+            throw BadRequestException('products.compareAtMustBeGreaterThanPrice');
+
+          prepared.push(variant);
+        }
+      }
+
+      const normalized = this.normalize(prepared);
+      this.assertValidity(normalized);
+
+      return repo.save(normalized);
     });
   }
 
-  update(productId: number, variantId: number, { imageId, ...dto }: UpdateVariantDTO) {
-    return this.variantRepository.manager.transaction(async (manager) => {
-      const variantRepository = manager.getRepository(Variant);
-
-      const variant = await this.getOneOrFail(productId, variantId, manager);
-      const remainingVariants = variant.product.variants.filter(({ id }) => id !== variantId);
-
-      if (variant.compareAt && variant.compareAt <= variant.price)
-        throw BadRequestException('products.compareAtMustBeGreaterThanPrice');
-
-      Object.assign(variant, dto);
-
-      if (imageId) variant.image = await this.mediaService.swapImage(imageId, variant.image?.id, manager);
-      else if (variant.image) await this.mediaService.detach(variant.image.id, manager);
-
-      const normalized = this.normalize([variant, ...remainingVariants]);
-      const savedVariants = await variantRepository.save(normalized);
-
-      return savedVariants.find(({ id }) => id === variantId)!;
-    });
-  }
-
-  remove(productId: number, variantId: number) {
-    return this.variantRepository.manager.transaction(async (manager) => {
-      const variantRepository = manager.getRepository(Variant);
-
-      const variant = await this.getOneOrFail(productId, variantId, manager);
-      const remainingVariants = variant.product.variants.filter(({ id }) => id !== variantId);
-      if (!remainingVariants.length) throw BadRequestException('products.cannotRemoveLastVariant');
-
-      if (variant.image) await this.mediaService.detach(variant.image.id, manager);
-
-      await variantRepository.softRemove(variant);
-
-      const normalized = this.normalize(remainingVariants);
-      await variantRepository.save(normalized);
-
-      return { deleted: true };
-    });
-  }
-
-  reorder(productId: number, ids: number[]) {
-    return this.variantRepository.manager.transaction(async (manager) => {
-      const variants = await this.getActiveVariants(productId, manager);
-
-      const uniqueIds = new Set(ids);
-      if (variants.length !== uniqueIds.size) throw BadRequestException('products.invalidVariantIds');
-
-      const variantById = new Map(variants.map((variant) => [variant.id, variant]));
-      if (ids.some((id) => !variantById.has(id))) throw BadRequestException('products.invalidVariantIds');
-
-      const ordered = ids.map((id) => variantById.get(id)!);
-      await this.reorderInternal(ordered, manager);
-
-      return ordered;
-    });
-  }
-
-  private async getOneOrFail(productId: number, variantId: number, manager: EntityManager) {
-    const variantRepository = manager.getRepository(Variant);
-
-    const variant = await variantRepository.findOne({
-      where: { id: variantId, product: { id: productId } },
-      relations: variantWithProductFullRelations,
-    });
-    if (!variant) throw NotFoundException('products.variantNotFound');
-
-    return variant;
-  }
-
-  private normalize<T extends CreateVariantDTO | Variant>(variants: T[]): T[] {
+  private normalize<T extends SyncVariantDTO | Variant>(variants: T[]): T[] {
     if (variants.length === 1) return [{ ...variants[0], isActive: true }];
 
     return variants;
   }
 
-  private applyCreatePositions(dtos: CreateVariantDTO[], existing: Variant[]): CreateVariantDTO[] {
-    const maxPosition = existing.reduce((max, variant) => Math.max(max, variant.position ?? 0), 0);
+  private assertValidity(variants: Variant[]) {
+    if (!variants.some(({ isActive }) => isActive)) throw BadRequestException('products.activeVariantRequired');
 
-    return dtos.map((dto, index) => ({
-      ...dto,
-      position: dto.position ?? maxPosition + index + 1,
-    }));
-  }
-
-  private async reorderInternal(variants: Variant[], manager: EntityManager): Promise<void> {
-    if (!variants.length) return;
-
-    const repo = manager.getRepository(Variant);
-    await repo.save(variants.map((variant, i) => ({ ...variant, position: -(i + 1) })));
-    await repo.save(variants.map((variant, i) => ({ ...variant, position: i + 1 })));
+    if (variants.some(({ compareAt, price }) => !!compareAt && compareAt <= price))
+      throw BadRequestException('products.compareAtMustBeGreaterThanPrice');
   }
 
   private getActiveVariants(productId: number, manager: EntityManager): Promise<Variant[]> {
@@ -139,6 +96,7 @@ export class VariantsService {
     return repo.find({
       where: { product: { id: productId }, deletedAt: IsNull() },
       relations: { image: true },
+      order: { position: 'ASC' },
     });
   }
 }

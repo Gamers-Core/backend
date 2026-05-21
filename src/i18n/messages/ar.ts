@@ -30,6 +30,7 @@ export default {
   'media.uploadFailed': 'فشل في رفع الوسائط',
   'media.unsupportedType': 'نوع الوسائط غير مدعوم',
   'media.requestTimeout': 'انتهت مهلة رفع الوسائط. يرجى المحاولة مرة أخرى.',
+  'media.notAttachedToProduct': 'واحد أو أكثر من عناصر الوسائط غير مرتبطة بالمنتج',
 
   'products.brandNotFound': 'العلامة التجارية غير موجودة',
   'products.categoryNotFound': 'الفئة غير موجودة',

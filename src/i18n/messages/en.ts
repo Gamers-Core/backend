@@ -30,6 +30,7 @@ export default {
   'media.uploadFailed': 'Media upload failed',
   'media.unsupportedType': 'Unsupported media type',
   'media.requestTimeout': 'Media upload timed out. Please try again.',
+  'media.notAttachedToProduct': 'One or more media items are not attached to the product',
 
   'products.brandNotFound': 'Brand not found',
   'products.categoryNotFound': 'Category not found',

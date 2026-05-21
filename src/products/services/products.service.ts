@@ -47,7 +47,7 @@ export class ProductsService {
         productRepo.create({ ...dto, brand: { id: brandId }, category: { id: categoryId } }),
       );
 
-      await this.variants.add(product.id, variants, manager);
+      await this.variants.sync(product.id, variants, manager);
 
       if (mediaIds !== undefined) await this.productMediaService.sync(product.id, mediaIds, manager);
 
@@ -215,15 +215,13 @@ export class ProductsService {
     return qb.getMany();
   }
 
-  update(id: number, { mediaIds, brandId, categoryId, ...dto }: UpdateProductDTO) {
+  update(id: number, { mediaIds, brandId, categoryId, variants, ...dto }: UpdateProductDTO) {
     return this.productsRepository.manager.transaction(async (manager) => {
       const productRepo = manager.getRepository(Product);
 
       const product = await this.getOneOrFail(id, manager, true);
 
       Object.assign(product, dto);
-
-      if (mediaIds !== undefined) await this.productMediaService.sync(id, mediaIds, manager);
 
       if (brandId) {
         const brandExists = await manager.getRepository(Brand).existsBy({ id: brandId });
@@ -241,6 +239,10 @@ export class ProductsService {
 
       await productRepo.save(product);
 
+      if (mediaIds !== undefined) await this.productMediaService.sync(id, mediaIds, manager);
+
+      if (variants) await this.variants.sync(id, variants, manager);
+
       return this.getOneOrFail(id, manager, true);
     });
   }
@@ -252,7 +254,7 @@ export class ProductsService {
       const product = await this.getOneOrFail(id, manager, true);
 
       await Promise.all(
-        product.variants.filter((v) => v.image).map((v) => this.mediaService.detach(v.image!.id, manager)),
+        product.variants.filter(({ image }) => image).map(({ image }) => this.mediaService.detach(image!.id, manager)),
       );
 
       await this.productMediaService.sync(id, [], manager);
@@ -340,7 +342,8 @@ export class ProductsService {
     return withOptionalManager(manager, this.productsRepository.manager, async (manager) => {
       const qb = this.buildProductQuery(manager, isAdmin)
         .where('product.id = :id', { id })
-        .orderBy('variant.position', 'ASC')
+        .orderBy('productMedia.order', 'ASC')
+        .addOrderBy('variant.position', 'ASC')
         .addOrderBy('variant.id', 'ASC');
 
       if (!isAdmin) qb.andWhere('product.status = :status', { status: 'active' });
@@ -367,6 +370,7 @@ export class ProductsService {
       if (filterActive && !isAdmin) qb.andWhere('product.status = :status', { status: 'active' });
 
       qb.orderBy(preserveOrder ? `array_position(ARRAY[${ids.join(',')}], product.id)` : 'product.id', 'ASC')
+        .addOrderBy('productMedia.order', 'ASC')
         .addOrderBy('variant.position', 'ASC')
         .addOrderBy('variant.id', 'ASC');
 
@@ -398,6 +402,10 @@ export class ProductsService {
       const product = await repo.findOne({
         where: { id },
         relations: productBrandCategoryRelations,
+        order: {
+          media: { order: 'ASC' },
+          variants: { position: 'ASC' },
+        },
       });
 
       if (!product) throw NotFoundException('products.productNotFound');

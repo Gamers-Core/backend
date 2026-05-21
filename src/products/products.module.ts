@@ -6,7 +6,6 @@ import { ProductMedia } from 'src/media/entities/product-media.entity';
 import { MediaModule } from 'src/media/media.module';
 
 import { AdminProductsController } from './controllers/admin-products.controller';
-import { AdminVariantsController } from './controllers/admin-variants.controller';
 import { ProductsController } from './controllers/products.controller';
 import { Product } from './entities/product.entity';
 import { Variant } from './entities/variant.entity';
@@ -16,7 +15,7 @@ import { VariantsService } from './services/variants.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Product, Media, ProductMedia, Variant]), MediaModule],
-  controllers: [ProductsController, AdminProductsController, AdminVariantsController],
+  controllers: [ProductsController, AdminProductsController],
   providers: [ProductsService, VariantsService, InventoryService],
   exports: [InventoryService],
 })
