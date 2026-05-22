@@ -8,7 +8,6 @@ export const mediaPolicyMap = {
   product: definePolicy({
     allowedType: 'all',
     maxBytes: 100 * 1024 * 1024,
-    transformation: [{ quality: 'auto', fetch_format: 'auto' }],
   }),
   variant: definePolicy({
     allowedType: 'image',
