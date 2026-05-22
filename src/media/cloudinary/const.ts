@@ -12,26 +12,17 @@ export const mediaPolicyMap = {
   variant: definePolicy({
     allowedType: 'image',
     maxBytes: 10 * 1024 * 1024,
-    transformation: [
-      { quality: 'auto', fetch_format: 'auto' },
-      { width: 1000, height: 1000, crop: 'limit', aspect_ratio: '1:1' },
-    ],
+    transformation: [{ width: 1000, height: 1000, crop: 'limit', aspect_ratio: '1:1' }],
   }),
   brand: definePolicy({
     allowedType: 'image',
     maxBytes: 5 * 1024 * 1024,
-    transformation: [
-      { quality: 'auto', fetch_format: 'auto' },
-      { width: 500, height: 500, crop: 'limit', aspect_ratio: '16:9' },
-    ],
+    transformation: [{ width: 500, height: 500, crop: 'limit', aspect_ratio: '16:9' }],
   }),
   userReview: definePolicy({
     allowedType: 'image',
     maxBytes: 10 * 1024 * 1024,
-    transformation: [
-      { quality: 'auto', fetch_format: 'auto' },
-      { width: 800, height: 800, crop: 'limit' },
-    ],
+    transformation: [{ width: 800, height: 800, crop: 'limit' }],
   }),
 } satisfies Record<MediaEntityType, MediaPolicy<MediaFormat>>;
 

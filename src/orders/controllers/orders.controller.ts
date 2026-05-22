@@ -20,7 +20,7 @@ export class OrdersController {
 
   @Get()
   getAll(@CurrentUser() user: User) {
-    return this.ordersService.getAll(user.id);
+    return this.ordersService.search({}, user.id);
   }
 
   @Post('checkout')

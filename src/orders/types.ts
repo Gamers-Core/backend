@@ -1,5 +1,6 @@
 import { Translate } from 'src/i18n/types';
 
+import { sortOptions } from './const';
 // eslint-disable-next-line import/no-cycle
 import { orderStatuses, paymentMethods, paymentStatuses } from './statuses';
 
@@ -40,3 +41,5 @@ export interface OrderAddressSnapshot {
   cityName: string;
   cityDropOff: string;
 }
+
+export type OrderSortOption = (typeof sortOptions)[number];

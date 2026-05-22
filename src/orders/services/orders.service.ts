@@ -17,6 +17,7 @@ import { MailService } from 'src/mail/mail.service';
 import { InventoryService } from 'src/products/services/inventory.service';
 
 import { AddOrderItemDTO } from '../dtos/admin/add-order-item.dto';
+import { AdminSearchOrdersDTO } from '../dtos/admin/admin-search-orders.dto';
 import { CreateOrderDTO } from '../dtos/admin/create-order.dto';
 import { UpdateOrderPaymentDTO } from '../dtos/admin/update-order-payment.dto';
 import { UpdateOrderShippingDTO } from '../dtos/admin/update-order-shipping.dto';
@@ -53,12 +54,51 @@ export class OrdersService {
     private readonly inventoryService: InventoryService,
   ) {}
 
-  getAll(userId?: number) {
-    return this.ordersRepo.find({
-      where: userId ? { user: { id: userId } } : undefined,
-      relations: { items: true, user: !!userId, history: true },
-      order: { createdAt: 'DESC', history: { createdAt: 'ASC' } },
-    });
+  search(params: AdminSearchOrdersDTO = {}, userId?: number) {
+    const { q, status, paymentStatus, paymentMethod, sort = 'created-descending' } = params;
+    const trimmedQ = q?.trim();
+
+    const qb = this.ordersRepo
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.user', 'user')
+      .leftJoinAndSelect('order.items', 'items')
+      .leftJoinAndSelect('order.history', 'history');
+
+    if (userId) qb.andWhere('user.id = :userId', { userId });
+
+    if (trimmedQ)
+      qb.andWhere('(order.orderNumber ILIKE :q OR order.trackingNumber ILIKE :q OR user.name ILIKE :q)', {
+        q: `%${trimmedQ}%`,
+      });
+
+    if (status) qb.andWhere('order.status = :status', { status });
+
+    if (paymentStatus) qb.andWhere('order.paymentStatus = :paymentStatus', { paymentStatus });
+
+    if (paymentMethod) qb.andWhere('order.paymentMethod = :paymentMethod', { paymentMethod });
+
+    switch (sort) {
+      case 'created-ascending':
+        qb.orderBy('order.createdAt', 'ASC');
+        break;
+
+      case 'total-ascending':
+        qb.orderBy('order.total', 'ASC', 'NULLS LAST');
+        break;
+
+      case 'total-descending':
+        qb.orderBy('order.total', 'DESC', 'NULLS LAST');
+        break;
+
+      case 'created-descending':
+      default:
+        qb.orderBy('order.createdAt', 'DESC');
+        break;
+    }
+
+    qb.addOrderBy('order.id', 'DESC').addOrderBy('history.createdAt', 'ASC');
+
+    return qb.getMany();
   }
 
   getOne(orderNumber: string, userId?: number) {
