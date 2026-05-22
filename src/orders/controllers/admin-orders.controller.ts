@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 
 import { IsAdminAuthGuard } from 'src/auth/guards/is-admin-auth.guard';
 import { Serialize } from 'src/common/interceptors/serialize.interceptor';
 
 import { AddOrderItemDTO } from '../dtos/admin/add-order-item.dto';
 import { AdminOrderDTO } from '../dtos/admin/admin-order.dto';
+import { AdminSearchOrdersDTO } from '../dtos/admin/admin-search-orders.dto';
 import { CreateOrderDTO } from '../dtos/admin/create-order.dto';
 import { UpdateOrderPaymentDTO } from '../dtos/admin/update-order-payment.dto';
 import { UpdateOrderShippingDTO } from '../dtos/admin/update-order-shipping.dto';
@@ -19,8 +20,9 @@ export class AdminOrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Get()
-  getOrders() {
-    return this.ordersService.getAll();
+  @Serialize(AdminOrderDTO)
+  search(@Query() dto: AdminSearchOrdersDTO, @Query('userId') userId?: number) {
+    return this.ordersService.search(dto, userId);
   }
 
   @Get(':orderNumber')
