@@ -78,7 +78,7 @@ export class VariantsService {
   }
 
   private normalize<T extends SyncVariantDTO | Variant>(variants: T[]): T[] {
-    if (variants.length === 1) return [{ ...variants[0], isActive: true }];
+    if (variants.length === 1) variants[0].isActive = true;
 
     return variants;
   }
