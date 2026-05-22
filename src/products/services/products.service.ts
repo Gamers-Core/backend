@@ -16,7 +16,7 @@ import { UpdateProductDTO } from '../dtos/admin/update-product.dto';
 import { SearchProductsDTO } from '../dtos/user/search-products.dto';
 import { Product } from '../entities/product.entity';
 import { Variant } from '../entities/variant.entity';
-import { productBrandCategoryRelations } from '../relations';
+import { productWithFullRelations } from '../relations';
 
 import { VariantsService } from './variants.service';
 
@@ -401,7 +401,7 @@ export class ProductsService {
 
       const product = await repo.findOne({
         where: { id },
-        relations: productBrandCategoryRelations,
+        relations: productWithFullRelations,
         order: {
           media: { order: 'ASC' },
           variants: { position: 'ASC' },

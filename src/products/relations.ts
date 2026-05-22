@@ -6,20 +6,21 @@ import { FeaturedVariant } from 'src/featured-variants/entities/featured-variant
 import { Product } from './entities/product.entity';
 import { Variant } from './entities/variant.entity';
 
-export const productBrandCategoryRelations = {
+export const productWithFullRelations = {
   brand: { image: true },
   category: true,
   media: { media: true },
+  variants: { image: true },
 } as const satisfies FindOptionsRelations<Product>;
 
 export const variantWithProductBrandCategoryRelations = {
   image: true,
-  product: productBrandCategoryRelations,
+  product: productWithFullRelations,
 } as const satisfies FindOptionsRelations<Variant>;
 
 export const variantWithProductFullRelations = {
   image: true,
-  product: { variants: { image: true }, ...productBrandCategoryRelations },
+  product: productWithFullRelations,
 } as const satisfies FindOptionsRelations<Variant>;
 
 export const featuredVariantRelations = {
