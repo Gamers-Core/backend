@@ -1,4 +1,4 @@
-import { Expose, Transform, Type } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 
 import { BasicUserDTO } from 'src/users/dtos/basic-user.dto';
 
@@ -16,14 +16,6 @@ class AdminOrderItemDTO extends OrderItemDTO {
 export class AdminOrderDTO extends OrderDTO {
   @Expose()
   id: number;
-
-  @Expose()
-  @Transform(({ obj }) => obj.user?.id ?? null)
-  userId: number | null;
-
-  @Expose()
-  @Transform(({ obj }) => obj.user?.email ?? null)
-  userEmail: string | null;
 
   @Expose()
   paymentStatus: PaymentStatus;
