@@ -2,7 +2,7 @@ import { Translate } from 'src/i18n/types';
 
 import { sortOptions } from './const';
 // eslint-disable-next-line import/no-cycle
-import { orderStatuses, paymentMethods, paymentStatuses } from './statuses';
+import { orderHistoryStatuses, orderHistoryTypes, orderStatuses, paymentMethods, paymentStatuses } from './statuses';
 
 type OrderIdentifierType = 'orderNumber' | 'trackingNumber';
 
@@ -17,6 +17,8 @@ type OrderIdentifier<T extends OrderIdentifierType> = T extends 'orderNumber'
 export type OrderStatus = (typeof orderStatuses)[number];
 export type PaymentStatus = (typeof paymentStatuses)[number];
 export type PaymentMethod = (typeof paymentMethods)[number];
+export type OrderHistoryType = (typeof orderHistoryTypes)[number];
+export type OrderHistoryStatus = (typeof orderHistoryStatuses)[number];
 
 export interface OrderStatusGuardContext {
   paymentMethod: PaymentMethod;

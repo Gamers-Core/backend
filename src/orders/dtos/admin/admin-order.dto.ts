@@ -3,7 +3,7 @@ import { ValidateNested } from 'class-validator';
 
 import { BasicUserDTO } from 'src/users/dtos/basic-user.dto';
 
-import type { OrderStatus, PaymentMethod, PaymentStatus } from '../../types';
+import type { OrderHistoryStatus, OrderHistoryType, OrderStatus, PaymentMethod, PaymentStatus } from '../../types';
 
 import { AdminOrderItemDTO } from './admin-order-item.dto';
 import { OrderAllowedActionsDTO } from './order-allowed-actions.dto';
@@ -30,7 +30,10 @@ class OrderAddressDTO {
 
 class OrderStatusHistoryDTO {
   @Expose()
-  status: OrderStatus;
+  type: OrderHistoryType;
+
+  @Expose()
+  status?: OrderHistoryStatus | null;
 
   @Expose()
   createdAt: Date;

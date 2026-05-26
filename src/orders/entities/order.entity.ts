@@ -1,5 +1,6 @@
 import { customAlphabet } from 'nanoid';
 import {
+  AfterLoad,
   BeforeInsert,
   Column,
   CreateDateColumn,
@@ -84,5 +85,10 @@ export class Order {
   ensureOrderNumber() {
     const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     if (!this.orderNumber) this.orderNumber = `GC-${date}-${nanoid()}`;
+  }
+
+  @AfterLoad()
+  ensureHistory() {
+    if (!this.history) this.history = [];
   }
 }

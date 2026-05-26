@@ -17,6 +17,10 @@ export const paymentStatuses = ['unpaid', 'paid', 'refunded'] as const;
 
 export const paymentMethods = ['cod', 'instapay', 'valu', 'card'] as const;
 
+export const orderHistoryTypes = ['status', 'payment_status'] as const;
+
+export const orderHistoryStatuses = [...orderStatuses, ...paymentStatuses] as const;
+
 export const orderTransitions: Partial<Record<OrderStatus, OrderStatus[]>> = {
   pending: ['confirmed', 'cancelled'],
   confirmed: ['on-progress', 'on-hold', 'cancelled'],

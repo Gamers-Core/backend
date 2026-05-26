@@ -1,7 +1,7 @@
-import { Expose, Type } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 
-import { type OrderStatus, type PaymentMethod } from '../../types';
+import { type OrderHistoryStatus, type OrderHistoryType, type PaymentMethod, type OrderStatus } from '../../types';
 import { OrderItemDTO } from '../order-item.dto';
 
 class OrderAddressDTO {
@@ -26,7 +26,10 @@ class OrderAddressDTO {
 
 class OrderStatusHistoryDTO {
   @Expose()
-  status: OrderStatus;
+  type: OrderHistoryType;
+
+  @Expose()
+  status?: OrderHistoryStatus | null;
 
   @Expose()
   createdAt: Date;
@@ -47,6 +50,7 @@ export class OrderDTO {
 
   @Expose()
   @ValidateNested({ each: true })
+  @Transform(({ value }) => value.filter((entry) => entry.type === 'status'))
   @Type(() => OrderStatusHistoryDTO)
   history: OrderStatusHistoryDTO[];
 

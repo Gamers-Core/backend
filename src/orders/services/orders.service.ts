@@ -34,7 +34,7 @@ import {
   getAllowedPaymentStatuses,
 } from '../helpers';
 import { nonUpdatableShippingStatuses, editableStatuses } from '../statuses';
-import { OrderOptions, OrderStatus } from '../types';
+import { OrderHistoryStatus, OrderHistoryType, OrderOptions, OrderStatus } from '../types';
 
 import { OrderItemsService } from './order-items.service';
 
@@ -154,7 +154,7 @@ export class OrdersService {
       assertStatusGuards(order, status);
 
       order.status = status;
-      await this.appendHistory(order, status, manager);
+      await this.appendHistory(order, { type: 'status', status }, manager);
       await this.statusHandlers[status]?.(order, manager);
 
       await withEnvironment(
@@ -174,10 +174,12 @@ export class OrdersService {
   }
 
   updatePaymentStatus(orderNumber: string, body: UpdateOrderPaymentDTO) {
-    return this.updateOrder({ orderNumber }, (order) => {
+    return this.updateOrder({ orderNumber }, async (order, manager) => {
       assertValidPaymentTransition(order.paymentStatus, body.paymentStatus);
       assertPaymentStatusGuards(order, body.paymentStatus);
       order.paymentStatus = body.paymentStatus;
+
+      await this.appendHistory(order, { type: 'payment_status', status: body.paymentStatus }, manager);
     });
   }
 
@@ -215,7 +217,7 @@ export class OrdersService {
     });
 
     await orderRepo.save(order);
-    await this.appendHistory(order, order.status, manager);
+    await this.appendHistory(order, { type: 'status', status: order.status }, manager);
 
     const diff = await this.orderItemsService.add(order, body.variants, manager);
     order.subtotal += diff;
@@ -306,14 +308,18 @@ export class OrdersService {
     return order;
   }
 
-  private async appendHistory(order: Order, status: OrderStatus, manager: EntityManager) {
+  private async appendHistory(
+    order: Order,
+    entry: { type: OrderHistoryType; status?: OrderHistoryStatus },
+    manager: EntityManager,
+  ) {
     const historyRepo = manager.getRepository(OrderStatusHistory);
 
-    const entry = historyRepo.create({ order: { id: order.id }, status });
+    const historyEntry = historyRepo.create({ order: { id: order.id }, type: entry.type, status: entry.status });
 
-    await historyRepo.save(entry);
+    await historyRepo.save(historyEntry);
 
-    if (Array.isArray(order.history)) order.history.push(entry);
+    if (Array.isArray(order.history)) order.history.push(historyEntry);
   }
 
   private serializeOrder(order: Order) {
