@@ -1,6 +1,7 @@
 import { AuthPurpose } from 'src/auth/types';
 import { TranslateFnWithoutLocale } from 'src/i18n/types';
 import { OrderDTO } from 'src/orders/dtos/user/order.dto';
+import { PolicyType } from 'src/policies/types';
 
 import { mails, mailsOptions } from './const';
 
@@ -18,6 +19,7 @@ export type MailOptions = {
   order_confirmation: OrderDTO;
   order_auto_cancellation: OrderDTO;
   order_status_update: OrderDTO;
+  policy_update: { policyType: PolicyType; version: number; updatedAt: Date };
 } & { [K in AuthPurpose]: { otp: string } };
 export interface MailOptionsMap<T extends MailOptionsType> extends Omit<SendMailOptions, 'to' | 'html'> {
   type: MailType;

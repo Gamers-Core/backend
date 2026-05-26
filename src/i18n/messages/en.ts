@@ -57,6 +57,10 @@ export default {
   'featuredVariants.invalidIds': 'Invalid featured variant IDs',
 
   'policies.concurrentUpdate': 'Policy was updated concurrently. Please retry.',
+  'policies.type.terms-of-service': 'Terms of Service',
+  'policies.type.shipping': 'Shipping Policy',
+  'policies.type.refund': 'Refund Policy',
+  'policies.type.privacy': 'Privacy Policy',
 
   'orders.invalidTransition': 'Invalid order status transition: {current} → {next}',
   'orders.invalidPaymentTransition': 'Invalid payment status transition: {current} → {next}',
@@ -138,6 +142,12 @@ export default {
   'mail.orderStatusUpdate.viewOrder': 'View Order',
   'mail.orderStatusUpdate.notice': "We'll keep you updated as your order progresses.",
   'mail.orderStatusUpdate.thanksForYourOrder': 'Thanks for your order!',
+  'mail.policyUpdate.subject': 'Policy Update - {policyType}',
+  'mail.policyUpdate.header': 'Policy Update',
+  'mail.policyUpdate.intro': 'We have updated one of our policies. Here are the details:',
+  'mail.policyUpdate.typeLabel': 'Policy:',
+  'mail.policyUpdate.versionLabel': 'Version:',
+  'mail.policyUpdate.dateLabel': 'Updated At:',
 
   'userReviews.notFound': 'User review not found',
   'userReviews.maxCount': 'Maximum of 3 user reviews allowed',

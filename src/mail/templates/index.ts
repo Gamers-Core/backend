@@ -3,6 +3,7 @@ import { MailTemplatesMap } from '../types';
 import { renderOrderAutoCancellationHtml } from './order-auto-cancellation.template';
 import { renderOrderConfirmationHtml } from './order-confirmation.template';
 import { renderOrderStatusUpdateHtml } from './order-status-update.template';
+import { renderPolicyUpdateHtml } from './policy-update.template';
 import { renderSigninHtml } from './signin.template';
 
 export const mailTemplates: MailTemplatesMap = {
@@ -35,5 +36,11 @@ export const mailTemplates: MailTemplatesMap = {
     title: t('mail.supportTitle'),
     subject: t(['mail.orderStatusUpdate.subject', { orderNumber, status: t(`orders.status.${status}`) }]),
     html: renderOrderStatusUpdateHtml,
+  }),
+  policy_update: (t, { policyType }) => ({
+    type: 'no-reply',
+    title: t('mail.supportTitle'),
+    subject: t(['mail.policyUpdate.subject', { policyType: t(`policies.type.${policyType}`) }]),
+    html: renderPolicyUpdateHtml,
   }),
 };

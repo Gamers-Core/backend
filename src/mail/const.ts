@@ -8,4 +8,5 @@ export const mailsOptions = [
   'order_confirmation',
   'order_auto_cancellation',
   'order_status_update',
+  'policy_update',
 ] as const;

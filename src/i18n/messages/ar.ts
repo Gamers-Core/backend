@@ -57,6 +57,10 @@ export default {
   'featuredVariants.invalidIds': 'معرّفات العناصر المميزة غير صالحة',
 
   'policies.concurrentUpdate': 'تم تحديث السياسة بالتزامن. يرجى إعادة المحاولة.',
+  'policies.type.terms-of-service': 'شروط الاستخدام',
+  'policies.type.shipping': 'سياسة الشحن',
+  'policies.type.refund': 'سياسة الاسترجاع',
+  'policies.type.privacy': 'سياسة الخصوصية',
 
   'orders.invalidTransition': 'انتقال حالة الطلب غير صالح: {current} → {next}',
   'orders.invalidPaymentTransition': 'انتقال حالة الدفع غير صالح: {current} → {next}',
@@ -137,6 +141,12 @@ export default {
   'mail.orderStatusUpdate.notice': 'سنُبقيك على اطلاع بأي تحديثات على طلبك.',
   'mail.orderStatusUpdate.viewOrder': 'عرض الطلب',
   'mail.orderStatusUpdate.thanksForYourOrder': 'شكراً لطلبك!',
+  'mail.policyUpdate.subject': 'تحديث سياسة - {policyType}',
+  'mail.policyUpdate.header': 'تحديث سياسة',
+  'mail.policyUpdate.intro': 'قمنا بتحديث احدى سياساتنا. إليك التفاصيل:',
+  'mail.policyUpdate.typeLabel': 'السياسة:',
+  'mail.policyUpdate.versionLabel': 'الإصدار:',
+  'mail.policyUpdate.dateLabel': 'تاريخ التحديث:',
 
   'userReviews.notFound': 'مراجعة المستخدم غير موجودة',
   'userReviews.maxCount': 'الحد الأقصى للمراجعات هو 3',

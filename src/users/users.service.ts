@@ -44,6 +44,10 @@ export class UsersService {
     return this.repo.findOne({ where: { email, isAdmin: true } });
   }
 
+  getMailRecipients() {
+    return this.repo.find({ select: { email: true, locale: true } });
+  }
+
   updateLocale(id: number, locale: Locale) {
     return this.update(id, { locale });
   }
