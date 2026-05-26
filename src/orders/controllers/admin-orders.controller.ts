@@ -20,7 +20,6 @@ export class AdminOrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Get()
-  @Serialize(AdminOrderDTO)
   search(@Query() dto: AdminSearchOrdersDTO, @Query('userId') userId?: number) {
     return this.ordersService.search(dto, userId);
   }
@@ -35,7 +34,7 @@ export class AdminOrdersController {
     return this.ordersService.create(body);
   }
 
-  @Patch(':orderNumber/paymentStatus')
+  @Patch(':orderNumber/payment-status')
   updatePayment(@Param('orderNumber') orderNumber: string, @Body() body: UpdateOrderPaymentDTO) {
     return this.ordersService.updatePaymentStatus(orderNumber, body);
   }

@@ -1,24 +1,94 @@
 import { Expose, Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
 
 import { BasicUserDTO } from 'src/users/dtos/basic-user.dto';
 
-import { type PaymentStatus } from '../../types';
-import { OrderItemDTO } from '../order-item.dto';
-import { OrderDTO } from '../user/order.dto';
+import type { OrderStatus, PaymentMethod, PaymentStatus } from '../../types';
 
+import { AdminOrderItemDTO } from './admin-order-item.dto';
 import { OrderAllowedActionsDTO } from './order-allowed-actions.dto';
 
-class AdminOrderItemDTO extends OrderItemDTO {
+class OrderAddressDTO {
   @Expose()
   id: number;
+
+  @Expose()
+  nameAr: string;
+
+  @Expose()
+  phoneNumber: string;
+
+  @Expose()
+  detailedAddress: string;
+
+  @Expose()
+  districtName: string;
+
+  @Expose()
+  cityName: string;
 }
 
-export class AdminOrderDTO extends OrderDTO {
+class OrderStatusHistoryDTO {
+  @Expose()
+  status: OrderStatus;
+
+  @Expose()
+  createdAt: Date;
+}
+
+export class AdminOrderDTO {
   @Expose()
   id: number;
 
   @Expose()
   paymentStatus: PaymentStatus;
+
+  @Expose()
+  orderNumber: string;
+
+  @Expose()
+  status: OrderStatus;
+
+  @Expose()
+  paymentMethod: PaymentMethod;
+
+  @Expose()
+  createdAt: Date;
+
+  @Expose()
+  @ValidateNested({ each: true })
+  @Type(() => OrderStatusHistoryDTO)
+  history: OrderStatusHistoryDTO[];
+
+  @Expose()
+  @ValidateNested({ each: true })
+  @Type(() => AdminOrderItemDTO)
+  items: AdminOrderItemDTO[];
+
+  @Expose()
+  @Type(() => OrderAddressDTO)
+  shippingAddress: OrderAddressDTO;
+
+  @Expose()
+  canOpenPackage: boolean;
+
+  @Expose()
+  note: string | null;
+
+  @Expose()
+  trackingNumber: string | null;
+
+  @Expose()
+  subtotal: number;
+
+  @Expose()
+  shippingFee: number;
+
+  @Expose()
+  total: number;
+
+  @Expose()
+  currency: string;
 
   @Expose()
   updatedAt: Date;
@@ -30,8 +100,4 @@ export class AdminOrderDTO extends OrderDTO {
   @Expose()
   @Type(() => BasicUserDTO)
   user: BasicUserDTO;
-
-  @Expose()
-  @Type(() => AdminOrderItemDTO)
-  declare items: AdminOrderItemDTO[];
 }
