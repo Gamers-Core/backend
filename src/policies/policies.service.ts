@@ -26,6 +26,7 @@ export class PoliciesService {
 
   private static readonly POLICY_HISTORY_DEPTH = 2;
   private static readonly POLICY_UPDATE_EMAIL_BATCH_SIZE = 50;
+  private static readonly POLICY_UPDATE_EMAIL_BATCH_DELAY_MS = 250;
   private readonly CACHE_KEY = 'policies:all';
 
   async update(type: PolicyType, updateDTO: UpdatePolicyDTO): Promise<Policy> {
@@ -119,12 +120,17 @@ export class PoliciesService {
           );
 
           const failures = results.filter((result) => result.status === 'rejected');
-          if (!failures.length) return;
+          if (failures.length) this.logger.warn(`Policy update email failures: ${failures.length}`);
 
-          this.logger.warn(`Policy update email failures: ${failures.length}`);
+          if (i + PoliciesService.POLICY_UPDATE_EMAIL_BATCH_SIZE < recipients.length)
+            await this.delay(PoliciesService.POLICY_UPDATE_EMAIL_BATCH_DELAY_MS);
         }
       },
       ['staging', 'production', 'local'],
     );
+  }
+
+  private async delay(ms: number) {
+    await new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
