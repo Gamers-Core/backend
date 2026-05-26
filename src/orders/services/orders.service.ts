@@ -101,8 +101,10 @@ export class OrdersService {
     return qb.getMany();
   }
 
-  getOne(orderNumber: string, userId?: number) {
-    return this.getOneOrFail(this.ordersRepo.manager, { orderNumber, userId }, true);
+  async getOne(orderNumber: string, userId?: number) {
+    const order = await this.getOneOrFail(this.ordersRepo.manager, { orderNumber, userId }, true);
+
+    return this.serializeOrder(order);
   }
 
   checkout(userId: number, body: CheckoutOrderDTO) {
@@ -261,12 +263,14 @@ export class OrdersService {
 
       const repo = manager.getRepository(Order);
 
-      const updatedOrder = await repo.save({
+      await repo.save({
         id: order.id,
         status: order.status,
         paymentStatus: order.paymentStatus,
         trackingNumber: order.trackingNumber,
       });
+
+      const updatedOrder = await this.getOneOrFail(manager, options, true);
 
       return this.serializeOrder(updatedOrder);
     });
@@ -281,7 +285,7 @@ export class OrdersService {
         ...(userId ? { user: { id: userId } } : {}),
       },
       relations: includeRelations ? { items: true, user: true, history: true } : undefined,
-      order: includeRelations ? { history: { createdAt: 'ASC' } } : undefined,
+      order: includeRelations ? { items: { productTitle: 'ASC' }, history: { createdAt: 'ASC' } } : undefined,
     });
 
     if (!order) throw NotFoundException('orders.notFound');
@@ -355,9 +359,6 @@ export class OrdersService {
       );
 
       order.trackingNumber = delivery.trackingNumber;
-    },
-    delivered: async (order) => {
-      if (order.paymentStatus === 'paid') await this.updateStatus({ orderNumber: order.orderNumber }, 'completed');
     },
     cancelled: async (order, manager) => {
       await withOptionalManager(manager, this.ordersRepo.manager, (manager) =>
