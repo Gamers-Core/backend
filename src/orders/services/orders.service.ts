@@ -12,7 +12,6 @@ import { withEnvironment } from 'src/common/with-environment';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 import { LocaleContextService } from 'src/i18n/locale-context.service';
 import { Locale } from 'src/i18n/types';
-import { getEmail } from 'src/mail/helpers';
 import { MailService } from 'src/mail/mail.service';
 import { InventoryService } from 'src/products/services/inventory.service';
 
@@ -149,7 +148,7 @@ export class OrdersService {
     );
   }
 
-  updateStatus(options: OrderOptions, status: OrderStatus) {
+  updateStatus(options: OrderOptions, status: OrderStatus, sendMail: boolean = true) {
     return this.updateOrder(options, async (order, manager) => {
       assertValidOrderTransition(order.status, status);
       assertStatusGuards(order, status);
@@ -157,6 +156,20 @@ export class OrdersService {
       order.status = status;
       await this.appendHistory(order, status, manager);
       await this.statusHandlers[status]?.(order, manager);
+
+      await withEnvironment(
+        async (isValid) => {
+          if (!isValid || !sendMail) return;
+
+          await this.mailService.sendTypedMail(
+            order.user.email,
+            'order_status_update',
+            this.mapToDTO(order, this.LocaleContextService.locale),
+            this.LocaleContextService.locale,
+          );
+        },
+        ['production'],
+      );
     });
   }
 
@@ -342,46 +355,27 @@ export class OrdersService {
         async (isValid) => {
           if (!isValid) return { trackingNumber: null };
 
-          const [delivery] = await Promise.all([
-            this.bostaService.createDelivery({
-              ...order.shippingAddress,
-              ...order,
-              unitPrice,
-              cod: order.total,
-              note: order.note ?? undefined,
-            }),
-            this.mailService.sendTypedMail(getEmail('admin'), 'order_reminder', this.mapToDTO(order, 'en'), 'en'),
-          ]);
-
-          return delivery;
+          return await this.bostaService.createDelivery({
+            ...order.shippingAddress,
+            ...order,
+            unitPrice,
+            cod: order.total,
+            note: order.note ?? undefined,
+          });
         },
         ['production'],
       );
 
       order.trackingNumber = delivery.trackingNumber;
     },
-    cancelled: async (order, manager) => {
-      await withOptionalManager(manager, this.ordersRepo.manager, (manager) =>
-        Promise.all(
+    cancelled: (order, manager) =>
+      withOptionalManager(manager, this.ordersRepo.manager, async (manager) => {
+        await Promise.all(
           order.items.map(({ variantExternalId, quantity }) =>
             this.inventoryService.restoreStock(variantExternalId, quantity, manager),
           ),
-        ),
-      );
-
-      await withEnvironment(
-        async (isValid) => {
-          if (!isValid) return;
-
-          await this.mailService.sendTypedMail(
-            order.user.email,
-            'order_cancellation',
-            this.mapToDTO(order, this.LocaleContextService.locale),
-          );
-        },
-        ['production'],
-      );
-    },
+        );
+      }),
   } as const satisfies Partial<Record<OrderStatus, (order: Order, manager?: EntityManager) => void | Promise<void>>>;
 
   private static readonly CANCEL_STALE_ORDERS_BATCH_SIZE = 10;
@@ -398,7 +392,21 @@ export class OrdersService {
 
       for (let i = 0; i < staleOrders.length; i += OrdersService.CANCEL_STALE_ORDERS_BATCH_SIZE) {
         const batch = staleOrders.slice(i, i + OrdersService.CANCEL_STALE_ORDERS_BATCH_SIZE);
-        await Promise.allSettled(batch.map(({ orderNumber }) => this.updateStatus({ orderNumber }, 'cancelled')));
+        await Promise.allSettled(
+          batch.map(async ({ orderNumber }) => {
+            await this.updateStatus({ orderNumber }, 'cancelled', false);
+
+            await this.mailService.sendTypedMail(
+              orderNumber,
+              'order_auto_cancellation',
+              this.mapToDTO(
+                await this.getOneOrFail(this.ordersRepo.manager, { orderNumber }, true),
+                this.LocaleContextService.locale,
+              ),
+              this.LocaleContextService.locale,
+            );
+          }),
+        );
       }
     } catch (error) {
       this.logger.error('Failed to cancel stale pending orders', error instanceof Error ? error.stack : String(error));

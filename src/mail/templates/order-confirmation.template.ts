@@ -50,5 +50,5 @@ export const renderOrderConfirmationHtml: MailTemplateFn<'order_confirmation'> =
 
   <p><strong>${t('mail.orderConfirmation.totalPaid')}</strong> ${currency}${total}</p>
 
-  <p style="color: #555;">${t('mail.orderConfirmation.shippedNotice')}</p>
+  <p style="color: #555;">${t('mail.orderConfirmation.thanksForYourOrder')}</p>
   `;

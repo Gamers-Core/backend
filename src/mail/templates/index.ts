@@ -1,8 +1,8 @@
 import { MailTemplatesMap } from '../types';
 
-import { renderOrderCancellationHtml } from './order-cancellation.template';
+import { renderOrderAutoCancellationHtml } from './order-auto-cancellation.template';
 import { renderOrderConfirmationHtml } from './order-confirmation.template';
-import { renderOrderReminderHtml } from './order-reminder.template';
+import { renderOrderStatusUpdateHtml } from './order-status-update.template';
 import { renderSigninHtml } from './signin.template';
 
 export const mailTemplates: MailTemplatesMap = {
@@ -24,16 +24,16 @@ export const mailTemplates: MailTemplatesMap = {
     subject: t(['mail.orderConfirmation.subject', { orderNumber }]),
     html: renderOrderConfirmationHtml,
   }),
-  order_reminder: (t) => ({
+  order_auto_cancellation: (t, { orderNumber }) => ({
     type: 'no-reply',
     title: t('mail.supportTitle'),
-    subject: t('mail.orderReminder.subject'),
-    html: renderOrderReminderHtml,
+    subject: t(['mail.orderAutoCancellation.subject', { orderNumber }]),
+    html: renderOrderAutoCancellationHtml,
   }),
-  order_cancellation: (t, { orderNumber }) => ({
+  order_status_update: (t, { orderNumber, status }) => ({
     type: 'no-reply',
     title: t('mail.supportTitle'),
-    subject: t(['mail.orderCancellation.subject', { orderNumber }]),
-    html: renderOrderCancellationHtml,
+    subject: t(['mail.orderStatusUpdate.subject', { orderNumber, status: t(`orders.status.${status}`) }]),
+    html: renderOrderStatusUpdateHtml,
   }),
 };

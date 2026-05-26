@@ -6,6 +6,6 @@ export const mailsOptions = [
   'signin',
   'admin_signin',
   'order_confirmation',
-  'order_reminder',
-  'order_cancellation',
+  'order_auto_cancellation',
+  'order_status_update',
 ] as const;
