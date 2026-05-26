@@ -17,6 +17,9 @@ BEGIN
         CREATE TYPE "order_status_history_status_enum" AS ENUM ('pending','confirmed','on-hold','on-progress','shipped','delivered','completed','returned','cancelled','unpaid','paid','refunded');
     END IF;
 END$$;`);
+                await queryRunner.query(`ALTER TYPE "order_status_history_status_enum" ADD VALUE IF NOT EXISTS 'unpaid'`);
+                await queryRunner.query(`ALTER TYPE "order_status_history_status_enum" ADD VALUE IF NOT EXISTS 'paid'`);
+                await queryRunner.query(`ALTER TYPE "order_status_history_status_enum" ADD VALUE IF NOT EXISTS 'refunded'`);
         await queryRunner.query(`ALTER TABLE "order_status_history" ALTER COLUMN "status" TYPE "order_status_history_status_enum" USING "status"::text::"order_status_history_status_enum"`);
         await queryRunner.query(`UPDATE "order_status_history" SET "type" = 'status' WHERE "type" IS NULL`);
         await queryRunner.query(`ALTER TABLE "order_status_history" ALTER COLUMN "type" SET NOT NULL`);
