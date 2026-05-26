@@ -49,6 +49,11 @@ export class AdminOrdersController {
     return this.ordersService.updateShipping(orderNumber, body);
   }
 
+  @Post(':orderNumber/restock')
+  restock(@Param('orderNumber') orderNumber: string) {
+    return this.ordersService.restockReturnedOrder(orderNumber);
+  }
+
   @Post(':orderNumber/items')
   addItems(@Param('orderNumber') orderNumber: string, @Body() body: AddOrderItemDTO) {
     return this.ordersService.addItems(orderNumber, body);

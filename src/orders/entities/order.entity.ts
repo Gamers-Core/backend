@@ -57,6 +57,9 @@ export class Order {
   @Column({ default: false })
   canOpenPackage: boolean;
 
+  @Column({ default: false })
+  restocked: boolean;
+
   @Column('decimal', { precision: 10, scale: 2 })
   subtotal: number;
 

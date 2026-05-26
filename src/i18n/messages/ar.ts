@@ -75,6 +75,8 @@ export default {
   'orders.shippingDetailsNotUpdatable': 'لا يمكن تحديث تفاصيل الشحن بعد الآن',
   'orders.mustIncludeAtLeastOneItem': 'يجب أن يتضمن الطلب عنصراً واحداً على الأقل',
   'orders.notEditableInCurrentStatus': 'لا يمكن تعديل الطلب في حالته الحالية',
+  'orders.alreadyRestocked': 'تمت إعادة المخزون لهذا الطلب مسبقاً',
+  'orders.restockOnlyReturned': 'يمكن إعادة المخزون فقط للطلبات المرتجعة',
   'orders.notFound': 'الطلب غير موجود',
   'orders.itemsRequired': 'العناصر مطلوبة',
   'orders.mustContainAtLeastOneItem': 'يجب أن يحتوي الطلب على عنصر واحد على الأقل',

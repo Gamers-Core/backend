@@ -75,6 +75,8 @@ export default {
   'orders.shippingDetailsNotUpdatable': 'Shipping details can no longer be updated',
   'orders.mustIncludeAtLeastOneItem': 'Order must include at least one item',
   'orders.notEditableInCurrentStatus': 'Order cannot be modified in its current status',
+  'orders.alreadyRestocked': 'Order has already been restocked',
+  'orders.restockOnlyReturned': 'Only returned orders can be restocked',
   'orders.notFound': 'Order not found',
   'orders.itemsRequired': 'Items are required',
   'orders.mustContainAtLeastOneItem': 'Order must contain at least one item',

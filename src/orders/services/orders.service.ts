@@ -192,6 +192,29 @@ export class OrdersService {
     });
   }
 
+  restockReturnedOrder(orderNumber: string) {
+    return this.ordersRepo.manager.transaction(async (manager) => {
+      const order = await this.getOneOrFail(manager, { orderNumber }, true);
+
+      if (order.status !== 'returned') throw BadRequestException('orders.restockOnlyReturned');
+      if (order.restocked) throw BadRequestException('orders.alreadyRestocked');
+
+      await withOptionalManager(manager, this.ordersRepo.manager, (manager) =>
+        Promise.all(
+          order.items.map(({ variantExternalId, quantity }) =>
+            this.inventoryService.restoreStock(variantExternalId, quantity, manager),
+          ),
+        ),
+      );
+
+      await manager.getRepository(Order).update(order.id, { restocked: true });
+
+      const updatedOrder = await this.getOneOrFail(manager, { orderNumber }, true);
+
+      return this.serializeOrder(updatedOrder);
+    });
+  }
+
   private async createOrderInternal(
     { userId, ...body }: CreateOrderDTO,
     manager: EntityManager,

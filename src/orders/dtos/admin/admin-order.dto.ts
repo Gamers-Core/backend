@@ -85,6 +85,9 @@ export class AdminOrderDTO {
   subtotal: number;
 
   @Expose()
+  restocked: boolean;
+
+  @Expose()
   shippingFee: number;
 
   @Expose()
