@@ -44,8 +44,8 @@ export class UsersService {
     return this.repo.findOne({ where: { email, isAdmin: true } });
   }
 
-  getMailRecipients() {
-    return this.repo.find({ select: { email: true, locale: true } });
+  getMailRecipients(includeAdmins = false) {
+    return this.repo.find({ select: { email: true, locale: true }, where: { isAdmin: includeAdmins } });
   }
 
   updateLocale(id: number, locale: Locale) {
