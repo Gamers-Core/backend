@@ -1,6 +1,6 @@
 import { MailTemplateFn } from '../types';
 
-export const renderSigninHtml: MailTemplateFn<'signin' | 'admin_signin'> = (t, { otp }, isRtl) =>
+export const renderSigninHtml: MailTemplateFn<'signin' | 'admin_signin'> = (t, { otp }, { isRtl }) =>
   `
   <h2 style="margin-bottom: 0;">🎮 Gamers Core</h2>
   <p style="margin-top: 4px; color: #555;">${t('mail.signin.header')}</p>
@@ -9,7 +9,6 @@ export const renderSigninHtml: MailTemplateFn<'signin' | 'admin_signin'> = (t, {
   <p>${t('mail.common.greeting')}</p>
   <p>${t('mail.signin.body')}</p>
 
-  <!-- OTP box -->
   <div style="
     background: #f5f5f5;
     padding: 16px;

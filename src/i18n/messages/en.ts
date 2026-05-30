@@ -122,6 +122,8 @@ export default {
   'mail.common.variant': 'Variant',
   'mail.common.qty': 'Qty',
   'mail.common.price': 'Price',
+  'mail.common.viewOrder': 'View Order',
+  'mail.common.viewPolicy': 'View Policy',
   'mail.common.automatedEmail': 'Gamers Core • This is an automated email',
   'mail.orderCancellation.subject': 'Order Cancellation - {orderNumber}',
   'mail.orderCancellation.header': 'Order Cancellation',

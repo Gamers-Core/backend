@@ -122,6 +122,8 @@ export default {
   'mail.common.variant': 'النسخة',
   'mail.common.qty': 'الكمية',
   'mail.common.price': 'السعر',
+  'mail.common.viewOrder': 'عرض الطلب',
+  'mail.common.viewPolicy': 'عرض السياسة',
   'mail.common.automatedEmail': 'Gamers Core • هذه رسالة بريد إلكتروني آلية',
   'mail.orderCancellation.subject': 'إلغاء الطلب - {orderNumber}',
   'mail.orderCancellation.header': 'إلغاء الطلب',

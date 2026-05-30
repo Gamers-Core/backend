@@ -3,7 +3,7 @@ import { MailTemplateFn } from '../types';
 export const renderOrderAutoCancellationHtml: MailTemplateFn<'order_auto_cancellation'> = (
   t,
   { orderNumber, currency, total, items },
-  isRtl,
+  { isRtl, frontendUrl },
 ) =>
   `
   <h2 style="margin-bottom: 0;">🎮 Gamers Core</h2>
@@ -13,7 +13,6 @@ export const renderOrderAutoCancellationHtml: MailTemplateFn<'order_auto_cancell
   <p>${t('mail.common.greeting')}</p>
   <p>${t('mail.orderAutoCancellation.intro')}</p>
 
-  <!-- Cancellation badge -->
   <div style="
     display: inline-block;
     background: #c0392b;
@@ -28,7 +27,6 @@ export const renderOrderAutoCancellationHtml: MailTemplateFn<'order_auto_cancell
     ${t('mail.orderCancellation.cancelledBadge')}
   </div>
 
-  <!-- Cancellation reason -->
   <div style="
     background: #fff3cd;
     border: 1px solid #ffeeba;
@@ -37,16 +35,15 @@ export const renderOrderAutoCancellationHtml: MailTemplateFn<'order_auto_cancell
     border-radius: 8px;
     margin-bottom: 20px;
   ">
-    <strong>${t('mail.orderAutoCancellation.reasonLabel')}</strong> ${t('mail.orderAutoCancellation.reason.stalePending')}
+    <strong>${t('mail.orderAutoCancellation.reasonLabel')}</strong>
+    ${t('mail.orderAutoCancellation.reason.stalePending')}
   </div>
 
-  <!-- Order summary -->
   <div style="background: #f5f5f5; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
     <strong>${t('mail.common.orderNumber')}</strong> ${orderNumber}<br />
     <strong>${t('mail.common.total')}</strong> ${currency}${total}
   </div>
 
-  <!-- Item recap -->
   <details>
     <summary style="cursor: pointer; color: #555; font-size: 14px; margin-bottom: 8px;">
       ${t('mail.orderCancellation.summary')} (${items.length})
@@ -75,6 +72,13 @@ export const renderOrderAutoCancellationHtml: MailTemplateFn<'order_auto_cancell
       </tbody>
     </table>
   </details>
+
+  <p style="margin: 16px 0;">
+    <a href="${frontendUrl}/orders/${orderNumber}"
+      style="display: inline-block; background: #1a1a2e; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none;">
+      ${t('mail.common.viewOrder')}
+    </a>
+  </p>
 
   <hr style="margin: 20px 0;" />
   <p style="color: #555; font-size: 13px;">${t('mail.orderCancellation.refundNotice')}</p>
