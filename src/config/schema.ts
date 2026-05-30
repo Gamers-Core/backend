@@ -13,15 +13,15 @@ const baseSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string(),
   CLOUDINARY_API_KEY: z.string(),
   CLOUDINARY_API_SECRET: z.string(),
+  FRONTEND_URL: z.url(),
 });
 
 const localSchema = z.object({
   ...baseSchema.shape,
-  FRONTEND_URL: z.url(),
 });
 
 const developmentSchema = z.object({
-  ...baseSchema.shape,
+  ...localSchema.shape,
   COOKIE_DOMAIN: z.string(),
 });
 const stagingSchema = z.object({
