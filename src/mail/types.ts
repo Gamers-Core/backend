@@ -34,5 +34,10 @@ export type MailTemplatesMap = { [K in MailOptionsType]: MailOptionsFn<K> };
 export type MailTemplateFn<T extends MailOptionsType> = (
   t: TranslateFnWithoutLocale,
   values: MailOptions[T],
-  isRtl: boolean,
+  options: MailTemplateOptions,
 ) => string;
+
+export interface MailTemplateOptions {
+  isRtl: boolean;
+  frontendUrl: string;
+}

@@ -3,7 +3,7 @@ import { MailTemplateFn } from '../types';
 export const renderOrderStatusUpdateHtml: MailTemplateFn<'order_status_update'> = (
   t,
   { orderNumber, status, currency, total, items },
-  isRtl,
+  { isRtl, frontendUrl },
 ) =>
   `
   <h2 style="margin-bottom: 0;">🎮 Gamers Core</h2>
@@ -13,7 +13,6 @@ export const renderOrderStatusUpdateHtml: MailTemplateFn<'order_status_update'> 
   <p>${t('mail.common.greeting')}</p>
   <p>${t('mail.orderStatusUpdate.intro')}</p>
 
-  <!-- Status badge -->
   <div style="
     display: inline-block;
     background: #1a1a2e;
@@ -28,13 +27,11 @@ export const renderOrderStatusUpdateHtml: MailTemplateFn<'order_status_update'> 
     ${t(`orders.status.${status}`)}
   </div>
 
-  <!-- Order summary -->
   <div style="background: #f5f5f5; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
     <strong>${t('mail.common.orderNumber')}</strong> ${orderNumber}<br />
     <strong>${t('mail.common.total')}</strong> ${currency}${total}
   </div>
 
-  <!-- Collapsible-style item recap -->
   <details>
     <summary style="cursor: pointer; color: #555; font-size: 14px; margin-bottom: 8px;">
       ${t('mail.orderStatusUpdate.summary')} (${items.length})
@@ -63,6 +60,13 @@ export const renderOrderStatusUpdateHtml: MailTemplateFn<'order_status_update'> 
       </tbody>
     </table>
   </details>
+
+  <p style="margin: 16px 0;">
+    <a href="${frontendUrl}/orders/${orderNumber}"
+      style="display: inline-block; background: #1a1a2e; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none;">
+      ${t('mail.common.viewOrder')}
+    </a>
+  </p>
 
   <hr style="margin: 20px 0;" />
   <p style="color: #555; font-size: 13px;">${t('mail.orderStatusUpdate.notice')}</p>

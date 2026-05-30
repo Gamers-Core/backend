@@ -3,7 +3,7 @@ import { MailTemplateFn } from '../types';
 export const renderOrderConfirmationHtml: MailTemplateFn<'order_confirmation'> = (
   t,
   { orderNumber, currency, total, items },
-  isRtl,
+  { isRtl, frontendUrl },
 ) =>
   `
   <h2 style="margin-bottom: 0;">🎮 Gamers Core</h2>
@@ -49,6 +49,13 @@ export const renderOrderConfirmationHtml: MailTemplateFn<'order_confirmation'> =
   <hr style="margin: 20px 0;" />
 
   <p><strong>${t('mail.orderConfirmation.totalPaid')}</strong> ${currency}${total}</p>
+
+  <p style="margin: 16px 0;">
+    <a href="${frontendUrl}/orders/${orderNumber}"
+      style="display: inline-block; background: #1a1a2e; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none;">
+      ${t('mail.common.viewOrder')}
+    </a>
+  </p>
 
   <p style="color: #555;">${t('mail.orderConfirmation.thanksForYourOrder')}</p>
   `;

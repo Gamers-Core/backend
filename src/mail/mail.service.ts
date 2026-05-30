@@ -56,9 +56,23 @@ export class MailService {
     const t = translateWithoutLocale(locale);
 
     const { type: mail, html, ...options } = mailTemplates[type](t, values);
-    const renderedHtml = renderMailWrapper(t, html(t, values, locale === 'ar'), locale);
+    const renderedHtml = renderMailWrapper(
+      t,
+      html(t, values, {
+        isRtl: locale === 'ar',
+        frontendUrl: this.getFrontendUrl(locale),
+      }),
+      locale,
+    );
 
     return this.send({ ...options, html: renderedHtml, to }, mail);
+  }
+
+  private getFrontendUrl(locale: Locale) {
+    const baseUrl = this.configService.get('FRONTEND_URL');
+    const normalizedBaseUrl = baseUrl.replace(/\/+$/, '');
+
+    return `${normalizedBaseUrl}/${locale}`;
   }
 
   private send({ title, to, subject, html }: SendMailOptions, mail: MailType) {
