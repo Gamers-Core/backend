@@ -243,7 +243,7 @@ export class OrdersService {
     await this.appendHistory(order, { type: 'status', status: order.status }, manager);
 
     const diff = await this.orderItemsService.add(order, body.variants, manager);
-    order.subtotal += diff;
+    order.subtotal = this.toNumber(order.subtotal) + diff;
     await this.recalculateAndSaveTotals(order, manager);
 
     if (clearCartAfterCreate) await this.cartService.sync(userId, [], manager);
@@ -264,7 +264,7 @@ export class OrdersService {
     );
 
     order.shippingFee = shippingFee;
-    order.total = order.subtotal + shippingFee;
+    order.total = this.toNumber(order.subtotal) + shippingFee;
 
     await manager.getRepository(Order).update(order.id, {
       subtotal: order.subtotal,
@@ -286,7 +286,7 @@ export class OrdersService {
 
     const diff = await mutate(order, manager);
 
-    order.subtotal += diff;
+    order.subtotal = this.toNumber(order.subtotal) + diff;
     await this.recalculateAndSaveTotals(order, manager);
 
     const updatedOrder = await this.getOneOrFail(manager, options, true);
@@ -329,6 +329,10 @@ export class OrdersService {
     if (!order) throw NotFoundException('orders.notFound');
 
     return order;
+  }
+
+  private toNumber(val: number | string): number {
+    return typeof val === 'string' ? parseFloat(val) : val;
   }
 
   private async appendHistory(
