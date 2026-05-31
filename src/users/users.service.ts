@@ -6,6 +6,7 @@ import { NotFoundException } from 'src/common/exceptions';
 import { isUniqueViolation } from 'src/common/helpers/db.helpers';
 import { Locale } from 'src/i18n/types';
 
+import { AdminSearchUsersDTO } from './dtos/admin/admin-search-users.dto';
 import { User } from './entities/user.entity';
 
 @Injectable()
@@ -46,6 +47,27 @@ export class UsersService {
 
   getMailRecipients(includeAdmins = false) {
     return this.repo.find({ select: { email: true, locale: true }, where: { isAdmin: includeAdmins } });
+  }
+
+  getAllForAdmin({ q }: AdminSearchUsersDTO = {}) {
+    const trimmedQ = q?.trim();
+
+    const qb = this.repo
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.addresses', 'address')
+      .where('user.isAdmin = false')
+      .loadRelationCountAndMap('user.ordersCount', 'user.orders');
+
+    if (trimmedQ)
+      qb.andWhere('(user.name ILIKE :q OR user.email ILIKE :q OR address.phoneNumber ILIKE :q)', {
+        q: `%${trimmedQ}%`,
+      });
+
+    return qb
+      .orderBy('user.createdAt', 'DESC')
+      .addOrderBy('address.isDefault', 'DESC')
+      .addOrderBy('address.id', 'ASC')
+      .getMany();
   }
 
   updateLocale(id: number, locale: Locale) {
