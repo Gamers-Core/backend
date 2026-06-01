@@ -61,7 +61,14 @@ export class PoliciesService {
         return policy;
       });
 
-      await this.sendPolicyUpdateEmail(policy);
+      await withEnvironment(
+        async (isValid) => {
+          if (!isValid) return;
+
+          await this.sendPolicyUpdateEmail(policy);
+        },
+        ['staging', 'production'],
+      );
 
       return policy;
     } catch (error) {
