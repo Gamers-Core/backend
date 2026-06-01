@@ -6,7 +6,7 @@ export const renderPolicyUpdateHtml: MailTemplateFn<'policy_update'> = (
   { isRtl, frontendUrl },
 ) => {
   const locale = isRtl ? 'ar' : 'en';
-  const formattedDate = new Date(updatedAt).toLocaleString(locale);
+  const formattedDate = new Date(updatedAt).toLocaleString(locale, { timeZone: 'Africa/Cairo' });
 
   return `
   <h2 style="margin-bottom: 0;">🎮 Gamers Core</h2>
