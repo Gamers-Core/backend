@@ -160,6 +160,8 @@ export default {
   'faqs.notFound': 'FAQ not found',
   'faqs.invalidIds': 'Invalid FAQ order',
 
+  'service.unavailable': 'Service is temporarily unavailable',
+
   isEmail: 'Must be a valid email address',
   isString: 'Must be a string',
   isPhoneNumber: 'Must be a valid phone number',

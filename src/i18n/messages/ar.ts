@@ -159,6 +159,8 @@ export default {
   'faqs.notFound': 'السؤال غير موجود',
   'faqs.invalidIds': 'ترتيب الأسئلة غير صالح',
 
+  'service.unavailable': 'الخدمة غير متاحة مؤقتًا',
+
   isEmail: 'يجب أن يكون بريدًا إلكترونيًا صالحًا',
   isString: 'يجب أن تكون القيمة نصًا',
   isPhoneNumber: 'يجب أن يكون رقم هاتف صالحًا',
