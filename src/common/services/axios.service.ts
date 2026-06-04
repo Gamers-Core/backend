@@ -50,9 +50,11 @@ export abstract class AxiosService<TWrapper = void, TError = { message?: string 
   protected onError(err: AxiosError): never {
     const status = err.response?.status;
 
-    const message = this.extractError
-      ? this.extractError(err.response?.data as TError)
-      : ((err.response?.data as { message?: string })?.message ?? err.message);
+    const data = err.response?.data as TError | undefined;
+    const message =
+      this.extractError && data
+        ? this.extractError(data)
+        : ((err.response?.data as { message?: string } | undefined)?.message ?? err.message);
 
     this.logger.error(`Request failed${status ? ` (${status})` : ''}: ${message}`);
 
