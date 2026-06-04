@@ -14,6 +14,7 @@ import { LocaleContextService } from 'src/i18n/locale-context.service';
 import { Locale } from 'src/i18n/types';
 import { MailService } from 'src/mail/mail.service';
 import { InventoryService } from 'src/products/services/inventory.service';
+import { WhatsAppService } from 'src/whatsapp/whatsapp.service';
 
 import { AddOrderItemDTO } from '../dtos/admin/add-order-item.dto';
 import { AdminSearchOrdersDTO } from '../dtos/admin/admin-search-orders.dto';
@@ -49,7 +50,8 @@ export class OrdersService {
     private readonly bostaService: BostaService,
     private readonly orderItemsService: OrderItemsService,
     private readonly mailService: MailService,
-    private readonly LocaleContextService: LocaleContextService,
+    private readonly whatsappService: WhatsAppService,
+    private readonly localeContextService: LocaleContextService,
     private readonly inventoryService: InventoryService,
   ) {}
 
@@ -148,28 +150,46 @@ export class OrdersService {
     );
   }
 
-  updateStatus(options: OrderOptions, status: OrderStatus, sendMail: boolean = true) {
-    return this.updateOrder(options, async (order, manager) => {
-      assertValidOrderTransition(order.status, status);
-      assertStatusGuards(order, status);
+  updateStatus(options: OrderOptions, status: OrderStatus, sendMail: boolean = true, manager?: EntityManager) {
+    return withOptionalManager(manager, this.ordersRepo.manager, async (manager) => {
+      return await this.updateOrder(
+        options,
+        async (order, manager) => {
+          assertValidOrderTransition(order.status, status);
+          assertStatusGuards(order, status);
 
-      order.status = status;
-      await this.appendHistory(order, { type: 'status', status }, manager);
-      await this.statusHandlers[status]?.(order, manager);
+          order.status = status;
+          await this.appendHistory(order, { type: 'status', status }, manager);
+          await this.statusHandlers[status]?.(order, manager);
 
-      await withEnvironment(
-        async (isValid) => {
-          if (!isValid || !sendMail) return;
+          await withEnvironment(
+            async (isValid) => {
+              if (!isValid || !sendMail) return;
 
-          await this.mailService.sendTypedMail(
-            order.user.email,
-            'order_status_update',
-            this.mapToDTO(order, this.LocaleContextService.locale),
-            this.LocaleContextService.locale,
+              await this.mailService.sendTypedMail(
+                order.user.email,
+                'order_status_update',
+                this.mapToDTO(order, this.localeContextService.locale),
+                this.localeContextService.locale,
+              );
+            },
+            ['production'],
           );
         },
-        ['production'],
+        manager,
       );
+    });
+  }
+
+  handleWhatsAppStatusUpdate(whatsappMessageId: string, isConfirmed: boolean) {
+    return this.ordersRepo.manager.transaction(async (manager) => {
+      const order = await this.getOneOrFail(manager, { whatsappMessageId }, true);
+
+      if (order.status !== 'pending') throw NotFoundException('orders.notFound');
+
+      const status = isConfirmed ? 'confirmed' : 'cancelled';
+
+      return await this.updateStatus({ whatsappMessageId }, status);
     });
   }
 
@@ -250,7 +270,7 @@ export class OrdersService {
 
     const updatedOrder = await this.getOneOrFail(manager, { orderNumber: order.orderNumber, userId }, true);
 
-    await this.statusHandlers.pending(updatedOrder);
+    await this.statusHandlers.pending(updatedOrder, manager);
 
     return updatedOrder;
   }
@@ -294,8 +314,12 @@ export class OrdersService {
     return this.serializeOrder(updatedOrder);
   }
 
-  private updateOrder(options: OrderOptions, mutate: (order: Order, manager: EntityManager) => void | Promise<void>) {
-    return this.ordersRepo.manager.transaction(async (manager) => {
+  private updateOrder(
+    options: OrderOptions,
+    mutate: (order: Order, manager: EntityManager) => void | Promise<void>,
+    manager?: EntityManager,
+  ) {
+    return withOptionalManager(manager, this.ordersRepo.manager, async (manager) => {
       const order = await this.getOneOrFail(manager, options, true);
       await mutate(order, manager);
 
@@ -367,16 +391,25 @@ export class OrdersService {
   }
 
   private readonly statusHandlers = {
-    pending: async (order) => {
+    pending: async (order, manager) => {
       await withEnvironment(
         async (isValid) => {
           if (!isValid) return;
 
-          await this.mailService.sendTypedMail(
-            order.user.email,
-            'order_confirmation',
-            this.mapToDTO(order, this.LocaleContextService.locale),
-          );
+          return await Promise.all([
+            this.whatsappService
+              .sendTypedMessage(
+                order.shippingAddress.phoneNumber,
+                'order_confirmation',
+                this.mapToDTO(order, this.localeContextService.locale),
+              )
+              .then((res) => manager.getRepository(Order).update(order.id, { whatsappMessageId: res.messages[0].id })),
+            this.mailService.sendTypedMail(
+              order.user.email,
+              'order_confirmation',
+              this.mapToDTO(order, this.localeContextService.locale),
+            ),
+          ]);
         },
         ['production'],
       );
@@ -401,15 +434,14 @@ export class OrdersService {
 
       order.trackingNumber = delivery.trackingNumber;
     },
-    cancelled: (order, manager) =>
-      withOptionalManager(manager, this.ordersRepo.manager, async (manager) => {
-        await Promise.all(
-          order.items.map(({ variantExternalId, quantity }) =>
-            this.inventoryService.restoreStock(variantExternalId, quantity, manager),
-          ),
-        );
-      }),
-  } as const satisfies Partial<Record<OrderStatus, (order: Order, manager?: EntityManager) => void | Promise<void>>>;
+    cancelled: async (order, manager) => {
+      await Promise.all(
+        order.items.map(({ variantExternalId, quantity }) =>
+          this.inventoryService.restoreStock(variantExternalId, quantity, manager),
+        ),
+      );
+    },
+  } as const satisfies Partial<Record<OrderStatus, (order: Order, manager: EntityManager) => void | Promise<void>>>;
 
   private static readonly CANCEL_STALE_ORDERS_BATCH_SIZE = 10;
   @Cron(CronExpression.EVERY_HOUR, { waitForCompletion: true })
@@ -434,9 +466,9 @@ export class OrdersService {
               'order_auto_cancellation',
               this.mapToDTO(
                 await this.getOneOrFail(this.ordersRepo.manager, { orderNumber }, true),
-                this.LocaleContextService.locale,
+                this.localeContextService.locale,
               ),
-              this.LocaleContextService.locale,
+              this.localeContextService.locale,
             );
           }),
         );

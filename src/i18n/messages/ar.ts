@@ -159,6 +159,13 @@ export default {
   'faqs.notFound': 'السؤال غير موجود',
   'faqs.invalidIds': 'ترتيب الأسئلة غير صالح',
 
+  'whatsapp.replies.confirmed': '✅ تم تأكيد طلبك بنجاح! سيتم التواصل معك قريباً لترتيب التوصيل.',
+  'whatsapp.replies.cancelled': '❌ تم إلغاء طلبك. إذا كان لديك أي استفسار، تواصل معنا.',
+  'whatsapp.replies.alreadyActioned': '⚠️ لقد قمت بالفعل باتخاذ إجراء على هذا الطلب.',
+  'whatsapp.replies.unknownAction': '❓ لم نتعرف على هذا الإجراء. يرجى الضغط على أحد الأزرار المتاحة.',
+  'whatsapp.replies.unsupportedMessage': `💬 للتواصل مع دعم Gamers Core، يرجى التواصل معنا عبر واتساب على الرابط التالي: {waLink}`,
+  'whatsapp.replies.error': '⚠️ حدث خطأ أثناء معالجة طلبك. يرجى المحاولة مرة أخرى أو التواصل مع الدعم.',
+
   'service.unavailable': 'الخدمة غير متاحة مؤقتًا',
 
   isEmail: 'يجب أن يكون بريدًا إلكترونيًا صالحًا',

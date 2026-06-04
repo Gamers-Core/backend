@@ -5,17 +5,17 @@ import { InternalAxiosRequestConfig } from 'axios';
 import { AxiosService } from 'src/common/services/axios.service';
 import { ConfigService } from 'src/config/config.service';
 import { translateWithoutLocale } from 'src/i18n/helpers';
-import { LocaleContextService } from 'src/i18n/locale-context.service';
-import { Locale } from 'src/i18n/types';
 
-import { whatsappTemplates } from './const';
+import { whatsappReplyMap, whatsappTemplates } from './templates';
 import {
   SendMessageResponse,
   SendTemplateData,
+  SendTextData,
   TemplateComponent,
   WhatsAppErrorResponse,
   WhatsAppMessageOptions,
   WhatsAppMessageType,
+  WhatsAppReplyAction,
 } from './types';
 
 @Injectable()
@@ -29,7 +29,6 @@ export class WhatsAppService extends AxiosService<unknown, WhatsAppErrorResponse
   constructor(
     httpService: HttpService,
     private readonly configService: ConfigService,
-    private readonly localeContextService: LocaleContextService,
   ) {
     super(httpService);
   }
@@ -43,30 +42,39 @@ export class WhatsAppService extends AxiosService<unknown, WhatsAppErrorResponse
     return err.error?.message;
   }
 
-  sendTypedMessage<T extends WhatsAppMessageType>(
-    to: string,
-    type: T,
-    values: WhatsAppMessageOptions[T],
-    locale: Locale = this.localeContextService.locale,
-  ) {
-    const t = translateWithoutLocale(locale);
-    const { languageCode, body, Footer, header } = whatsappTemplates[type];
+  // Normalize EG numbers: 01xxxxxxxxx → 201xxxxxxxxx
+  private normalizePhone(phone: string): string {
+    return phone.startsWith('0') ? `2${phone}` : phone;
+  }
 
-    const components: TemplateComponent[] = [
-      {
-        type: 'body',
-        parameters: body(t, values),
-      },
-    ];
+  resolveReplyAction(payload: string): WhatsAppReplyAction | null {
+    return whatsappReplyMap[payload] ?? null;
+  }
 
-    if (Footer) components.push({ type: 'footer', parameters: Footer(t, values) });
+  sendTypedMessage<T extends WhatsAppMessageType>(to: string, type: T, values: WhatsAppMessageOptions[T]) {
+    const t = translateWithoutLocale('ar');
+    const { languageCode, body, footer, header } = whatsappTemplates[type];
+
+    const components: TemplateComponent[] = [{ type: 'body', parameters: body(t, values) }];
+
     if (header) components.unshift({ type: 'header', parameters: header(t, values) });
+    if (footer) components.push({ type: 'footer', parameters: footer(t, values) });
 
     return this.post<SendMessageResponse, SendTemplateData>(`/${this.phoneNumberId}/messages`, {
       messaging_product: 'whatsapp',
-      to: `2${to}`,
+      to: this.normalizePhone(to),
       type: 'template',
       template: { name: type, language: { code: languageCode }, components },
+    });
+  }
+
+  sendText(to: string, body: string) {
+    return this.post<SendMessageResponse, SendTextData>(`/${this.phoneNumberId}/messages`, {
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to: this.normalizePhone(to),
+      type: 'text',
+      text: { body },
     });
   }
 }

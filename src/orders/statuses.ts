@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-cycle
 import { OrderStatus, OrderStatusGuard, PaymentStatus } from './types';
 
 export const orderStatuses = [

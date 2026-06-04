@@ -10,7 +10,7 @@ async function bootstrap() {
 
   const origin = cookieDomain
     ? new RegExp(`^https?:\\/\\/([a-z0-9-]+\\.)*${cookieDomain.replace(/^\./, '').replace(/\./g, '\\.')}$`)
-    : process.env.FRONTEND_URL!;
+    : new RegExp('^https?://localhost(:[0-9]+)?$');
 
   app.enableCors({
     origin,
