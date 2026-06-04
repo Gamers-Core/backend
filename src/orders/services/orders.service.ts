@@ -10,6 +10,7 @@ import { CartService } from 'src/cart/cart.service';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withEnvironment } from 'src/common/with-environment';
 import { withOptionalManager } from 'src/common/with-optional-manager';
+import { translateWithoutLocale } from 'src/i18n/helpers';
 import { LocaleContextService } from 'src/i18n/locale-context.service';
 import { Locale } from 'src/i18n/types';
 import { MailService } from 'src/mail/mail.service';
@@ -182,14 +183,16 @@ export class OrdersService {
   }
 
   handleWhatsAppStatusUpdate(whatsappMessageId: string, isConfirmed: boolean) {
+    const t = translateWithoutLocale('ar');
+
+    const status = isConfirmed ? 'confirmed' : 'cancelled';
+
     return this.ordersRepo.manager.transaction(async (manager) => {
       const order = await this.getOneOrFail(manager, { whatsappMessageId }, true);
 
-      if (order.status !== 'pending') throw NotFoundException('orders.notFound');
+      if (order.status !== 'pending') return t('whatsapp.replies.alreadyActioned');
 
-      const status = isConfirmed ? 'confirmed' : 'cancelled';
-
-      return await this.updateStatus({ whatsappMessageId }, status, true, manager);
+      await this.updateStatus({ whatsappMessageId }, status, true, manager);
     });
   }
 

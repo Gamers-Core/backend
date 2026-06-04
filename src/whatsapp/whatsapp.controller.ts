@@ -55,13 +55,14 @@ export class WhatsappController {
       if (action.type === 'order_confirmation') {
         const isConfirm = action.action === 'confirm';
         try {
-          await this.ordersService.handleWhatsAppStatusUpdate(message.context.id, isConfirm);
+          const res = await this.ordersService.handleWhatsAppStatusUpdate(message.context.id, isConfirm);
+
           await this.whatsappService.sendText(
             from,
-            isConfirm ? t('whatsapp.replies.confirmed') : t('whatsapp.replies.cancelled'),
+            res || (isConfirm ? t('whatsapp.replies.confirmed') : t('whatsapp.replies.cancelled')),
           );
         } catch {
-          await this.whatsappService.sendText(from, t('whatsapp.replies.alreadyActioned'));
+          await this.whatsappService.sendText(from, t('whatsapp.replies.error'));
         }
       }
       return;
