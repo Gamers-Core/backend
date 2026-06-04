@@ -14,9 +14,6 @@ const baseSchema = z.object({
   CLOUDINARY_API_KEY: z.string(),
   CLOUDINARY_API_SECRET: z.string(),
   FRONTEND_URL: z.url(),
-  WHATSAPP_PHONE_NUMBER_ID: z.string(),
-  WHATSAPP_TOKEN: z.string(),
-  WHATSAPP_WEBHOOK_SECRET: z.string(),
 });
 
 const localSchema = z.object({
@@ -35,6 +32,10 @@ const stagingSchema = z.object({
 });
 const productionSchema = z.object({
   ...stagingSchema.shape,
+  WHATSAPP_PHONE_NUMBER_ID: z.string(),
+  WHATSAPP_TOKEN: z.string(),
+  WHATSAPP_WEBHOOK_SECRET: z.string(),
+  WHATSAPP_APP_SECRET: z.string(),
   BOSTA_WEBHOOK_SECRET: z.string(),
 });
 

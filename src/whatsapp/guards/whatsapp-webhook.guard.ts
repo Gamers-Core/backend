@@ -1,4 +1,4 @@
-import { timingSafeEqual } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Request } from 'express';
@@ -7,19 +7,8 @@ import { UnauthorizedException } from 'src/common/exceptions/http.exceptions';
 import { withEnvironment } from 'src/common/with-environment';
 import { ConfigService } from 'src/config/config.service';
 
-import { WhatsAppWebhookVerificationQuery } from '../types';
-
-const safeCompare = (a: string, b: string): boolean => {
-  const bufA = Buffer.from(a);
-  const bufB = Buffer.from(b);
-
-  if (bufA.length !== bufB.length) return false;
-
-  return timingSafeEqual(bufA, bufB);
-};
-
 @Injectable()
-export class WhatsAppWebhookGuard implements CanActivate {
+export class WhatsAppSignatureGuard implements CanActivate {
   constructor(private readonly configService: ConfigService) {}
 
   canActivate(context: ExecutionContext): boolean {
@@ -27,20 +16,22 @@ export class WhatsAppWebhookGuard implements CanActivate {
       (isValid) => {
         if (!isValid) return true;
 
-        const req = context
-          .switchToHttp()
-          .getRequest<
-            Request<
-              { [key: string]: string | string[]; [key: number]: string },
-              undefined,
-              undefined,
-              WhatsAppWebhookVerificationQuery
-            >
-          >();
-        const expectedSecret = this.configService.get('WHATSAPP_WEBHOOK_SECRET');
-        const providedSecret = req.query.hub_verify_token ?? '';
+        const req = context.switchToHttp().getRequest<Request & { rawBody?: Buffer }>();
 
-        if (!safeCompare(providedSecret, expectedSecret)) throw UnauthorizedException('unauthorized');
+        const signature = req.headers['x-hub-signature-256'];
+        if (!signature || typeof signature !== 'string') throw UnauthorizedException('unauthorized');
+
+        const rawBody = req.rawBody;
+        if (!rawBody) throw UnauthorizedException('unauthorized');
+
+        const appSecret = this.configService.get('WHATSAPP_APP_SECRET') ?? '';
+        const expected = `sha256=${createHmac('sha256', appSecret).update(rawBody).digest('hex')}`;
+
+        const sigBuffer = Buffer.from(signature);
+        const expectedBuffer = Buffer.from(expected);
+
+        if (sigBuffer.length !== expectedBuffer.length || !timingSafeEqual(sigBuffer, expectedBuffer))
+          throw UnauthorizedException('unauthorized');
 
         return true;
       },

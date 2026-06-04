@@ -4,7 +4,8 @@ import { Public } from 'src/auth/decorators/public.decorator';
 import { translateWithoutLocale } from 'src/i18n/helpers';
 import { OrdersService } from 'src/orders/services/orders.service';
 
-import { WhatsAppWebhookGuard } from './guards/whatsapp-webhook.guard';
+import { WhatsAppVerifyWebhookGuard } from './guards/whatsapp-verify-webhook.guard';
+import { WhatsAppSignatureGuard } from './guards/whatsapp-webhook.guard';
 import type { WhatsAppWebhookEvent, WhatsAppWebhookVerificationQuery } from './types';
 import { WhatsAppService } from './whatsapp.service';
 
@@ -16,13 +17,14 @@ export class WhatsappController {
   ) {}
 
   @Public()
-  @UseGuards(WhatsAppWebhookGuard)
+  @UseGuards(WhatsAppVerifyWebhookGuard)
   @Get('webhook')
   verifyWebhook(@Query() query: WhatsAppWebhookVerificationQuery) {
     return query.hub_challenge;
   }
 
   @Public()
+  @UseGuards(WhatsAppSignatureGuard)
   @Post('webhook')
   async handleWebhook(@Body() data: WhatsAppWebhookEvent) {
     const value = data.entry?.[0]?.changes?.[0]?.value;
