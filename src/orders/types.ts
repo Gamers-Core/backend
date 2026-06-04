@@ -1,10 +1,9 @@
 import { Translate } from 'src/i18n/types';
 
 import { sortOptions } from './const';
-// eslint-disable-next-line import/no-cycle
 import { orderHistoryStatuses, orderHistoryTypes, orderStatuses, paymentMethods, paymentStatuses } from './statuses';
 
-type OrderIdentifierType = 'orderNumber' | 'trackingNumber';
+type OrderIdentifierType = 'orderNumber' | 'trackingNumber' | 'whatsappMessageId';
 
 export type OrderOptions<T extends OrderIdentifierType = OrderIdentifierType> = {
   userId?: number;
@@ -12,7 +11,11 @@ export type OrderOptions<T extends OrderIdentifierType = OrderIdentifierType> = 
 
 type OrderIdentifier<T extends OrderIdentifierType> = T extends 'orderNumber'
   ? { orderNumber: string }
-  : { trackingNumber: string };
+  : T extends 'trackingNumber'
+    ? { trackingNumber: string }
+    : T extends 'whatsappMessageId'
+      ? { whatsappMessageId: string }
+      : never;
 
 export type OrderStatus = (typeof orderStatuses)[number];
 export type PaymentStatus = (typeof paymentStatuses)[number];

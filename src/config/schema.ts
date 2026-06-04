@@ -32,6 +32,10 @@ const stagingSchema = z.object({
 });
 const productionSchema = z.object({
   ...stagingSchema.shape,
+  WHATSAPP_PHONE_NUMBER_ID: z.string(),
+  WHATSAPP_TOKEN: z.string(),
+  WHATSAPP_WEBHOOK_SECRET: z.string(),
+  WHATSAPP_APP_SECRET: z.string(),
   BOSTA_WEBHOOK_SECRET: z.string(),
 });
 

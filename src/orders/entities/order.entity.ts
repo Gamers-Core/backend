@@ -54,6 +54,9 @@ export class Order {
   @Column('varchar', { nullable: true, length: 255 })
   trackingNumber: string | null;
 
+  @Column('varchar', { nullable: true, length: 255 })
+  whatsappMessageId: string | null;
+
   @Column({ default: false })
   canOpenPackage: boolean;
 

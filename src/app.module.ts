@@ -33,6 +33,7 @@ import { RedisModule } from './redis/redis.module';
 import { SidebarModule } from './sidebar/sidebar.module';
 import { UserReviewsModule } from './user-reviews/user-reviews.module';
 import { UsersModule } from './users/users.module';
+import { WhatsappModule } from './whatsapp/whatsapp.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { UsersModule } from './users/users.module';
     I18nModule,
     FAQsModule,
     SidebarModule,
+    WhatsappModule,
   ],
   controllers: [AppController],
   providers: [

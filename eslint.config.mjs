@@ -46,7 +46,6 @@ export default defineConfig(
     },
   },
   {
-    files: ['**/*.entity.ts'],
     rules: {
       'import/no-cycle': 'off',
     },

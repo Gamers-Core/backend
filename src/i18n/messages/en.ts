@@ -160,6 +160,16 @@ export default {
   'faqs.notFound': 'FAQ not found',
   'faqs.invalidIds': 'Invalid FAQ order',
 
+  'whatsapp.replies.confirmed':
+    '✅ Your order has been confirmed successfully! We will contact you soon to arrange delivery.',
+  'whatsapp.replies.cancelled': '❌ Your order has been cancelled. If you have any questions, please contact us.',
+  'whatsapp.replies.alreadyActioned': '⚠️ You have already taken action on this order.',
+  'whatsapp.replies.unknownAction': "❓ We didn't recognize this action. Please press one of the available buttons.",
+  'whatsapp.replies.unsupportedMessage': `💬 To contact Gamers Core support, please message us on WhatsApp at the link below: {waLink}`,
+  'whatsapp.replies.error': '⚠️ An error occurred while processing your request. Please try again or contact support.',
+
+  'service.unavailable': 'Service is temporarily unavailable',
+
   isEmail: 'Must be a valid email address',
   isString: 'Must be a string',
   isPhoneNumber: 'Must be a valid phone number',

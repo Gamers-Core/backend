@@ -20,7 +20,7 @@ export class MailService {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
-    private readonly LocaleContextService: LocaleContextService,
+    private readonly localeContextService: LocaleContextService,
   ) {
     this.brevo = this.httpService.axiosRef.create({ baseURL: 'https://api.brevo.com/v3', timeout: 10_000 });
 
@@ -51,7 +51,7 @@ export class MailService {
     to: string,
     type: T,
     values: MailOptions[T],
-    locale: Locale = this.LocaleContextService.locale,
+    locale: Locale = this.localeContextService.locale,
   ) {
     const t = translateWithoutLocale(locale);
 

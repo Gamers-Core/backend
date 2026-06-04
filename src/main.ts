@@ -3,14 +3,14 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   app.getHttpAdapter().getInstance().set('trust proxy', 1);
 
   const cookieDomain = process.env.COOKIE_DOMAIN;
 
   const origin = cookieDomain
     ? new RegExp(`^https?:\\/\\/([a-z0-9-]+\\.)*${cookieDomain.replace(/^\./, '').replace(/\./g, '\\.')}$`)
-    : process.env.FRONTEND_URL!;
+    : new RegExp('^https?://localhost(:[0-9]+)?$');
 
   app.enableCors({
     origin,
