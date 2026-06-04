@@ -4,8 +4,8 @@ import { Public } from 'src/auth/decorators/public.decorator';
 import { translateWithoutLocale } from 'src/i18n/helpers';
 import { OrdersService } from 'src/orders/services/orders.service';
 
+import { WhatsAppSignatureGuard } from './guards/whatsapp-signature.guard';
 import { WhatsAppVerifyWebhookGuard } from './guards/whatsapp-verify-webhook.guard';
-import { WhatsAppSignatureGuard } from './guards/whatsapp-webhook.guard';
 import type { WhatsAppWebhookEvent, WhatsAppWebhookVerificationQuery } from './types';
 import { WhatsAppService } from './whatsapp.service';
 

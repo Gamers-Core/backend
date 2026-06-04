@@ -14,7 +14,7 @@ export class WhatsAppSignatureGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     return withEnvironment(
       (isValid) => {
-        if (!isValid) return true;
+        if (!isValid) return false;
 
         const req = context.switchToHttp().getRequest<Request & { rawBody?: Buffer }>();
 
@@ -35,7 +35,7 @@ export class WhatsAppSignatureGuard implements CanActivate {
 
         return true;
       },
-      ['local', 'production'],
+      ['production'],
     );
   }
 }
