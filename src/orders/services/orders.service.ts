@@ -189,7 +189,7 @@ export class OrdersService {
 
       const status = isConfirmed ? 'confirmed' : 'cancelled';
 
-      return await this.updateStatus({ whatsappMessageId }, status);
+      return await this.updateStatus({ whatsappMessageId }, status, true, manager);
     });
   }
 
