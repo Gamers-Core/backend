@@ -2,7 +2,7 @@ import { MailTemplateFn } from '../types';
 
 export const renderPolicyUpdateHtml: MailTemplateFn<'policy_update'> = (
   t,
-  { policyType, version, updatedAt },
+  { policyType, updatedAt },
   { isRtl, frontendUrl },
 ) => {
   const locale = isRtl ? 'ar' : 'en';
@@ -18,7 +18,6 @@ export const renderPolicyUpdateHtml: MailTemplateFn<'policy_update'> = (
 
   <div style="background: #f5f5f5; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
     <strong>${t('mail.policyUpdate.typeLabel')}</strong> ${t(`policies.type.${policyType}`)}<br />
-    <strong>${t('mail.policyUpdate.versionLabel')}</strong> ${version}<br />
     <strong>${t('mail.policyUpdate.dateLabel')}</strong> ${formattedDate}
   </div>
 
