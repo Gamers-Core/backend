@@ -4,12 +4,12 @@ import { Serialize } from 'src/common/interceptors/serialize.interceptor';
 import { locales } from 'src/i18n/const';
 import type { Locale } from 'src/i18n/types';
 
-import { CurrentUser } from './decorators/current-user.decorator';
-import { BasicUserDTO } from './dtos/basic-user.dto';
-import { FullUserDTO } from './dtos/full-user.dto';
-import { UpdateMeDTO } from './dtos/update-me.dto';
-import { User } from './entities/user.entity';
-import { UsersService } from './users.service';
+import { CurrentUser } from '../decorators/current-user.decorator';
+import { BasicUserDTO } from '../dtos/basic-user.dto';
+import { FullUserDTO } from '../dtos/full-user.dto';
+import { UpdateMeDTO } from '../dtos/update-me.dto';
+import { User } from '../entities/user.entity';
+import { UsersService } from '../users.service';
 
 @Controller('users')
 export class UsersController {

@@ -49,13 +49,14 @@ export class UsersService {
     return this.repo.find({ select: { email: true, locale: true }, where: { isAdmin: includeAdmins } });
   }
 
-  getAllForAdmin({ q }: AdminSearchUsersDTO = {}) {
+  getAllForAdmin({ q, sort }: AdminSearchUsersDTO = {}) {
     const trimmedQ = q?.trim();
 
     const qb = this.repo
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.addresses', 'address')
       .where('user.isAdmin = false')
+      .andWhere('user.name IS NOT NULL')
       .loadRelationCountAndMap('user.ordersCount', 'user.orders');
 
     if (trimmedQ)
@@ -63,11 +64,58 @@ export class UsersService {
         q: `%${trimmedQ}%`,
       });
 
-    return qb
-      .orderBy('user.createdAt', 'DESC')
-      .addOrderBy('address.isDefault', 'DESC')
-      .addOrderBy('address.id', 'ASC')
-      .getMany();
+    switch (sort) {
+      case 'name-ascending':
+        qb.orderBy('user.name', 'ASC');
+        break;
+
+      case 'name-descending':
+        qb.orderBy('user.name', 'DESC');
+        break;
+
+      case 'email-ascending':
+        qb.orderBy('user.email', 'ASC');
+        break;
+
+      case 'email-descending':
+        qb.orderBy('user.email', 'DESC');
+        break;
+
+      case 'orders-ascending':
+        qb.orderBy(`(SELECT COUNT(*) FROM "order" WHERE "order"."user_id" = "user"."id")`, 'ASC');
+        break;
+      case 'orders-descending':
+        qb.orderBy(`(SELECT COUNT(*) FROM "order" WHERE "order"."user_id" = "user"."id")`, 'DESC');
+        break;
+
+      case 'addresses-ascending':
+        qb.orderBy('(SELECT COUNT(*) FROM "address" WHERE "address"."user_id" = "user"."id")', 'ASC');
+        break;
+
+      case 'addresses-descending':
+        qb.orderBy('(SELECT COUNT(*) FROM "address" WHERE "address"."user_id" = "user"."id")', 'DESC');
+        break;
+
+      case 'locale-ascending':
+        qb.orderBy('user.locale', 'ASC');
+        break;
+
+      case 'locale-descending':
+        qb.orderBy('user.locale', 'DESC');
+        break;
+
+      case 'created-ascending':
+        qb.orderBy('user.createdAt', 'ASC');
+        break;
+
+      case 'created-descending':
+      default:
+        qb.orderBy('user.createdAt', 'DESC');
+    }
+
+    qb.addOrderBy('address.id', 'DESC').addOrderBy('address.isDefault', 'DESC');
+
+    return qb.getMany();
   }
 
   updateLocale(id: number, locale: Locale) {
