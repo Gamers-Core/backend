@@ -465,6 +465,19 @@ export class OrdersService {
       order.trackingNumber = delivery.trackingNumber;
     },
     cancelled: async (order, manager) => {
+      if (order.trackingNumber) {
+        await withEnvironment(
+          async (isValid) => {
+            if (!isValid) return;
+
+            await this.bostaService.cancelDelivery(order.trackingNumber!);
+          },
+          ['production'],
+        );
+
+        order.trackingNumber = null;
+      }
+
       await Promise.all(
         order.items.map(({ variantExternalId, quantity }) =>
           this.inventoryService.restoreStock(variantExternalId, quantity, manager),

@@ -9,7 +9,7 @@ export interface BostaResponse<T> {
 export interface BostaError {
   message: string;
   error: string;
-  statusCode: number;
+  errorCode: number;
   data: null;
 }
 

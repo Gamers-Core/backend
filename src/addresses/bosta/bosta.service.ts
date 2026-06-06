@@ -128,12 +128,16 @@ export class BostaService extends AxiosService<BostaResponse<unknown>, BostaErro
   }
 
   async updateDelivery(trackingNumber: string, props: Partial<CreateDelivery>) {
-    const updatedDelivery = await this.put<{ _id: string }, Partial<Omit<DeliveryData, 'businessLocationId'>>>(
+    return await this.put<{ _id: string }, Partial<Omit<DeliveryData, 'businessLocationId'>>>(
       `/deliveries/business/${trackingNumber}`,
       this.mapToDeliveryData(props),
     );
+  }
 
-    return updatedDelivery;
+  async cancelDelivery(trackingNumber: string) {
+    return await this.delete<{ _id: string }>(`/deliveries/business/${trackingNumber}/terminate`).catch(() => ({
+      _id: trackingNumber,
+    }));
   }
 
   private mapToDeliveryData(props: CreateDelivery, pickupLocationId: string): DeliveryData;
