@@ -1,4 +1,4 @@
-import { deliveryTypes } from './const';
+import { bostaPaymentMethods, deliveryTypes } from './const';
 
 export interface BostaResponse<T> {
   success: boolean;
@@ -132,6 +132,8 @@ export interface ShippingFees {
   dropOffZoneFees: number;
   pickupZoneFees: number;
 }
+
+export type BostaPaymentMethod = (typeof bostaPaymentMethods)[number];
 
 export enum CreateDeliveryType {
   DELIVER = 10,

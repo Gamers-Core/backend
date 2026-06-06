@@ -1,3 +1,5 @@
+import { bostaPaymentMethods } from 'src/addresses/bosta/const';
+
 import { OrderStatus, OrderStatusGuard, PaymentStatus } from './types';
 
 export const orderStatuses = [
@@ -14,7 +16,7 @@ export const orderStatuses = [
 
 export const paymentStatuses = ['unpaid', 'paid', 'refunded'] as const;
 
-export const paymentMethods = ['cod', 'instapay', 'valu', 'card'] as const;
+export const paymentMethods = ['instapay', ...bostaPaymentMethods] as const;
 
 export const orderHistoryTypes = ['status', 'payment_status'] as const;
 

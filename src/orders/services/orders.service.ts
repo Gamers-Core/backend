@@ -6,6 +6,8 @@ import { EntityManager, LessThan, Repository } from 'typeorm';
 
 import { AddressesService } from 'src/addresses/addresses.service';
 import { BostaService } from 'src/addresses/bosta/bosta.service';
+import { bostaPaymentMethods } from 'src/addresses/bosta/const';
+import { BostaPaymentMethod } from 'src/addresses/bosta/types';
 import { CartService } from 'src/cart/cart.service';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withEnvironment } from 'src/common/with-environment';
@@ -152,8 +154,11 @@ export class OrdersService {
   }
 
   updateStatus(options: OrderOptions, status: OrderStatus, sendMail: boolean = true, manager?: EntityManager) {
-    return withOptionalManager(manager, this.ordersRepo.manager, async (manager) => {
-      return await this.updateOrder(
+    return withOptionalManager(
+      manager,
+      this.ordersRepo.manager,
+      async (manager) =>
+        await this.updateOrder(
         options,
         async (order, manager) => {
           assertValidOrderTransition(order.status, status);
@@ -178,8 +183,8 @@ export class OrdersService {
           );
         },
         manager,
+        ),
       );
-    });
   }
 
   handleWhatsAppStatusUpdate(whatsappMessageId: string, isConfirmed: boolean) {
@@ -419,6 +424,7 @@ export class OrdersService {
     },
     confirmed: async (order) => {
       const unitPrice = order.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+      const isBostaPayment = bostaPaymentMethods.includes(order.paymentMethod as BostaPaymentMethod);
 
       const delivery = await withEnvironment(
         async (isValid) => {
@@ -428,7 +434,7 @@ export class OrdersService {
             ...order.shippingAddress,
             ...order,
             unitPrice,
-            cod: order.total,
+            cod: isBostaPayment ? this.toNumber(order.total) : 0,
             note: order.note ?? undefined,
           });
         },

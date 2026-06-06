@@ -18,3 +18,5 @@ export const deliveryStates: Record<number, OrderStatus> = {
   30: 'shipped',
   45: 'delivered',
 };
+
+export const bostaPaymentMethods = ['cod', 'valu', 'card'] as const;
