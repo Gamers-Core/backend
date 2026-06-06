@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, IsNull, Not, Repository } from 'typeorm';
 
 import { Brand } from 'src/brands/entities/brand.entity';
 import { Category } from 'src/categories/entities/category.entity';
 import { FeaturedVariant } from 'src/featured-variants/entities/featured-variant.entity';
 import { Order } from 'src/orders/entities/order.entity';
 import { Product } from 'src/products/entities/product.entity';
+import { User } from 'src/users/entities/user.entity';
 
 import { SidebarCountsByUrl } from './types';
 
@@ -14,6 +15,7 @@ import { SidebarCountsByUrl } from './types';
 export class SidebarService {
   constructor(
     @InjectRepository(Order) private readonly ordersRepo: Repository<Order>,
+    @InjectRepository(User) private readonly usersRepo: Repository<User>,
     @InjectRepository(Product) private readonly productsRepo: Repository<Product>,
     @InjectRepository(Brand) private readonly brandsRepo: Repository<Brand>,
     @InjectRepository(Category) private readonly categoriesRepo: Repository<Category>,
@@ -21,8 +23,9 @@ export class SidebarService {
   ) {}
 
   async getCounts(): Promise<SidebarCountsByUrl> {
-    const [orders, products, brands, categories, featuredVariants] = await Promise.all([
+    const [orders, users, products, brands, categories, featuredVariants] = await Promise.all([
       this.ordersRepo.count({ where: { status: In(['confirmed', 'on-progress', 'on-hold']) } }),
+      this.usersRepo.count({ where: { isAdmin: false, name: Not(IsNull()) } }),
       this.productsRepo.count({ where: { status: 'active' } }),
       this.brandsRepo.count(),
       this.categoriesRepo.count(),
@@ -31,6 +34,7 @@ export class SidebarService {
 
     return {
       '/orders': orders,
+      '/users': users,
       '/products': products,
       '/brands': brands,
       '/categories': categories,

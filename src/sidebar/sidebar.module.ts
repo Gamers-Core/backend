@@ -9,12 +9,15 @@ import { Order } from 'src/orders/entities/order.entity';
 import { Policy } from 'src/policies/entities/policy.entity';
 import { Product } from 'src/products/entities/product.entity';
 import { UserReview } from 'src/user-reviews/entities/user-review.entity';
+import { User } from 'src/users/entities/user.entity';
 
 import { SidebarController } from './sidebar.controller';
 import { SidebarService } from './sidebar.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Order, Product, Brand, Category, FeaturedVariant, FAQ, Policy, UserReview])],
+  imports: [
+    TypeOrmModule.forFeature([Order, User, Product, Brand, Category, FeaturedVariant, FAQ, Policy, UserReview]),
+  ],
   controllers: [SidebarController],
   providers: [SidebarService],
 })
