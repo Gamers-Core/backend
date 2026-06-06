@@ -160,32 +160,32 @@ export class OrdersService {
       this.ordersRepo.manager,
       async (manager) =>
         await this.updateOrder(
-        options,
-        async (order, manager) => {
-          assertValidOrderTransition(order.status, status);
-          assertStatusGuards(order, status);
+          options,
+          async (order, manager) => {
+            assertValidOrderTransition(order.status, status);
+            assertStatusGuards(order, status);
 
-          order.status = status;
-          await this.appendHistory(order, { type: 'status', status }, manager);
-          await this.statusHandlers[status]?.(order, manager);
+            order.status = status;
+            await this.appendHistory(order, { type: 'status', status }, manager);
+            await this.statusHandlers[status]?.(order, manager);
 
-          await withEnvironment(
-            async (isValid) => {
-              if (!isValid || !sendMail) return;
+            await withEnvironment(
+              async (isValid) => {
+                if (!isValid || !sendMail) return;
 
-              await this.mailService.sendTypedMail(
-                order.user.email,
-                'order_status_update',
-                this.mapToDTO(order, this.localeContextService.locale),
-                this.localeContextService.locale,
-              );
-            },
-            ['production'],
-          );
-        },
-        manager,
+                await this.mailService.sendTypedMail(
+                  order.user.email,
+                  'order_status_update',
+                  this.mapToDTO(order, this.localeContextService.locale),
+                  this.localeContextService.locale,
+                );
+              },
+              ['production'],
+            );
+          },
+          manager,
         ),
-      );
+    );
   }
 
   handleWhatsAppStatusUpdate(whatsappMessageId: string, isConfirmed: boolean) {
