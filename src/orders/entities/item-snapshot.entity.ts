@@ -32,6 +32,9 @@ export class ItemSnapshot {
   quantity: number;
 
   @Column('decimal', { precision: 10, scale: 2 })
+  unitCost: number;
+
+  @Column('decimal', { precision: 10, scale: 2 })
   unitPrice: number;
 
   @Column('decimal', { precision: 10, scale: 2 })

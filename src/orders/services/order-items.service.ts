@@ -103,6 +103,7 @@ export class OrderItemsService {
       mediaId: variant.image?.id ?? null,
       imageURL: variant.image?.src ?? null,
       quantity,
+      unitCost: variant.costPerItem,
       unitPrice,
       lineTotal,
     };

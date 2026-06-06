@@ -322,7 +322,7 @@ export class OrdersService {
       const itemSnapshotRepo = manager.getRepository(ItemSnapshot);
 
       const freshItems = await itemSnapshotRepo.findBy({ order: { id: order.id } });
-      const unitPrice = freshItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+      const unitPrice = freshItems.reduce((sum, item) => sum + item.quantity * item.unitCost, 0);
       const isBostaPayment = bostaPaymentMethods.includes(order.paymentMethod as BostaPaymentMethod);
 
       await withEnvironment(
@@ -444,7 +444,7 @@ export class OrdersService {
       );
     },
     confirmed: async (order) => {
-      const unitPrice = order.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+      const unitPrice = order.items.reduce((sum, item) => sum + item.quantity * item.unitCost, 0);
       const isBostaPayment = bostaPaymentMethods.includes(order.paymentMethod as BostaPaymentMethod);
 
       const delivery = await withEnvironment(
