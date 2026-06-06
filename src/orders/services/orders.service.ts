@@ -27,6 +27,7 @@ import { UpdateOrderShippingDTO } from '../dtos/admin/update-order-shipping.dto'
 import { UpdateOrderItemDTO } from '../dtos/admin/update-order.dto';
 import { CheckoutOrderDTO } from '../dtos/user/checkout-order.dto';
 import { OrderDTO } from '../dtos/user/order.dto';
+import { ItemSnapshot } from '../entities/item-snapshot.entity';
 import { OrderStatusHistory } from '../entities/order-status-history.entity';
 import { Order } from '../entities/order.entity';
 import {
@@ -316,6 +317,26 @@ export class OrdersService {
 
     order.subtotal = this.toNumber(order.subtotal) + diff;
     await this.recalculateAndSaveTotals(order, manager);
+
+    if (order.trackingNumber) {
+      const itemSnapshotRepo = manager.getRepository(ItemSnapshot);
+
+      const freshItems = await itemSnapshotRepo.findBy({ order: { id: order.id } });
+      const unitPrice = freshItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+      const isBostaPayment = bostaPaymentMethods.includes(order.paymentMethod as BostaPaymentMethod);
+
+      await withEnvironment(
+        async (isValid) => {
+          if (!isValid) return;
+
+          await this.bostaService.updateDelivery(order.trackingNumber!, {
+            unitPrice,
+            ...(isBostaPayment ? { cod: this.toNumber(order.total) } : {}),
+          });
+        },
+        ['production'],
+      );
+    }
 
     const updatedOrder = await this.getOneOrFail(manager, options, true);
 

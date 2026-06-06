@@ -142,7 +142,7 @@ export enum CreateDeliveryType {
   CUSTOMER_RETURN = 25,
 }
 
-export interface CreateDeliveryData {
+export interface DeliveryData {
   type: CreateDeliveryType;
   specs?: {
     size?: 'SMALL' | 'MEDIUM' | 'LARGE' | 'Light Bulky' | 'Heavy Bulky';

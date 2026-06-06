@@ -17,7 +17,7 @@ import {
   ShippingFees,
   CreateDelivery,
   DeliveryResponse,
-  CreateDeliveryData,
+  DeliveryData,
   CreateDeliveryType,
   BostaResponse,
   BostaError,
@@ -119,25 +119,54 @@ export class BostaService extends AxiosService<BostaResponse<unknown>, BostaErro
   async createDelivery(props: CreateDelivery) {
     const defaultPickupAddress = await this.getDefaultPickupLocation();
 
-    const delivery = await this.post<DeliveryResponse, CreateDeliveryData>('/deliveries?apiVersion=1', {
-      businessLocationId: defaultPickupAddress._id,
-      type: CreateDeliveryType.DELIVER,
-      flexShippingInfo: {
-        amountToBeCollected: 200,
-        isOrderEligible: true,
-      },
-      notes: props.note,
-      cod: props.cod,
-      dropOffAddress: { cityId: props.cityId, districtId: props.districtId, firstLine: props.detailedAddress },
-      goodsInfo: { amount: props.unitPrice },
-      receiver: {
-        phone: props.phoneNumber,
-        fullName: props.nameAr,
-      },
-      businessReference: props.orderNumber,
-      allowToOpenPackage: props.canOpenPackage,
-    });
+    const delivery = await this.post<DeliveryResponse, DeliveryData>(
+      '/deliveries?apiVersion=1',
+      this.mapToDeliveryData(props, defaultPickupAddress?._id),
+    );
 
     return delivery;
+  }
+
+  async updateDelivery(trackingNumber: string, props: Partial<CreateDelivery>) {
+    const updatedDelivery = await this.put<{ _id: string }, Partial<Omit<DeliveryData, 'businessLocationId'>>>(
+      `/deliveries/business/${trackingNumber}`,
+      this.mapToDeliveryData(props),
+    );
+
+    return updatedDelivery;
+  }
+
+  private mapToDeliveryData(props: CreateDelivery, pickupLocationId: string): DeliveryData;
+  private mapToDeliveryData(props: Partial<CreateDelivery>): Partial<DeliveryData>;
+  private mapToDeliveryData(props: Partial<CreateDelivery>, pickupLocationId?: string) {
+    const data: Partial<DeliveryData> = {
+      flexShippingInfo: { isOrderEligible: true, amountToBeCollected: 200 },
+    };
+
+    if (pickupLocationId) {
+      data.businessLocationId = pickupLocationId;
+      data.type = CreateDeliveryType.DELIVER;
+    }
+
+    if (props.cod) data.cod = props.cod;
+
+    if (props.note !== undefined) data.notes = props.note;
+
+    if (props.cityId)
+      data.dropOffAddress = {
+        cityId: props.cityId,
+        districtId: props.districtId ?? '',
+        firstLine: props.detailedAddress ?? '',
+      };
+
+    if (props.unitPrice !== undefined) data.goodsInfo = { amount: props.unitPrice };
+
+    if (props.phoneNumber || props.nameAr)
+      data.receiver = { phone: props.phoneNumber ?? '', fullName: props.nameAr ?? '' };
+
+    if (props.canOpenPackage !== undefined) data.allowToOpenPackage = props.canOpenPackage;
+    if (props.orderNumber !== undefined) data.businessReference = props.orderNumber;
+
+    return data;
   }
 }
