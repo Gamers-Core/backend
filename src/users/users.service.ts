@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, IsNull, Not, Repository } from 'typeorm';
 
-import { NotFoundException } from 'src/common/exceptions';
+import { ConflictException, NotFoundException } from 'src/common/exceptions';
 import { isUniqueViolation } from 'src/common/helpers/db.helpers';
 import { Locale } from 'src/i18n/types';
 
@@ -37,7 +37,7 @@ export class UsersService {
   async createForAdmin(dto: AdminCreateUserDTO) {
     const user = await this.getOneByEmail(dto.email);
 
-    if (user) throw NotFoundException('user.alreadyExists');
+    if (user) throw ConflictException('user.alreadyExists');
 
     const newUser = this.repo.create(dto);
 
@@ -131,7 +131,7 @@ export class UsersService {
         qb.orderBy('user.createdAt', 'DESC');
     }
 
-    qb.addOrderBy('address.id', 'DESC').addOrderBy('address.isDefault', 'DESC');
+    qb.addOrderBy('address.isDefault', 'DESC').addOrderBy('address.id', 'DESC');
 
     return qb.getMany();
   }
@@ -141,6 +141,12 @@ export class UsersService {
   }
 
   async update(id: number, updatedUser: DeepPartial<User>) {
+    if (updatedUser.email) {
+      const userWithEmail = await this.getOneByEmail(updatedUser.email);
+
+      if (userWithEmail && userWithEmail.id !== id) throw ConflictException('user.alreadyExists');
+    }
+
     const result = await this.repo.update(id, updatedUser);
     if (!result.affected) throw NotFoundException('user.notFound');
 
