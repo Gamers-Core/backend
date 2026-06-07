@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, IsNull, Not, Repository } from 'typeorm';
 
-import { NotFoundException } from 'src/common/exceptions';
+import { ConflictException, NotFoundException } from 'src/common/exceptions';
 import { isUniqueViolation } from 'src/common/helpers/db.helpers';
 import { Locale } from 'src/i18n/types';
 
+import { AdminCreateUserDTO } from './dtos/admin/admin-create-user.dto';
 import { AdminSearchUsersDTO } from './dtos/admin/admin-search-users.dto';
 import { User } from './entities/user.entity';
 
@@ -33,12 +34,29 @@ export class UsersService {
     return this.repo.save(this.repo.create({ email }));
   }
 
+  async createForAdmin(dto: AdminCreateUserDTO) {
+    const user = await this.getOneByEmail(dto.email);
+
+    if (user) throw ConflictException('user.alreadyExists');
+
+    const newUser = this.repo.create(dto);
+
+    return this.repo.save(newUser);
+  }
+
   getOne(id: number) {
     return this.repo.findOne({ where: { id } });
   }
 
-  getFull(id: number) {
-    return this.repo.findOne({ where: { id }, relations: { addresses: true } });
+  async getFull(id: number) {
+    const user = await this.repo.findOne({
+      where: { id, isAdmin: false, name: Not(IsNull()) },
+      relations: { addresses: true, orders: { items: true } },
+      order: { addresses: { id: 'DESC', isDefault: 'DESC' }, orders: { createdAt: 'DESC' } },
+    });
+    if (!user) throw NotFoundException('user.notFound');
+
+    return user;
   }
 
   getAdminByEmail(email: string) {
@@ -49,13 +67,14 @@ export class UsersService {
     return this.repo.find({ select: { email: true, locale: true }, where: { isAdmin: includeAdmins } });
   }
 
-  getAllForAdmin({ q }: AdminSearchUsersDTO = {}) {
+  getAllForAdmin({ q, sort }: AdminSearchUsersDTO = {}) {
     const trimmedQ = q?.trim();
 
     const qb = this.repo
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.addresses', 'address')
       .where('user.isAdmin = false')
+      .andWhere('user.name IS NOT NULL')
       .loadRelationCountAndMap('user.ordersCount', 'user.orders');
 
     if (trimmedQ)
@@ -63,11 +82,58 @@ export class UsersService {
         q: `%${trimmedQ}%`,
       });
 
-    return qb
-      .orderBy('user.createdAt', 'DESC')
-      .addOrderBy('address.isDefault', 'DESC')
-      .addOrderBy('address.id', 'ASC')
-      .getMany();
+    switch (sort) {
+      case 'name-ascending':
+        qb.orderBy('user.name', 'ASC');
+        break;
+
+      case 'name-descending':
+        qb.orderBy('user.name', 'DESC');
+        break;
+
+      case 'email-ascending':
+        qb.orderBy('user.email', 'ASC');
+        break;
+
+      case 'email-descending':
+        qb.orderBy('user.email', 'DESC');
+        break;
+
+      case 'orders-ascending':
+        qb.orderBy(`(SELECT COUNT(*) FROM "order" WHERE "order"."user_id" = "user"."id")`, 'ASC');
+        break;
+      case 'orders-descending':
+        qb.orderBy(`(SELECT COUNT(*) FROM "order" WHERE "order"."user_id" = "user"."id")`, 'DESC');
+        break;
+
+      case 'addresses-ascending':
+        qb.orderBy('(SELECT COUNT(*) FROM "address" WHERE "address"."user_id" = "user"."id")', 'ASC');
+        break;
+
+      case 'addresses-descending':
+        qb.orderBy('(SELECT COUNT(*) FROM "address" WHERE "address"."user_id" = "user"."id")', 'DESC');
+        break;
+
+      case 'locale-ascending':
+        qb.orderBy('user.locale', 'ASC');
+        break;
+
+      case 'locale-descending':
+        qb.orderBy('user.locale', 'DESC');
+        break;
+
+      case 'created-ascending':
+        qb.orderBy('user.createdAt', 'ASC');
+        break;
+
+      case 'created-descending':
+      default:
+        qb.orderBy('user.createdAt', 'DESC');
+    }
+
+    qb.addOrderBy('address.isDefault', 'DESC').addOrderBy('address.id', 'DESC');
+
+    return qb.getMany();
   }
 
   updateLocale(id: number, locale: Locale) {
@@ -75,6 +141,12 @@ export class UsersService {
   }
 
   async update(id: number, updatedUser: DeepPartial<User>) {
+    if (updatedUser.email) {
+      const userWithEmail = await this.getOneByEmail(updatedUser.email);
+
+      if (userWithEmail && userWithEmail.id !== id) throw ConflictException('user.alreadyExists');
+    }
+
     const result = await this.repo.update(id, updatedUser);
     if (!result.affected) throw NotFoundException('user.notFound');
 
