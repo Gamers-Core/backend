@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards } from '@nestjs/common';
 
 import { IsAdminAuthGuard } from 'src/auth/guards/is-admin-auth.guard';
 import { Serialize } from 'src/common/interceptors/serialize.interceptor';
@@ -21,7 +21,7 @@ export class AdminUsersController {
 
   @Serialize(AdminUserDTO)
   @Get(':id')
-  getUserById(@Param('id') id: number) {
+  getUserById(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.getFull(id);
   }
 
@@ -33,12 +33,12 @@ export class AdminUsersController {
 
   @Serialize(AdminUserDTO)
   @Post(':id')
-  updateUser(@Param('id') id: number, @Body() dto: AdminCreateUserDTO) {
+  updateUser(@Param('id', ParseIntPipe) id: number, @Body() dto: AdminCreateUserDTO) {
     return this.usersService.update(id, dto);
   }
 
   @Delete(':id')
-  deleteUser(@Param('id') id: number) {
+  deleteUser(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.remove(id);
   }
 }
