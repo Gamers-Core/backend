@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 
 import { IsAdminAuthGuard } from 'src/auth/guards/is-admin-auth.guard';
 import { Serialize } from 'src/common/interceptors/serialize.interceptor';
@@ -32,7 +32,7 @@ export class AdminUsersController {
   }
 
   @Serialize(AdminUserDTO)
-  @Post(':id')
+  @Patch(':id')
   updateUser(@Param('id', ParseIntPipe) id: number, @Body() dto: AdminCreateUserDTO) {
     return this.usersService.update(id, dto);
   }
