@@ -1,5 +1,6 @@
 export default {
   'user.notFound': 'المستخدم غير موجود',
+  'user.alreadyExists': 'مستخدم بهذا البريد الإلكتروني موجود بالفعل',
 
   'address.notFound': 'العنوان غير موجود',
   'address.cityInvalid': 'المدينة غير صالحة',

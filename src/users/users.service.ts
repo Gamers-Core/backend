@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, IsNull, Not, Repository } from 'typeorm';
 
 import { NotFoundException } from 'src/common/exceptions';
 import { isUniqueViolation } from 'src/common/helpers/db.helpers';
 import { Locale } from 'src/i18n/types';
 
+import { AdminCreateUserDTO } from './dtos/admin/admin-create-user.dto';
 import { AdminSearchUsersDTO } from './dtos/admin/admin-search-users.dto';
 import { User } from './entities/user.entity';
 
@@ -33,12 +34,29 @@ export class UsersService {
     return this.repo.save(this.repo.create({ email }));
   }
 
+  async createForAdmin(dto: AdminCreateUserDTO) {
+    const user = await this.getOneByEmail(dto.email);
+
+    if (user) throw NotFoundException('user.alreadyExists');
+
+    const newUser = this.repo.create(dto);
+
+    return this.repo.save(newUser);
+  }
+
   getOne(id: number) {
     return this.repo.findOne({ where: { id } });
   }
 
-  getFull(id: number) {
-    return this.repo.findOne({ where: { id }, relations: { addresses: true } });
+  async getFull(id: number) {
+    const user = await this.repo.findOne({
+      where: { id, isAdmin: false, name: Not(IsNull()) },
+      relations: { addresses: true, orders: { items: true } },
+      order: { addresses: { id: 'DESC', isDefault: 'DESC' }, orders: { createdAt: 'DESC' } },
+    });
+    if (!user) throw NotFoundException('user.notFound');
+
+    return user;
   }
 
   getAdminByEmail(email: string) {

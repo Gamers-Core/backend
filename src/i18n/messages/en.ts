@@ -1,5 +1,6 @@
 export default {
   'user.notFound': 'User not found',
+  'user.alreadyExists': 'User with this email already exists',
 
   'address.notFound': 'Address not found',
   'address.cityInvalid': 'Invalid city',
