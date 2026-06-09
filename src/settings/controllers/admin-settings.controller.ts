@@ -10,12 +10,12 @@ import { SettingsService } from '../settings.service';
 import type { SettingKey } from '../types';
 
 @Controller('admin/settings')
-@Serialize(AdminSettingsDTO)
 @UseGuards(IsAdminAuthGuard)
 export class AdminSettingsController {
   constructor(private readonly settingsService: SettingsService) {}
 
   @Get()
+  @Serialize(AdminSettingsDTO)
   getSettings() {
     return this.settingsService.getAll();
   }
