@@ -169,6 +169,8 @@ export default {
 
   'service.unavailable': 'الخدمة غير متاحة مؤقتًا',
 
+  'settings.maintenanceMode.message': 'الموقع تحت الصيانة حالياً. يرجى العودة لاحقاً.',
+
   isEmail: 'يجب أن يكون بريدًا إلكترونيًا صالحًا',
   isString: 'يجب أن تكون القيمة نصًا',
   isPhoneNumber: 'يجب أن يكون رقم هاتف صالحًا',
