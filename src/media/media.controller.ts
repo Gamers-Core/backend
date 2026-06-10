@@ -14,6 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { IsAdminAuthGuard } from 'src/auth/guards/is-admin-auth.guard';
 import { BadRequestException } from 'src/common/exceptions';
 import { Serialize } from 'src/common/interceptors/serialize.interceptor';
+import { SkipMaintenance } from 'src/settings/decorators/skip-maintenance.decorator';
 
 import { mediaPolicyMap } from './cloudinary/const';
 import { AdminMediaDTO } from './dtos/admin/admin-media.dto';
@@ -21,8 +22,9 @@ import { UploadMediaDTO } from './dtos/admin/upload-media.dto';
 import { MediaService } from './services/media.service';
 import { UploadedMediaFile } from './types';
 
-@Controller('media')
+@SkipMaintenance()
 @UseGuards(IsAdminAuthGuard)
+@Controller('media')
 export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
 

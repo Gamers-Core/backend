@@ -30,6 +30,8 @@ import { PoliciesModule } from './policies/policies.module';
 import { ProductsModule } from './products/products.module';
 import { CacheModule } from './redis/cache.module';
 import { RedisModule } from './redis/redis.module';
+import { MaintenanceGuard } from './settings/guards/maintenance.guard';
+import { SettingsModule } from './settings/settings.module';
 import { SidebarModule } from './sidebar/sidebar.module';
 import { UserReviewsModule } from './user-reviews/user-reviews.module';
 import { UsersModule } from './users/users.module';
@@ -73,6 +75,7 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
     FAQsModule,
     SidebarModule,
     WhatsappModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [
@@ -91,6 +94,10 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: MaintenanceGuard,
     },
   ],
 })

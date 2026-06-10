@@ -3,6 +3,7 @@ import { translate } from './helpers';
 import messages from './messages';
 
 export type Locale = (typeof locales)[number];
+export type OptionalLocale = Exclude<Locale, typeof defaultLocale>;
 export type Messages = typeof messages;
 export type TranslateFn = typeof translate;
 export type TranslateFnWithoutLocale = <K extends I18nKey>(options: Translate<K>) => Messages[Locale][K];

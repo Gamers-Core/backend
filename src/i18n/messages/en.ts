@@ -171,6 +171,8 @@ export default {
 
   'service.unavailable': 'Service is temporarily unavailable',
 
+  'settings.maintenanceMode.message': 'The site is currently under maintenance. Please check back later.',
+
   isEmail: 'Must be a valid email address',
   isString: 'Must be a string',
   isPhoneNumber: 'Must be a valid phone number',
