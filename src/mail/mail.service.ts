@@ -60,7 +60,8 @@ export class MailService {
       t,
       html(t, values, {
         isRtl: locale === 'ar',
-        frontendUrl: this.getFrontendUrl(locale),
+        frontendUrl: this.getUrl(this.configService.get('FRONTEND_URL'), locale),
+        adminFrontendUrl: this.getUrl(this.configService.get('ADMIN_FRONTEND_URL')),
       }),
       locale,
     );
@@ -68,11 +69,12 @@ export class MailService {
     return this.send({ ...options, html: renderedHtml, to }, mail);
   }
 
-  private getFrontendUrl(locale: Locale) {
-    const baseUrl = this.configService.get('FRONTEND_URL');
-    const normalizedBaseUrl = baseUrl.replace(/\/+$/, '');
+  private getUrl(url: string, locale?: Locale) {
+    const normalizedBaseUrl = url.replace(/\/+$/, '');
 
-    return `${normalizedBaseUrl}/${locale}`;
+    if (locale) return `${normalizedBaseUrl}/${locale}`;
+
+    return normalizedBaseUrl;
   }
 
   private send({ title, to, subject, html }: SendMailOptions, mail: MailType) {

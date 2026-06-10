@@ -19,6 +19,8 @@ export type MailOptions = {
   order_confirmation: OrderDTO;
   order_auto_cancellation: OrderDTO;
   order_status_update: OrderDTO;
+  order_notify_admin: OrderDTO;
+
   policy_update: { policyType: PolicyType; version: number; updatedAt: Date };
 } & { [K in AuthPurpose]: { otp: string } };
 export interface MailOptionsMap<T extends MailOptionsType> extends Omit<SendMailOptions, 'to' | 'html'> {
@@ -40,4 +42,5 @@ export type MailTemplateFn<T extends MailOptionsType> = (
 export interface MailTemplateOptions {
   isRtl: boolean;
   frontendUrl: string;
+  adminFrontendUrl: string;
 }

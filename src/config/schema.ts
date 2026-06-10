@@ -14,6 +14,7 @@ const baseSchema = z.object({
   CLOUDINARY_API_KEY: z.string(),
   CLOUDINARY_API_SECRET: z.string(),
   FRONTEND_URL: z.url(),
+  ADMIN_FRONTEND_URL: z.url(),
 });
 
 const localSchema = z.object({
