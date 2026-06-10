@@ -20,15 +20,15 @@ export class SettingsService {
       'settings:all',
       async () => {
         const settings = await this.repo.find();
+        const defaults = Object.fromEntries(
+          Object.entries(SETTINGS_MAP).map(([key, DtoClass]) => [key, new DtoClass()]),
+        ) as unknown as SettingsMap;
 
-        return settings.reduce<SettingsMap>(
-          (acc, setting) => {
-            acc[setting.key] = setting.value;
+        return settings.reduce<SettingsMap>((acc, setting) => {
+          acc[setting.key] = setting.value;
 
-            return acc;
-          },
-          { ...SETTINGS_MAP },
-        );
+          return acc;
+        }, defaults);
       },
       { ttlMs: 1000 * 60 * 60 },
     );
@@ -40,9 +40,10 @@ export class SettingsService {
       async () => {
         const setting = await this.repo.findOne({ where: { key } });
 
-        const DefaultValueClass = SETTINGS_MAP[key];
+        const DTOClass = SETTINGS_MAP[key];
+        const defaults = new DTOClass() as InstanceType<typeof DTOClass>;
 
-        return (setting?.value as InstanceType<typeof DefaultValueClass>) ?? new DefaultValueClass();
+        return (setting?.value as InstanceType<typeof DTOClass>) ?? defaults;
       },
       { ttlMs: 1000 * 60 * 60 },
     );
