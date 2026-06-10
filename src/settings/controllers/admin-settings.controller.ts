@@ -27,6 +27,6 @@ export class AdminSettingsController {
 
   @Put(':key')
   async updateSetting(@Param('key', new ParseEnumPipe(SETTINGS_KEYS)) key: SettingKey, @Body() value: unknown) {
-    return await this.settingsService.set(key, (await new SettingValuePipe(key).transform(value)) as any);
+    return this.settingsService.set(key, (await new SettingValuePipe(key).transform(value)) as any);
   }
 }

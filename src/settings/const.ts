@@ -1,5 +1,5 @@
 import { MaintenanceModeSettingDTO } from './dtos/maintenance-mode.setting.dto';
-import { SettingKey } from './types';
+import type { SettingKey } from './types';
 
 export const SETTINGS_MAP = {
   maintenanceMode: MaintenanceModeSettingDTO,

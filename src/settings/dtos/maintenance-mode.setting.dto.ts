@@ -26,5 +26,5 @@ export class MaintenanceModeSettingDTO {
   @ValidateIf((o) => o.enabled === true)
   @IsOptional()
   @IsDateString()
-  countdown?: Date;
+  countdown?: string;
 }
