@@ -2,6 +2,7 @@ import { Body, Controller, Post, Req, Session } from '@nestjs/common';
 import type { Request } from 'express';
 
 import { Serialize } from 'src/common/interceptors/serialize.interceptor';
+import { SkipMaintenance } from 'src/settings/decorators/skip-maintenance.decorator';
 
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
@@ -17,6 +18,7 @@ import type { AuthSession } from './types';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @SkipMaintenance()
   @Post('logout')
   logout(@Req() req: Request) {
     req.session = null;
@@ -32,6 +34,7 @@ export class AuthController {
     return this.authService.signin(body);
   }
 
+  @SkipMaintenance()
   @Serialize(OTPDTO)
   @Post('admin/signin')
   adminSignin(@Session() session: AuthSession, @Req() req: Request, @Body() body: SigninDTO) {
@@ -40,6 +43,7 @@ export class AuthController {
     return this.authService.adminSignin(body);
   }
 
+  @SkipMaintenance()
   @Serialize(VerifyOTPResponseDTO)
   @Post('verify-otp')
   async verifyOTP(@Body() body: VerifyOTPDTO, @Session() session: AuthSession) {
@@ -50,6 +54,7 @@ export class AuthController {
     return result;
   }
 
+  @SkipMaintenance()
   @Post('resend-otp')
   resendOtp(@Body() body: ResendOTPDTO) {
     return this.authService.resendOTP(body);
