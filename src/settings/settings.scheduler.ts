@@ -9,7 +9,7 @@ import { SettingKey } from './types';
 export class SettingsScheduler {
   constructor(private readonly settingsService: SettingsService) {}
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_10_SECONDS)
   async handleCrons() {
     await Promise.all(
       (Object.entries(SETTINGS_MAP) as [SettingKey, any][])
