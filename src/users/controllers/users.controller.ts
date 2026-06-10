@@ -3,6 +3,7 @@ import { Body, Controller, Get, Param, ParseEnumPipe, Patch } from '@nestjs/comm
 import { Serialize } from 'src/common/interceptors/serialize.interceptor';
 import { locales } from 'src/i18n/const';
 import type { Locale } from 'src/i18n/types';
+import { SkipMaintenance } from 'src/settings/decorators/skip-maintenance.decorator';
 
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { BasicUserDTO } from '../dtos/basic-user.dto';
@@ -15,6 +16,7 @@ import { UsersService } from '../users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @SkipMaintenance()
   @Serialize(BasicUserDTO)
   @Get('me')
   getCurrentUser(@CurrentUser() user: User) {
