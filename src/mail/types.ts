@@ -19,7 +19,6 @@ export type MailOptions = {
   order_confirmation: OrderDTO;
   order_auto_cancellation: OrderDTO;
   order_status_update: OrderDTO;
-  order_notify_admin: OrderDTO;
 
   policy_update: { policyType: PolicyType; version: number; updatedAt: Date };
 } & { [K in AuthPurpose]: { otp: string } };

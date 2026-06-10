@@ -15,7 +15,6 @@ import { withOptionalManager } from 'src/common/with-optional-manager';
 import { translateWithoutLocale } from 'src/i18n/helpers';
 import { LocaleContextService } from 'src/i18n/locale-context.service';
 import { Locale } from 'src/i18n/types';
-import { getEmail } from 'src/mail/helpers';
 import { MailService } from 'src/mail/mail.service';
 import { InventoryService } from 'src/products/services/inventory.service';
 import { WhatsAppService } from 'src/whatsapp/whatsapp.service';
@@ -448,36 +447,22 @@ export class OrdersService {
       const unitPrice = order.items.reduce((sum, item) => sum + item.quantity * item.unitCost, 0);
       const isBostaPayment = bostaPaymentMethods.includes(order.paymentMethod as BostaPaymentMethod);
 
-      const [delivery] = await Promise.allSettled([
-        withEnvironment(
-          async (isValid) => {
-            if (!isValid) return { trackingNumber: null };
+      const delivery = await withEnvironment(
+        async (isValid) => {
+          if (!isValid) return { trackingNumber: null };
 
-            return await this.bostaService.createDelivery({
-              ...order.shippingAddress,
-              ...order,
-              unitPrice,
-              cod: isBostaPayment ? this.toNumber(order.total) : 0,
-              note: order.note ?? undefined,
-            });
-          },
-          ['production'],
-        ),
-        withEnvironment(
-          async (isValid) => {
-            if (!isValid) return null;
+          return await this.bostaService.createDelivery({
+            ...order.shippingAddress,
+            ...order,
+            unitPrice,
+            cod: isBostaPayment ? this.toNumber(order.total) : 0,
+            note: order.note ?? undefined,
+          });
+        },
+        ['production'],
+      );
 
-            await this.mailService.sendTypedMail(
-              getEmail('admin'),
-              'order_notify_admin',
-              this.mapToDTO(order, this.localeContextService.locale),
-            );
-          },
-          ['production', 'staging'],
-        ),
-      ]);
-
-      if (delivery.status === 'fulfilled') order.trackingNumber = delivery.value.trackingNumber;
+      order.trackingNumber = delivery.trackingNumber;
     },
     cancelled: async (order, manager) => {
       if (order.trackingNumber) {
