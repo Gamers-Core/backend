@@ -1,8 +1,8 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, Logger } from '@nestjs/common';
-import { AxiosError, AxiosInstance } from 'axios';
+import { Injectable } from '@nestjs/common';
+import { InternalAxiosRequestConfig } from 'axios';
 
-import { ServiceUnavailableException } from 'src/common/exceptions';
+import { AxiosService } from 'src/common/services/axios.service';
 import { ConfigService } from 'src/config/config.service';
 import { translateWithoutLocale } from 'src/i18n/helpers';
 import { LocaleContextService } from 'src/i18n/locale-context.service';
@@ -13,38 +13,23 @@ import { mailTemplates } from './templates';
 import { MailOptions, MailOptionsType, MailType, SendMailOptions } from './types';
 
 @Injectable()
-export class MailService {
-  private readonly logger = new Logger('MailErrorHandler');
-  private readonly brevo: AxiosInstance;
+export class MailService extends AxiosService {
+  protected readonly baseURL = 'https://api.brevo.com/v3';
 
   constructor(
-    private readonly httpService: HttpService,
+    readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly localeContextService: LocaleContextService,
   ) {
-    this.brevo = this.httpService.axiosRef.create({ baseURL: 'https://api.brevo.com/v3', timeout: 10_000 });
+    super(httpService);
+  }
 
-    this.brevo.interceptors.request.use((config) => {
-      const apiKey = this.configService.get('BREVO_API_KEY');
+  protected onRequest(config: InternalAxiosRequestConfig) {
+    config.headers['api-key'] = this.configService.get('BREVO_API_KEY');
+    config.headers.accept = 'application/json';
+    config.headers['content-type'] = 'application/json';
 
-      config.headers['api-key'] = apiKey;
-      config.headers.accept = 'application/json';
-      config.headers['content-type'] = 'application/json';
-
-      return config;
-    });
-
-    this.brevo.interceptors.response.use(
-      (res) => res,
-      (err: AxiosError<{ message?: string }>) => {
-        const status = err.response?.status ?? err.status;
-        const upstreamMessage = err.response?.data?.message ?? err.message;
-
-        this.logger.error(`Brevo API request failed${status ? ` (status: ${status})` : ''}: ${upstreamMessage}`);
-
-        throw ServiceUnavailableException('mail.unavailable');
-      },
-    );
+    return config;
   }
 
   sendTypedMail<T extends MailOptionsType>(
@@ -78,7 +63,7 @@ export class MailService {
   }
 
   private send({ title, to, subject, html }: SendMailOptions, mail: MailType) {
-    return this.brevo.post('/smtp/email', {
+    return this.post('/smtp/email', {
       sender: { name: title, email: getEmail(mail) },
       to: [{ email: to }],
       subject,
