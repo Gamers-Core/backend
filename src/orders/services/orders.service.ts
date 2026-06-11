@@ -176,8 +176,8 @@ export class OrdersService {
                 await this.mailService.sendTypedMail(
                   order.user.email,
                   'order_status_update',
-                  this.mapToDTO(order, this.localeContextService.locale),
-                  this.localeContextService.locale,
+                  this.mapToDTO(order, order.user.locale),
+                  order.user.locale,
                 );
               },
               ['production'],
@@ -427,16 +427,13 @@ export class OrdersService {
 
           return await Promise.all([
             this.whatsappService
-              .sendTypedMessage(
-                order.shippingAddress.phoneNumber,
-                'order_confirmation',
-                this.mapToDTO(order, this.localeContextService.locale),
-              )
+              .sendTypedMessage(order.shippingAddress.phoneNumber, 'order_confirmation', this.mapToDTO(order, 'ar'))
               .then((res) => manager.getRepository(Order).update(order.id, { whatsappMessageId: res.messages[0].id })),
             this.mailService.sendTypedMail(
               order.user.email,
               'order_confirmation',
-              this.mapToDTO(order, this.localeContextService.locale),
+              this.mapToDTO(order, order.user.locale),
+              order.user.locale,
             ),
           ]);
         },
@@ -504,14 +501,13 @@ export class OrdersService {
           batch.map(async ({ orderNumber }) => {
             await this.updateStatus({ orderNumber }, 'cancelled', false);
 
+            const order = await this.getOneOrFail(this.ordersRepo.manager, { orderNumber }, true);
+
             await this.mailService.sendTypedMail(
-              orderNumber,
+              order.user.email,
               'order_auto_cancellation',
-              this.mapToDTO(
-                await this.getOneOrFail(this.ordersRepo.manager, { orderNumber }, true),
-                this.localeContextService.locale,
-              ),
-              this.localeContextService.locale,
+              this.mapToDTO(order, order.user.locale),
+              order.user.locale,
             );
           }),
         );
