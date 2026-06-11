@@ -1,6 +1,8 @@
 import { Expose, Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 
+import { assertValidOrderTransition } from 'src/orders/helpers';
+
 import { type OrderHistoryStatus, type OrderHistoryType, type PaymentMethod, type OrderStatus } from '../../types';
 import { OrderItemDTO } from '../order-item.dto';
 
@@ -86,4 +88,15 @@ export class OrderDTO {
 
   @Expose()
   currency: string;
+
+  @Expose()
+  @Transform(({ obj }) => {
+    try {
+      assertValidOrderTransition(obj.status, 'returned');
+      return true;
+    } catch {
+      return false;
+    }
+  })
+  canReturn: boolean;
 }
