@@ -4,6 +4,7 @@ import { Public } from 'src/auth/decorators/public.decorator';
 import { translateWithoutLocale } from 'src/i18n/helpers';
 import { OrdersService } from 'src/orders/services/orders.service';
 
+import { whatsappBusinessPhoneNumber } from './const';
 import { WhatsAppSignatureGuard } from './guards/whatsapp-signature.guard';
 import { WhatsAppVerifyWebhookGuard } from './guards/whatsapp-verify-webhook.guard';
 import type { WhatsAppWebhookEvent, WhatsAppWebhookVerificationQuery } from './types';
@@ -39,7 +40,7 @@ export class WhatsappController {
     if (message.type === 'text') {
       await this.whatsappService.sendText(
         from,
-        t(['whatsapp.replies.unsupportedMessage', { waLink: 'https://wa.me/201559241000' }]),
+        t(['whatsapp.replies.unsupportedMessage', { waLink: `https://wa.me/2${whatsappBusinessPhoneNumber}` }]),
       );
       return;
     }
@@ -70,7 +71,7 @@ export class WhatsappController {
 
     await this.whatsappService.sendText(
       from,
-      t(['whatsapp.replies.unsupportedMessage', { waLink: 'https://wa.me/201559241000' }]),
+      t(['whatsapp.replies.unsupportedMessage', { waLink: `https://wa.me/2${whatsappBusinessPhoneNumber}` }]),
     );
   }
 }

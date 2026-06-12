@@ -18,4 +18,15 @@ export const whatsappTemplates: WhatsAppTemplatesMap = {
       },
     ],
   },
+  admin_notification: {
+    languageCode: 'en_GB',
+    buttons: (_, { orderNumber }) => [
+      {
+        index: '0',
+        type: 'button',
+        sub_type: 'url',
+        parameters: [{ type: 'text', text: orderNumber }],
+      },
+    ],
+  },
 };

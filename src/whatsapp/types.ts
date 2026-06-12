@@ -7,20 +7,29 @@ export type WhatsAppMessageType = (typeof whatsappMessageTypes)[number];
 
 export type WhatsAppMessageOptions = {
   order_confirmation: OrderDTO;
+  admin_notification: OrderDTO;
 };
 
-export type LanguageCode = `${Locale}_EG` | Locale;
+export type Region = 'EG' | 'GB';
+
+export type LanguageCode = `${Locale}_${Region}` | Locale;
 
 type TemplateFn<T extends WhatsAppMessageType> = (
   t: TranslateFnWithoutLocale,
   values: WhatsAppMessageOptions[T],
 ) => TemplateParameter[];
 
+type ButtonTemplateFn<T extends WhatsAppMessageType> = (
+  t: TranslateFnWithoutLocale,
+  values: WhatsAppMessageOptions[T],
+) => TemplateButtonComponent[];
+
 export interface WhatsAppTemplateMap<T extends WhatsAppMessageType> {
   languageCode: LanguageCode;
-  body: TemplateFn<T>;
+  body?: TemplateFn<T>;
   header?: TemplateFn<T>;
   footer?: TemplateFn<T>;
+  buttons?: ButtonTemplateFn<T>;
 }
 
 export type WhatsAppTemplatesMap = { [K in WhatsAppMessageType]: WhatsAppTemplateMap<K> };
@@ -41,12 +50,21 @@ export interface SendTextData {
 }
 
 export interface TemplateParameter {
-  type: 'text' | 'currency' | 'date_time' | 'image';
-  text: string;
+  type: 'text' | 'currency' | 'date_time' | 'image' | 'payload';
+  text?: string;
+  payload?: string;
+  parameter_name?: string;
 }
 
 export interface TemplateComponent {
-  type: 'body' | 'header' | 'footer';
+  type: 'body' | 'header' | 'footer' | 'button';
+  parameters: TemplateParameter[];
+}
+
+export interface TemplateButtonComponent {
+  type: 'button';
+  sub_type: 'url' | 'quick_reply' | 'catalog' | 'flow';
+  index: string;
   parameters: TemplateParameter[];
 }
 
@@ -57,7 +75,7 @@ export interface SendTemplateData<T extends WhatsAppMessageType = WhatsAppMessag
   template: {
     name: T;
     language: { code: LanguageCode };
-    components: TemplateComponent[];
+    components: (TemplateComponent | TemplateButtonComponent)[];
   };
 }
 
@@ -76,7 +94,6 @@ export interface WhatsAppErrorResponse {
   };
 }
 
-// Webhook types
 export interface WhatsAppWebhookVerificationQuery {
   hub_mode: string;
   hub_verify_token: string;

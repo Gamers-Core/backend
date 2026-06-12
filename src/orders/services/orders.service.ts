@@ -12,11 +12,13 @@ import { CartService } from 'src/cart/cart.service';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withEnvironment } from 'src/common/with-environment';
 import { withOptionalManager } from 'src/common/with-optional-manager';
+import { defaultLocale } from 'src/i18n/const';
 import { translateWithoutLocale } from 'src/i18n/helpers';
 import { LocaleContextService } from 'src/i18n/locale-context.service';
 import { Locale } from 'src/i18n/types';
 import { MailService } from 'src/mail/mail.service';
 import { InventoryService } from 'src/products/services/inventory.service';
+import { whatsappBusinessPhoneNumber } from 'src/whatsapp/const';
 import { WhatsAppService } from 'src/whatsapp/whatsapp.service';
 
 import { AddOrderItemDTO } from '../dtos/admin/add-order-item.dto';
@@ -444,22 +446,36 @@ export class OrdersService {
       const unitPrice = order.items.reduce((sum, item) => sum + item.quantity * item.unitCost, 0);
       const isBostaPayment = bostaPaymentMethods.includes(order.paymentMethod as BostaPaymentMethod);
 
-      const delivery = await withEnvironment(
-        async (isValid) => {
-          if (!isValid) return { trackingNumber: null };
+      const [delivery] = await Promise.allSettled([
+        withEnvironment(
+          async (isValid) => {
+            if (!isValid) return { trackingNumber: null };
 
-          return await this.bostaService.createDelivery({
-            ...order.shippingAddress,
-            ...order,
-            unitPrice,
-            cod: isBostaPayment ? this.toNumber(order.total) : 0,
-            note: order.note ?? undefined,
-          });
-        },
-        ['production'],
-      );
+            return await this.bostaService.createDelivery({
+              ...order.shippingAddress,
+              ...order,
+              unitPrice,
+              cod: isBostaPayment ? this.toNumber(order.total) : 0,
+              note: order.note ?? undefined,
+            });
+          },
+          ['production'],
+        ),
+        withEnvironment(
+          async (isValid) => {
+            if (!isValid) return;
 
-      order.trackingNumber = delivery.trackingNumber;
+            await this.whatsappService.sendTypedMessage(
+              whatsappBusinessPhoneNumber,
+              'admin_notification',
+              this.mapToDTO(order, defaultLocale),
+            );
+          },
+          ['production'],
+        ),
+      ]);
+
+      if (delivery.status === 'fulfilled') order.trackingNumber = delivery.value.trackingNumber;
     },
     cancelled: async (order, manager) => {
       if (order.trackingNumber) {

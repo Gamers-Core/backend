@@ -42,27 +42,24 @@ export class WhatsAppService extends AxiosService<unknown, WhatsAppErrorResponse
     return err.error?.message;
   }
 
-  // Normalize EG numbers: 01xxxxxxxxx → 201xxxxxxxxx
-  private normalizePhone(phone: string): string {
-    return phone.startsWith('0') ? `2${phone}` : phone;
-  }
-
   resolveReplyAction(payload: string): WhatsAppReplyAction | null {
     return whatsappReplyMap[payload] ?? null;
   }
 
   sendTypedMessage<T extends WhatsAppMessageType>(to: string, type: T, values: WhatsAppMessageOptions[T]) {
     const t = translateWithoutLocale('ar');
-    const { languageCode, body, footer, header } = whatsappTemplates[type];
+    const { languageCode, body, footer, header, buttons } = whatsappTemplates[type];
 
-    const components: TemplateComponent[] = [{ type: 'body', parameters: body(t, values) }];
+    const components: TemplateComponent[] = [];
 
+    if (body) components.push({ type: 'body', parameters: body(t, values) });
     if (header) components.unshift({ type: 'header', parameters: header(t, values) });
     if (footer) components.push({ type: 'footer', parameters: footer(t, values) });
+    if (buttons) components.push(...buttons(t, values));
 
     return this.post<SendMessageResponse, SendTemplateData>(`/${this.phoneNumberId}/messages`, {
       messaging_product: 'whatsapp',
-      to: this.normalizePhone(to),
+      to: `2${to}`,
       type: 'template',
       template: { name: type, language: { code: languageCode }, components },
     });
@@ -72,7 +69,7 @@ export class WhatsAppService extends AxiosService<unknown, WhatsAppErrorResponse
     return this.post<SendMessageResponse, SendTextData>(`/${this.phoneNumberId}/messages`, {
       messaging_product: 'whatsapp',
       recipient_type: 'individual',
-      to: this.normalizePhone(to),
+      to: `2${to}`,
       type: 'text',
       text: { body },
     });
