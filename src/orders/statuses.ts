@@ -77,7 +77,7 @@ export const paymentStatusGuards: Partial<Record<PaymentStatus, OrderStatusGuard
       isInvalid: ({ paymentMethod, status }) =>
         paymentMethod !== 'cod' &&
         paymentMethod !== 'instapay' &&
-        !['pending', 'confirmed', 'on-progress', 'on-hold', 'shipped'].includes(status),
+        !['pending', 'confirmed', 'on-progress', 'on-hold'].includes(status),
       message: 'orders.paid.onlinePaymentsBeforeDelivery',
     },
     {
