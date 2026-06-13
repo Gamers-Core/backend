@@ -46,12 +46,19 @@ export const nonUpdatableShippingStatuses: OrderStatus[] = ['delivered', 'comple
 export const orderStatusGuards: Partial<Record<OrderStatus, OrderStatusGuard[]>> = {
   shipped: [
     {
-      isInvalid: ({ paymentMethod, paymentStatus }) => paymentMethod !== 'cod' && paymentStatus !== 'paid',
+      isInvalid: ({ status, paymentMethod, paymentStatus }) =>
+        paymentMethod !== 'cod' && paymentStatus !== 'paid' && !['on-hold', 'on-progress'].includes(status),
       message: 'orders.shipped.mustBePaidBeforeCOD',
     },
     {
       isInvalid: ({ trackingNumber }) => !trackingNumber,
       message: 'orders.shipped.trackingNumberRequired',
+    },
+  ],
+  delivered: [
+    {
+      isInvalid: ({ paymentMethod, paymentStatus }) => paymentMethod !== 'cod' && paymentStatus !== 'paid',
+      message: 'orders.delivered.mustBePaidBeforeDelivery',
     },
   ],
   completed: [
@@ -77,7 +84,7 @@ export const paymentStatusGuards: Partial<Record<PaymentStatus, OrderStatusGuard
       isInvalid: ({ paymentMethod, status }) =>
         paymentMethod !== 'cod' &&
         paymentMethod !== 'instapay' &&
-        !['pending', 'confirmed', 'on-progress', 'on-hold'].includes(status),
+        !['pending', 'confirmed', 'on-progress', 'on-hold', 'shipped'].includes(status),
       message: 'orders.paid.onlinePaymentsBeforeDelivery',
     },
     {

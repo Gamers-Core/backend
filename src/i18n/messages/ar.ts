@@ -67,6 +67,7 @@ export default {
   'orders.invalidPaymentTransition': 'انتقال حالة الدفع غير صالح: {current} → {next}',
   'orders.shipped.mustBePaidBeforeCOD': 'يجب دفع الطلبات قبل الشحن',
   'orders.shipped.trackingNumberRequired': 'رقم التتبع مطلوب قبل الشحن',
+  'orders.delivered.mustBePaidBeforeDelivery': 'يجب دفع الطلبات قبل التسليم',
   'orders.completed.mustBeDeliveredAndPaid': 'يجب أن يكون الطلب قد تم تسليمه ودفعه قبل الاكتمال',
   'orders.refunded.onlyReturned': 'يمكن استرداد الأموال فقط للطلبات التي تم إرجاعها',
   'orders.paid.CODOnlyAfterDelivery': 'يمكن فقط تمييز طلبات الدفع عند الاستلام كمدفوعة بعد التسليم',
