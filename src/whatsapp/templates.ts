@@ -29,4 +29,5 @@ export const whatsappTemplates: WhatsAppTemplatesMap = {
       },
     ],
   },
+  page_review: { languageCode: 'ar_EG' },
 };

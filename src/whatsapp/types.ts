@@ -8,6 +8,7 @@ export type WhatsAppMessageType = (typeof whatsappMessageTypes)[number];
 export type WhatsAppMessageOptions = {
   order_confirmation: OrderDTO;
   admin_notification: OrderDTO;
+  page_review: OrderDTO;
 };
 
 export type Region = 'EG' | 'GB';

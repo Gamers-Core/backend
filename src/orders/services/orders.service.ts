@@ -14,7 +14,6 @@ import { withEnvironment } from 'src/common/with-environment';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 import { defaultLocale } from 'src/i18n/const';
 import { translateWithoutLocale } from 'src/i18n/helpers';
-import { LocaleContextService } from 'src/i18n/locale-context.service';
 import { Locale } from 'src/i18n/types';
 import { MailService } from 'src/mail/mail.service';
 import { InventoryService } from 'src/products/services/inventory.service';
@@ -57,7 +56,6 @@ export class OrdersService {
     private readonly orderItemsService: OrderItemsService,
     private readonly mailService: MailService,
     private readonly whatsappService: WhatsAppService,
-    private readonly localeContextService: LocaleContextService,
     private readonly inventoryService: InventoryService,
   ) {}
 
@@ -476,6 +474,20 @@ export class OrdersService {
       ]);
 
       if (delivery.status === 'fulfilled') order.trackingNumber = delivery.value.trackingNumber;
+    },
+    completed: async (order) => {
+      await withEnvironment(
+        async (isValid) => {
+          if (!isValid) return;
+
+          await this.whatsappService.sendTypedMessage(
+            order.shippingAddress.phoneNumber,
+            'page_review',
+            this.mapToDTO(order, order.user.locale),
+          );
+        },
+        ['production'],
+      );
     },
     cancelled: async (order, manager) => {
       if (order.trackingNumber) {
