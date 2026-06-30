@@ -55,6 +55,7 @@ export interface TemplateParameter {
   text?: string;
   payload?: string;
   parameter_name?: string;
+  image?: { link: string };
 }
 
 export interface TemplateComponent {
@@ -76,7 +77,7 @@ export interface SendTemplateData<T extends WhatsAppMessageType = WhatsAppMessag
   template: {
     name: T;
     language: { code: LanguageCode };
-    components: (TemplateComponent | TemplateButtonComponent)[];
+    components?: (TemplateComponent | TemplateButtonComponent)[];
   };
 }
 

@@ -29,5 +29,15 @@ export const whatsappTemplates: WhatsAppTemplatesMap = {
       },
     ],
   },
-  page_review: { languageCode: 'ar_EG' },
+  page_review: {
+    languageCode: 'ar_EG',
+    header: () => [
+      {
+        type: 'image',
+        image: {
+          link: 'https://res.cloudinary.com/gamers-core/image/upload/f_jpg/v1782843853/s5ztvicq1us4iquonqor.webp',
+        },
+      },
+    ],
+  },
 };
