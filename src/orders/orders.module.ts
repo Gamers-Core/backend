@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AddressesModule } from 'src/addresses/addresses.module';
 import { CartModule } from 'src/cart/cart.module';
+import { DiscountsModule } from 'src/discounts/discounts.module';
 import { MailService } from 'src/mail/mail.service';
 import { MediaModule } from 'src/media/media.module';
 import { ProductsModule } from 'src/products/products.module';
@@ -24,6 +25,7 @@ import { OrdersService } from './services/orders.service';
     CartModule,
     ProductsModule,
     MediaModule,
+    DiscountsModule,
     forwardRef(() => WhatsappModule),
   ],
   controllers: [OrdersController, AdminOrdersController, BostaOrdersController],

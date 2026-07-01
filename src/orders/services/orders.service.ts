@@ -12,6 +12,8 @@ import { CartService } from 'src/cart/cart.service';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withEnvironment } from 'src/common/with-environment';
 import { withOptionalManager } from 'src/common/with-optional-manager';
+import { DiscountsService } from 'src/discounts/discounts.service';
+import { DiscountableItem } from 'src/discounts/types';
 import { defaultLocale } from 'src/i18n/const';
 import { translateWithoutLocale } from 'src/i18n/helpers';
 import { Locale } from 'src/i18n/types';
@@ -57,6 +59,7 @@ export class OrdersService {
     private readonly mailService: MailService,
     private readonly whatsappService: WhatsAppService,
     private readonly inventoryService: InventoryService,
+    private readonly discountsService: DiscountsService,
   ) {}
 
   search(params: AdminSearchOrdersDTO = {}, userId?: number) {
@@ -118,13 +121,34 @@ export class OrdersService {
       if (!cart.items.length) throw BadRequestException('orders.cartEmpty');
 
       const variants = cart.items.map(({ variant, quantity }) => ({ externalId: variant.externalId, quantity }));
-      return this.createOrderInternal({ userId, ...body, variants }, manager, true);
+
+      return this.createOrderInternal(
+        { userId, ...body, variants },
+        manager,
+        true,
+        cart.items.map(({ variant, quantity }) => ({ variant, quantity })),
+      );
     });
   }
 
   create(body: CreateOrderDTO) {
     return this.ordersRepo.manager.transaction(async (manager) => {
-      const order = await this.createOrderInternal(body, manager);
+      const variants = await this.inventoryService.getManyByExternalIds(
+        body.variants.map((v) => v.externalId),
+        manager,
+      );
+
+      const variantsByExternalId = new Map(variants.map((v) => [v.externalId, v]));
+
+      const order = await this.createOrderInternal(
+        body,
+        manager,
+        false,
+        body.variants.map(({ externalId, quantity }) => ({
+          variant: variantsByExternalId.get(externalId)!,
+          quantity,
+        })),
+      );
 
       return this.serializeOrder(order);
     });
@@ -248,6 +272,7 @@ export class OrdersService {
     { userId, ...body }: CreateOrderDTO,
     manager: EntityManager,
     clearCartAfterCreate: boolean = false,
+    discountableItems: DiscountableItem[] = [],
   ) {
     if (!body.variants.length) throw BadRequestException('orders.mustIncludeAtLeastOneItem');
 
@@ -264,6 +289,9 @@ export class OrdersService {
       canOpenPackage: body.canOpenPackage ?? false,
       subtotal: 0,
       shippingFee: 0,
+      discountCode: null,
+      discountAmount: null,
+      isFreeShipping: false,
       total: 0,
       shippingAddress: address,
     });
@@ -273,7 +301,42 @@ export class OrdersService {
 
     const diff = await this.orderItemsService.add(order, body.variants, manager);
     order.subtotal = this.toNumber(order.subtotal) + diff;
+    order.total = this.toNumber(order.subtotal);
+
+    const discountResult = await this.discountsService.resolveDiscount(
+      body.discountCode ?? null,
+      userId,
+      discountableItems,
+      this.toNumber(order.subtotal),
+      manager,
+    );
+
+    const isFreeShipping = discountResult?.discountAmount === null;
+    order.isFreeShipping = isFreeShipping;
+
     await this.recalculateAndSaveTotals(order, manager);
+
+    if (discountResult) {
+      order.discountCode = discountResult.discount.code;
+      order.discountAmount = discountResult.discountAmount;
+
+      if (!isFreeShipping) {
+        order.total = Math.max(0, this.toNumber(order.total) - discountResult.discountAmount!);
+
+        await orderRepo.update(order.id, {
+          discountCode: order.discountCode,
+          discountAmount: order.discountAmount,
+          total: order.total,
+        });
+      } else
+        await orderRepo.update(order.id, {
+          discountCode: order.discountCode,
+          discountAmount: order.discountAmount,
+          isFreeShipping: order.isFreeShipping,
+        });
+
+      await this.discountsService.recordUsage(discountResult.discount, userId, order, discountResult, manager);
+    }
 
     if (clearCartAfterCreate) await this.cartService.sync(userId, [], manager);
 
@@ -285,19 +348,26 @@ export class OrdersService {
   }
 
   private async recalculateAndSaveTotals(order: Order, manager: EntityManager) {
-    const shippingFee = await this.bostaService.calculateShippingFees(
-      order.subtotal,
-      order.shippingAddress.cityDropOff,
-      order.paymentMethod === 'cod',
-      order.canOpenPackage,
-    );
+    const { shippingFee, codFee, openingFee } = await this.bostaService.getShippingFees({
+      cod: String(order.subtotal),
+      dropOffCity: order.shippingAddress.cityDropOff,
+    });
 
     order.shippingFee = shippingFee;
-    order.total = this.toNumber(order.subtotal) + shippingFee;
+    if (order.paymentMethod === 'cod') order.codFee = codFee;
+    if (order.canOpenPackage) order.openPackageFee = openingFee;
+
+    order.total =
+      this.toNumber(order.subtotal) +
+      (order.isFreeShipping ? 0 : shippingFee) +
+      (order.codFee ?? 0) +
+      (order.openPackageFee ?? 0);
 
     await manager.getRepository(Order).update(order.id, {
       subtotal: order.subtotal,
       shippingFee: order.shippingFee,
+      codFee: order.codFee,
+      openPackageFee: order.openPackageFee,
       total: order.total,
     });
 
@@ -412,7 +482,7 @@ export class OrdersService {
     };
   }
 
-  private mapToDTO(order: Order, locale: Locale): OrderDTO {
+  mapToDTO(order: Order, locale: Locale): OrderDTO {
     return plainToInstance(OrderDTO, this.serializeOrder(order), {
       excludeExtraneousValues: true,
       context: { locale, userId: order.user.id },
@@ -486,7 +556,7 @@ export class OrdersService {
             this.mapToDTO(order, order.user.locale),
           );
         },
-        ['production'],
+        ['production', 'local'],
       );
     },
     cancelled: async (order, manager) => {

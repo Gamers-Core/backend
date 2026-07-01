@@ -51,6 +51,15 @@ export class OrderDTO {
   createdAt: Date;
 
   @Expose()
+  discountCode: string | null;
+
+  @Expose()
+  discountAmount: number | null;
+
+  @Expose()
+  isFreeShipping: boolean;
+
+  @Expose()
   @ValidateNested({ each: true })
   @Transform(({ value }) => value.filter((entry) => entry.type === 'status'))
   @Type(() => OrderStatusHistoryDTO)
@@ -82,6 +91,12 @@ export class OrderDTO {
 
   @Expose()
   shippingFee: number;
+
+  @Expose()
+  codFee: number | null;
+
+  @Expose()
+  openPackageFee: number | null;
 
   @Expose()
   total: number;
