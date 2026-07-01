@@ -18,7 +18,7 @@ export class DiscountUsageDTO {
   id: number;
 
   @Expose()
-  discountAmount: number;
+  discountAmount: number | null;
 
   @Expose()
   shippingDiscount: number;
