@@ -192,6 +192,7 @@ export default {
 
   'settings.maintenanceMode.message': 'الموقع تحت الصيانة حالياً. يرجى العودة لاحقاً.',
 
+  'discounts.alreadyExists': 'يوجد خصم بهذا الكود بالفعل',
   'discounts.invalidCode': 'كود الخصم غير صالح',
   'discounts.notApplicable': 'هذا الخصم لا ينطبق على أي عنصر في عربة التسوق',
   'discounts.notYetActive': 'هذا الخصم غير مفعّل حالياً',

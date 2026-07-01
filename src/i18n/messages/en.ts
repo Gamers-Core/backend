@@ -194,6 +194,7 @@ export default {
 
   'settings.maintenanceMode.message': 'The site is currently under maintenance. Please check back later.',
 
+  'discounts.alreadyExists': 'A discount with this code already exists',
   'discounts.invalidCode': 'Invalid discount code',
   'discounts.notApplicable': 'This discount does not apply to any items in your cart',
   'discounts.notYetActive': 'This discount is not yet active',

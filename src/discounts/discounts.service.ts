@@ -5,7 +5,7 @@ import { EntityManager, Repository } from 'typeorm';
 import { Brand } from 'src/brands/entities/brand.entity';
 import { CartService } from 'src/cart/cart.service';
 import { Category } from 'src/categories/entities/category.entity';
-import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { BadRequestException, ConflictException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 import { Order } from 'src/orders/entities/order.entity';
 import { Variant } from 'src/products/entities/variant.entity';
@@ -45,27 +45,6 @@ export class DiscountsService {
   }
 
   private readonly AUTOMATIC_CACHE_KEY = 'discounts:automatic';
-
-  add({ variantIds, categoryIds, brandIds, eligibleUserIds, ...dto }: CreateDiscountDTO) {
-    return this.discountRepo.manager.transaction(async (manager) => {
-      const repo = manager.getRepository(Discount);
-
-      const discount = await repo.save(
-        repo.create({
-          ...dto,
-          code: dto.method === 'code' ? dto.code : null,
-          variants: variantIds?.map((id) => ({ id })) as Variant[],
-          categories: categoryIds?.map((id) => ({ id })) as Category[],
-          brands: brandIds?.map((id) => ({ id })) as Brand[],
-          eligibleUsers: eligibleUserIds?.map((id) => ({ id })) as User[],
-        }),
-      );
-
-      if (discount.method === 'automatic') await this.cacheService.delete(this.AUTOMATIC_CACHE_KEY);
-
-      return this.getOneOrFail(discount.id, manager);
-    });
-  }
 
   search({ q, method, target, eligibility, sort = 'created-descending' }: AdminSearchDiscountsDTO = {}) {
     const trimmedQ = q?.trim();
@@ -116,6 +95,30 @@ export class DiscountsService {
 
   getOne(id: number) {
     return this.getOneOrFail(id);
+  }
+
+  add({ variantIds, categoryIds, brandIds, eligibleUserIds, ...dto }: CreateDiscountDTO) {
+    return this.discountRepo.manager.transaction(async (manager) => {
+      const repo = manager.getRepository(Discount);
+
+      const existing = await repo.exists({ where: { code: dto.code } });
+      if (existing) throw ConflictException('discounts.alreadyExists');
+
+      const discount = await repo.save(
+        repo.create({
+          ...dto,
+          code: dto.method === 'code' ? dto.code : null,
+          variants: variantIds?.map((id) => ({ id })) as Variant[],
+          categories: categoryIds?.map((id) => ({ id })) as Category[],
+          brands: brandIds?.map((id) => ({ id })) as Brand[],
+          eligibleUsers: eligibleUserIds?.map((id) => ({ id })) as User[],
+        }),
+      );
+
+      if (discount.method === 'automatic') await this.cacheService.delete(this.AUTOMATIC_CACHE_KEY);
+
+      return this.getOneOrFail(discount.id, manager);
+    });
   }
 
   update(id: number, { variantIds, categoryIds, brandIds, eligibleUserIds, ...dto }: UpdateDiscountDTO) {
