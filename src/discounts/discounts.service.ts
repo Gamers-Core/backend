@@ -101,8 +101,11 @@ export class DiscountsService {
     return this.discountRepo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(Discount);
 
-      const existing = await repo.exists({ where: { code: dto.code } });
-      if (existing) throw ConflictException('discounts.alreadyExists');
+      if (dto.method === 'code') {
+        const existing = await repo.exists({ where: { code: dto.code } });
+
+        if (existing) throw ConflictException('discounts.alreadyExists');
+      }
 
       const discount = await repo.save(
         repo.create({

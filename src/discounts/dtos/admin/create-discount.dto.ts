@@ -1,3 +1,4 @@
+import { Transform } from 'class-transformer';
 import { IsArray, IsBoolean, IsDateString, IsIn, IsNumber, IsOptional, Min, ValidateIf } from 'class-validator';
 
 import { MaxIfPercentage } from 'src/discounts/validators/max-if-percent.validator';
@@ -11,6 +12,7 @@ import type { DiscountEligibility, DiscountMethod, DiscountTarget, DiscountValue
 
 export class CreateDiscountDTO {
   @RequiredIfCodeMethod()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toUpperCase() : value))
   code?: string;
 
   @IsIn(discountMethods)
