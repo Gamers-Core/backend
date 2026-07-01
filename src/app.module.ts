@@ -20,6 +20,7 @@ import { ConfigModule } from './config/config.module';
 import { ConfigService } from './config/config.service';
 import { getEnvironment } from './config/helpers';
 import { validate } from './config/validate';
+import { DiscountsModule } from './discounts/discounts.module';
 import { FAQsModule } from './faqs/faqs.module';
 import { FeaturedVariantsModule } from './featured-variants/featured-variants.module';
 import { I18nModule } from './i18n/i18n.module';
@@ -76,6 +77,7 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
     SidebarModule,
     WhatsappModule,
     SettingsModule,
+    DiscountsModule,
   ],
   controllers: [AppController],
   providers: [

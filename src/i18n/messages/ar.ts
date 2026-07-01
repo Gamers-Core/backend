@@ -192,6 +192,16 @@ export default {
 
   'settings.maintenanceMode.message': 'الموقع تحت الصيانة حالياً. يرجى العودة لاحقاً.',
 
+  'discounts.invalidCode': 'كود الخصم غير صالح',
+  'discounts.notApplicable': 'هذا الخصم لا ينطبق على أي عنصر في عربة التسوق',
+  'discounts.notYetActive': 'هذا الخصم غير مفعّل حالياً',
+  'discounts.expired': 'انتهت صلاحية هذا الخصم',
+  'discounts.minOrderAmountNotMet': 'هذا الخصم يتطلب حد أدنى للطلب بقيمة {amount}',
+  'discounts.usageLimitReached': 'تم الوصول للحد الأقصى لاستخدام هذا الخصم',
+  'discounts.userUsageLimitReached': 'لقد استخدمت هذا الكود الحد الأقصى من المرات المسموح بها',
+  'discounts.notFound': 'الخصم غير موجود',
+  'discounts.notEligible': 'أنت غير مؤهل لاستخدام هذا الخصم',
+
   isEmail: 'يجب أن يكون بريدًا إلكترونيًا صالحًا',
   isString: 'يجب أن تكون القيمة نصًا',
   isPhoneNumber: 'يجب أن يكون رقم هاتف صالحًا',
@@ -216,6 +226,11 @@ export default {
   conditionalValidation: 'لا تحقق الشرط المطلوب',
   isLocalized: 'يجب أن تكون القيمة كائن ترجمة صالح',
   isGreaterThan: 'يجب أن تكون القيمة أكبر من القيمة المرتبطة',
+  requiredIfCodeMethod: "هذا الحقل مطلوب عندما يكون طريقة الخصم 'code'",
+  requiredIfTarget: 'هذا الحقل مطلوب عندما يكون هدف الخصم {target}',
+  requiredUnlessFreeShipping: 'هذا الحقل مطلوب ما لم يكن هدف الخصم هو الشحن المجاني',
+  maxIfPercentage: 'يجب أن تكون القيمة أقل من أو تساوي 100 عندما يكون نوع قيمة الخصم نسبة مئوية',
+  customValidation: 'فشل التحقق المخصص',
 
   unauthorized: 'غير مصرح',
   unauthenticated: 'غير مصادق',
