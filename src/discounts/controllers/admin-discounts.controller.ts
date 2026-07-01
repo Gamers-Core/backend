@@ -40,7 +40,6 @@ export class AdminDiscountsController {
   }
 
   @Delete(':id')
-  @Serialize(AdminDiscountDTO)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.discountsService.remove(id);
   }

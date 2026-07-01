@@ -211,6 +211,9 @@ export class DiscountsService {
 
     if (!discount) throw NotFoundException('discounts.invalidCode');
 
+    discount.startsAt = discount.startsAt ? new Date(discount.startsAt) : null;
+    discount.expiresAt = discount.expiresAt ? new Date(discount.expiresAt) : null;
+
     this.checkValidityWindow(discount);
     this.checkEligibility(discount, userId);
     await this.checkUsageLimits(discount, userId, manager);
@@ -252,6 +255,9 @@ export class DiscountsService {
       let best: DiscountResult | null = null;
 
       for (const discount of candidates) {
+        discount.startsAt = discount.startsAt ? new Date(discount.startsAt) : null;
+        discount.expiresAt = discount.expiresAt ? new Date(discount.expiresAt) : null;
+
         try {
           this.checkValidityWindow(discount);
           this.checkMinOrderAmount(discount, orderTotal);

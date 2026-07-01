@@ -21,9 +21,6 @@ export class DiscountUsageDTO {
   discountAmount: number | null;
 
   @Expose()
-  shippingDiscount: number;
-
-  @Expose()
   @Type(() => AdminUserDTO)
   user: AdminUserDTO;
 
