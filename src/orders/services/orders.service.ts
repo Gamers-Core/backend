@@ -556,7 +556,7 @@ export class OrdersService {
             this.mapToDTO(order, order.user.locale),
           );
         },
-        ['production', 'local'],
+        ['production'],
       );
     },
     cancelled: async (order, manager) => {
