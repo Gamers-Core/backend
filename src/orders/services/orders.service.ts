@@ -16,6 +16,8 @@ import { defaultLocale } from 'src/i18n/const';
 import { translateWithoutLocale } from 'src/i18n/helpers';
 import { Locale } from 'src/i18n/types';
 import { MailService } from 'src/mail/mail.service';
+import { hashCity, hashCountry, hashEmail, hashExternalId, hashName, hashPhone } from 'src/meta/hash.helpers';
+import { MetaService } from 'src/meta/meta.service';
 import { InventoryService } from 'src/products/services/inventory.service';
 import { whatsappBusinessPhoneNumber } from 'src/whatsapp/const';
 import { WhatsAppService } from 'src/whatsapp/whatsapp.service';
@@ -57,6 +59,7 @@ export class OrdersService {
     private readonly mailService: MailService,
     private readonly whatsappService: WhatsAppService,
     private readonly inventoryService: InventoryService,
+    private readonly metaService: MetaService,
   ) {}
 
   search(params: AdminSearchOrdersDTO = {}, userId?: number) {
@@ -476,18 +479,47 @@ export class OrdersService {
       if (delivery.status === 'fulfilled') order.trackingNumber = delivery.value.trackingNumber;
     },
     completed: async (order) => {
-      await withEnvironment(
-        async (isValid) => {
-          if (!isValid) return;
+      await Promise.allSettled([
+        withEnvironment(
+          async (isValid) => {
+            if (!isValid) return;
 
-          await this.whatsappService.sendTypedMessage(
-            order.shippingAddress.phoneNumber,
-            'page_review',
-            this.mapToDTO(order, order.user.locale),
-          );
-        },
-        ['production'],
-      );
+            await this.whatsappService.sendTypedMessage(
+              order.shippingAddress.phoneNumber,
+              'page_review',
+              this.mapToDTO(order, order.user.locale),
+            );
+          },
+          ['production'],
+        ),
+        withEnvironment(
+          async (isValid) => {
+            if (!isValid) return;
+
+            const [firstName = '', ...lastName] = (order.user.name ?? '').trim().split(/\s+/);
+
+            const lastNameValue = lastName.join(' ');
+
+            await this.metaService.purchase({
+              event_id: order.orderNumber,
+              user_data: {
+                em: [hashEmail(order.user.email)],
+                ph: [hashPhone(order.shippingAddress.phoneNumber)],
+                country: [hashCountry('eg')],
+                ct: [hashCity(order.shippingAddress.cityName)],
+                fn: [hashName(firstName)],
+                ln: [hashName(lastNameValue)],
+                external_id: [hashExternalId(String(order.user.id))],
+              },
+              custom_data: {
+                currency: order.currency,
+                value: this.toNumber(order.total),
+              },
+            });
+          },
+          ['production'],
+        ),
+      ]);
     },
     cancelled: async (order, manager) => {
       if (order.trackingNumber) {

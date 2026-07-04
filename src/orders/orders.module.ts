@@ -6,6 +6,7 @@ import { AddressesModule } from 'src/addresses/addresses.module';
 import { CartModule } from 'src/cart/cart.module';
 import { MailService } from 'src/mail/mail.service';
 import { MediaModule } from 'src/media/media.module';
+import { MetaModule } from 'src/meta/meta.module';
 import { ProductsModule } from 'src/products/products.module';
 import { WhatsappModule } from 'src/whatsapp/whatsapp.module';
 
@@ -24,6 +25,7 @@ import { OrdersService } from './services/orders.service';
     CartModule,
     ProductsModule,
     MediaModule,
+    MetaModule,
     forwardRef(() => WhatsappModule),
   ],
   controllers: [OrdersController, AdminOrdersController, BostaOrdersController],
