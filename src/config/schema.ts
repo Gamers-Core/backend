@@ -38,6 +38,8 @@ const productionSchema = z.object({
   WHATSAPP_WEBHOOK_SECRET: z.string(),
   WHATSAPP_APP_SECRET: z.string(),
   BOSTA_WEBHOOK_SECRET: z.string(),
+  META_PIXEL_ID: z.string(),
+  META_ACCESS_TOKEN: z.string(),
 });
 
 export const envVariablesSchemaMap = {
