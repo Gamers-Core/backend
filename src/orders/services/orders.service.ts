@@ -514,7 +514,7 @@ export class OrdersService {
   private static readonly CANCEL_STALE_ORDERS_BATCH_SIZE = 10;
   @Cron(CronExpression.EVERY_HOUR, { waitForCompletion: true })
   async cancelStalePendingOrders() {
-    const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
     try {
       const staleOrders = await this.ordersRepo.find({
