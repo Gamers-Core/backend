@@ -26,6 +26,7 @@ import { FeaturedVariantsModule } from './featured-variants/featured-variants.mo
 import { I18nModule } from './i18n/i18n.module';
 import { LocaleContextMiddleware } from './i18n/locale-context.middleware';
 import { MediaModule } from './media/media.module';
+import { MetaModule } from './meta/meta.module';
 import { OrdersModule } from './orders/orders.module';
 import { PoliciesModule } from './policies/policies.module';
 import { ProductsModule } from './products/products.module';
@@ -78,6 +79,7 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
     WhatsappModule,
     SettingsModule,
     DiscountsModule,
+    MetaModule,
   ],
   controllers: [AppController],
   providers: [
