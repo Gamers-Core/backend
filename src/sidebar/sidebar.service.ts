@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, Not, Repository } from 'typeorm';
+import { In, IsNull, LessThanOrEqual, MoreThan, Not, Or, Repository } from 'typeorm';
 
 import { Brand } from 'src/brands/entities/brand.entity';
 import { Category } from 'src/categories/entities/category.entity';
+import { Discount } from 'src/discounts/entities/discount.entity';
 import { FeaturedVariant } from 'src/featured-variants/entities/featured-variant.entity';
 import { Order } from 'src/orders/entities/order.entity';
 import { Product } from 'src/products/entities/product.entity';
@@ -20,16 +21,22 @@ export class SidebarService {
     @InjectRepository(Brand) private readonly brandsRepo: Repository<Brand>,
     @InjectRepository(Category) private readonly categoriesRepo: Repository<Category>,
     @InjectRepository(FeaturedVariant) private readonly featuredVariantsRepo: Repository<FeaturedVariant>,
+    @InjectRepository(Discount) private readonly discountsRepo: Repository<Discount>,
   ) {}
 
   async getCounts(): Promise<SidebarCountsByUrl> {
-    const [orders, users, products, brands, categories, featuredVariants] = await Promise.all([
+    const now = new Date();
+
+    const [orders, users, products, brands, categories, featuredVariants, discounts] = await Promise.all([
       this.ordersRepo.count({ where: { status: In(['confirmed', 'on-progress', 'on-hold']) } }),
       this.usersRepo.count({ where: { isAdmin: false, name: Not(IsNull()) } }),
       this.productsRepo.count({ where: { status: 'active' } }),
       this.brandsRepo.count(),
       this.categoriesRepo.count(),
       this.featuredVariantsRepo.count(),
+      this.discountsRepo.count({
+        where: { isActive: true, startsAt: Or(IsNull(), LessThanOrEqual(now)), expiresAt: Or(IsNull(), MoreThan(now)) },
+      }),
     ]);
 
     return {
@@ -39,6 +46,7 @@ export class SidebarService {
       '/brands': brands,
       '/categories': categories,
       '/featured-variants': featuredVariants,
+      '/discounts': discounts,
     };
   }
 }

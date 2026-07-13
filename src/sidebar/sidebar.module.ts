@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { Brand } from 'src/brands/entities/brand.entity';
 import { Category } from 'src/categories/entities/category.entity';
+import { Discount } from 'src/discounts/entities/discount.entity';
 import { FAQ } from 'src/faqs/entities/faq.entity';
 import { FeaturedVariant } from 'src/featured-variants/entities/featured-variant.entity';
 import { Order } from 'src/orders/entities/order.entity';
@@ -16,7 +17,18 @@ import { SidebarService } from './sidebar.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, User, Product, Brand, Category, FeaturedVariant, FAQ, Policy, UserReview]),
+    TypeOrmModule.forFeature([
+      Order,
+      User,
+      Product,
+      Brand,
+      Category,
+      FeaturedVariant,
+      FAQ,
+      Policy,
+      UserReview,
+      Discount,
+    ]),
   ],
   controllers: [SidebarController],
   providers: [SidebarService],

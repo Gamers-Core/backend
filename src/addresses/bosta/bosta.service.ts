@@ -93,17 +93,6 @@ export class BostaService extends AxiosService<BostaResponse<unknown>, BostaErro
     };
   }
 
-  async calculateShippingFees(cod: number, dropOffCity: string, isCOD: boolean, canOpenPackage: boolean) {
-    const { shippingFee, codFee, openingFee } = await this.getShippingFees({ cod: String(cod), dropOffCity });
-
-    let total = shippingFee;
-
-    if (isCOD) total += codFee;
-    if (canOpenPackage) total += openingFee;
-
-    return total;
-  }
-
   getPickupLocations() {
     return this.cacheService.getOrSet<BostaPickupLocation[]>(
       'bosta:pickup-locations',

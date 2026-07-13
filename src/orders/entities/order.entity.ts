@@ -63,11 +63,26 @@ export class Order {
   @Column({ default: false })
   restocked: boolean;
 
+  @Column('varchar', { default: null, nullable: true })
+  discountCode: string | null;
+
+  @Column('decimal', { precision: 10, scale: 2, default: null, nullable: true })
+  discountAmount: number | null;
+
+  @Column('boolean', { default: false })
+  isFreeShipping: boolean;
+
   @Column('decimal', { precision: 10, scale: 2 })
   subtotal: number;
 
   @Column('decimal', { precision: 10, scale: 2, default: 0 })
   shippingFee: number;
+
+  @Column('decimal', { precision: 10, scale: 2, default: null, nullable: true })
+  codFee: number | null;
+
+  @Column('decimal', { precision: 10, scale: 2, default: null, nullable: true })
+  openPackageFee: number | null;
 
   @Column('decimal', { precision: 10, scale: 2 })
   total: number;

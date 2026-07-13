@@ -59,6 +59,15 @@ export class AdminOrderDTO {
   createdAt: Date;
 
   @Expose()
+  discountCode: string | null;
+
+  @Expose()
+  discountAmount: number | null;
+
+  @Expose()
+  isFreeShipping: boolean;
+
+  @Expose()
   @ValidateNested({ each: true })
   @Type(() => OrderStatusHistoryDTO)
   history: OrderStatusHistoryDTO[];
@@ -89,6 +98,12 @@ export class AdminOrderDTO {
 
   @Expose()
   shippingFee: number;
+
+  @Expose()
+  codFee: number | null;
+
+  @Expose()
+  openPackageFee: number | null;
 
   @Expose()
   total: number;

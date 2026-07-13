@@ -5,4 +5,5 @@ export interface SidebarCountsByUrl {
   '/brands': number;
   '/categories': number;
   '/featured-variants': number;
+  '/discounts': number;
 }

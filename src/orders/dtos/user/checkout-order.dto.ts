@@ -19,4 +19,8 @@ export class CheckoutOrderDTO {
   @IsOptional()
   @IsBoolean()
   canOpenPackage?: boolean;
+
+  @IsOptional()
+  @IsString()
+  discountCode?: string;
 }

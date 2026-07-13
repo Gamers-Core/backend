@@ -194,6 +194,17 @@ export default {
 
   'settings.maintenanceMode.message': 'The site is currently under maintenance. Please check back later.',
 
+  'discounts.alreadyExists': 'A discount with this code already exists',
+  'discounts.invalidCode': 'Invalid discount code',
+  'discounts.notApplicable': 'This discount does not apply to any items in your cart',
+  'discounts.notYetActive': 'This discount is not yet active',
+  'discounts.expired': 'This discount has expired',
+  'discounts.minOrderAmountNotMet': 'This discount requires a minimum order of {amount}',
+  'discounts.usageLimitReached': 'This discount has reached its usage limit',
+  'discounts.userUsageLimitReached': 'You have already used this discount the maximum number of times',
+  'discounts.notFound': 'Discount not found',
+  'discounts.notEligible': 'You are not eligible to use this discount',
+
   isEmail: 'Must be a valid email address',
   isString: 'Must be a string',
   isPhoneNumber: 'Must be a valid phone number',
@@ -218,6 +229,11 @@ export default {
   conditionalValidation: 'Does not satisfy the required condition',
   isLocalized: 'Must be a valid localized object',
   isGreaterThan: 'Must be greater than the related value',
+  requiredIfCodeMethod: "This field is required when the discount method is 'code'",
+  requiredIfTarget: 'This field is required when the discount target is {target}',
+  requiredUnlessFreeShipping: 'This field is required unless the discount target is free shipping',
+  maxIfPercentage: 'This field must be less than or equal to 100 when the discount value type is percentage',
+  customValidation: 'Custom validation failed',
 
   unauthorized: 'Unauthorized',
   unauthenticated: 'Unauthenticated',
