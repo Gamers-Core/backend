@@ -59,7 +59,7 @@ export class WhatsAppService extends AxiosService<unknown, WhatsAppErrorResponse
 
     return this.post<SendMessageResponse, SendTemplateData>(`/${this.phoneNumberId}/messages`, {
       messaging_product: 'whatsapp',
-      to: `2${to}`,
+      to: this.formatPhoneNumber(to),
       type: 'template',
       template: { name: type, language: { code: languageCode }, components },
     });
@@ -69,9 +69,18 @@ export class WhatsAppService extends AxiosService<unknown, WhatsAppErrorResponse
     return this.post<SendMessageResponse, SendTextData>(`/${this.phoneNumberId}/messages`, {
       messaging_product: 'whatsapp',
       recipient_type: 'individual',
-      to: `2${to}`,
+      to: this.formatPhoneNumber(to),
       type: 'text',
       text: { body },
     });
+  }
+
+  private formatPhoneNumber(phone: string): string {
+    let digits = phone.replace(/\D/g, '');
+
+    if (digits.startsWith('0')) digits = `2${digits}`;
+    else if (!digits.startsWith('20')) digits = `20${digits}`;
+
+    return digits;
   }
 }
