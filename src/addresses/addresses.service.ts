@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, FindOneOptions, Repository } from 'typeorm';
 
+import { AuthContextService } from 'src/auth/auth-context.service';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 
 import { BostaService } from './bosta/bosta.service';
 import { CreateAddressDTO } from './dtos/admin/create-address.dto';
 import { UpdateAddressDTO } from './dtos/admin/update-address.dto';
+import { AddressSelect } from './dtos/user/address.dto';
 import { Address } from './entities/address.entity';
 import { BostaLocation } from './types';
 
@@ -17,12 +19,14 @@ export class AddressesService {
     @InjectRepository(Address)
     private addressesRepo: Repository<Address>,
     private readonly bostaService: BostaService,
+    private readonly authContextService: AuthContextService,
   ) {}
 
   getAll(userId: number) {
     return this.addressesRepo.find({
       where: { user: { id: userId } },
       order: { isDefault: 'DESC', createdAt: 'DESC' },
+      select: AddressSelect,
     });
   }
 
@@ -37,7 +41,7 @@ export class AddressesService {
 
       await this.setDefault(createdAddress.id, userId, manager);
 
-      return this.getOneOrFail(createdAddress.id, userId, manager);
+      return this.getOneOrFail(createdAddress.id, userId, { select: AddressSelect }, manager);
     });
   }
 
@@ -45,7 +49,7 @@ export class AddressesService {
     return this.addressesRepo.manager.transaction(async (manager) => {
       const addressRepo = manager.getRepository(Address);
 
-      const address = await this.getOneOrFail(id, userId, manager);
+      const address = await this.getOneOrFail(id, userId, { select: AddressSelect }, manager);
 
       if (dto.cityId || dto.districtId) {
         const locationData = await this.resolveLocationUpdate(dto, address);
@@ -65,7 +69,7 @@ export class AddressesService {
     await this.addressesRepo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(Address);
 
-      const address = await this.getOneOrFail(id, userId, manager);
+      const address = await this.getOneOrFail(id, userId, { select: AddressSelect }, manager);
 
       await repo.delete(address.id);
       if (!address.isDefault) return;
@@ -98,12 +102,13 @@ export class AddressesService {
     });
   }
 
-  getOneOrFail(id: number, userId: number, manager?: EntityManager) {
+  getOneOrFail(id: number, userId: number, options?: FindOneOptions<Address>, manager?: EntityManager) {
     return withOptionalManager(manager, this.addressesRepo.manager, async (manager) => {
       const addressRepo = manager.getRepository(Address);
 
       const address = await addressRepo.findOne({
         where: { id, user: { id: userId } },
+        ...options,
       });
 
       if (!address) throw NotFoundException('address.notFound');

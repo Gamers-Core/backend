@@ -281,7 +281,7 @@ export class OrdersService {
 
     const orderRepo = manager.getRepository(Order);
 
-    const address = await this.addressService.getOneOrFail(body.addressId, userId, manager);
+    const address = await this.addressService.getOneOrFail(body.addressId, userId, {}, manager);
 
     const order = orderRepo.create({
       user: { id: userId },
