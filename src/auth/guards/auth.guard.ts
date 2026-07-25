@@ -7,11 +7,14 @@ import { UnauthorizedException } from 'src/common/exceptions';
 import { LocaleContextService } from 'src/i18n/locale-context.service';
 import { UsersService } from 'src/users/users.service';
 
+import { AuthContextService } from '../auth-context.service';
+
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly usersService: UsersService,
     private readonly reflector: Reflector,
+    private readonly authContextService: AuthContextService,
     private readonly localeContextService: LocaleContextService,
   ) {}
 
@@ -39,6 +42,7 @@ export class AuthGuard implements CanActivate {
       throw UnauthorizedException('unauthorized');
     }
 
+    this.authContextService.user = user;
     this.localeContextService.locale = user.locale;
     req.res?.setHeader('x-locale', user.locale);
     req.res?.setHeader('x-is-logged-in', 'true');

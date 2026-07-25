@@ -16,6 +16,7 @@ import { CartModule } from './cart/cart.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ValidationException } from './common/exceptions';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
 import { ConfigModule } from './config/config.module';
 import { ConfigService } from './config/config.service';
 import { getEnvironment } from './config/helpers';
@@ -24,7 +25,6 @@ import { DiscountsModule } from './discounts/discounts.module';
 import { FAQsModule } from './faqs/faqs.module';
 import { FeaturedVariantsModule } from './featured-variants/featured-variants.module';
 import { I18nModule } from './i18n/i18n.module';
-import { LocaleContextMiddleware } from './i18n/locale-context.middleware';
 import { MediaModule } from './media/media.module';
 import { MetaModule } from './meta/meta.module';
 import { OrdersModule } from './orders/orders.module';
@@ -84,6 +84,7 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
   controllers: [AppController],
   providers: [
     AppService,
+    RequestContextMiddleware,
     {
       provide: APP_PIPE,
       useValue: new ValidationPipe({
@@ -108,7 +109,7 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
 export class AppModule {
   constructor(
     private configService: ConfigService,
-    private localeContextMiddleware: LocaleContextMiddleware,
+    private requestContextMiddleware: RequestContextMiddleware,
   ) {}
 
   configure(consumer: MiddlewareConsumer) {
@@ -128,7 +129,7 @@ export class AppModule {
           path: '/',
           maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
         }),
-        this.localeContextMiddleware.use.bind(this.localeContextMiddleware),
+        this.requestContextMiddleware.use.bind(this.requestContextMiddleware),
       )
       .forRoutes('*');
   }
