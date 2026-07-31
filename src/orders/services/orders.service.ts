@@ -614,7 +614,7 @@ export class OrdersService {
   } as const satisfies Partial<Record<OrderStatus, (order: Order, manager: EntityManager) => void | Promise<void>>>;
 
   private static readonly CANCEL_STALE_ORDERS_BATCH_SIZE = 10;
-  @Cron(CronExpression.EVERY_HOUR, { waitForCompletion: true })
+  @Cron(CronExpression.EVERY_2_HOURS, { waitForCompletion: true })
   async cancelStalePendingOrders() {
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
 

@@ -23,7 +23,7 @@ export class FeaturedVariantsService {
   private readonly CACHE_KEY = 'featuredVariants:all';
 
   getAll() {
-    return this.cacheService.getOrSet(this.CACHE_KEY, () => this.getAllOrdered(), { ttlMs: 1000 * 60 * 60 });
+    return this.cacheService.getOrSet(this.CACHE_KEY, () => this.getAllOrdered(), { ttlMs: 1000 * 60 * 60 * 12 });
   }
 
   add({ variantId, ...dto }: AddFeaturedVariantDTO) {

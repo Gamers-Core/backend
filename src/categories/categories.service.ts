@@ -23,13 +23,13 @@ export class CategoriesService {
 
   getAll() {
     return this.cacheService.getOrSet(this.cacheKey, () => this.repo.find({ order: { id: 'ASC' } }), {
-      ttlMs: 1000 * 60 * 60,
+      ttlMs: 1000 * 60 * 60 * 12,
     });
   }
 
   getOne(id: number) {
     return this.cacheService.getOrSet(this.getCategoryCacheKey(id), () => this.getOneOrFail(id), {
-      ttlMs: 1000 * 60 * 60,
+      ttlMs: 1000 * 60 * 60 * 12,
     });
   }
 
