@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, IsNull, Repository } from 'typeorm';
 
+import { AuthContextService } from 'src/auth/auth-context.service';
 import { BadRequestException, ConflictException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 import { Variant } from 'src/products/entities/variant.entity';
@@ -10,6 +11,7 @@ import { CacheService } from 'src/redis/cache.service';
 
 import { AddFeaturedVariantDTO } from './dtos/admin/add-featured-variant.dto';
 import { UpdateFeaturedVariantDTO } from './dtos/admin/update-featured-variant.dto';
+import { featuredVariantSelect } from './dtos/user/featured-variant.dto';
 import { FeaturedVariant } from './entities/featured-variant.entity';
 
 @Injectable()
@@ -18,6 +20,7 @@ export class FeaturedVariantsService {
     @InjectRepository(FeaturedVariant)
     private readonly repo: Repository<FeaturedVariant>,
     private readonly cacheService: CacheService,
+    private readonly authContextService: AuthContextService,
   ) {}
 
   private readonly CACHE_KEY = 'featuredVariants:all';
@@ -130,6 +133,7 @@ export class FeaturedVariantsService {
         relations: featuredVariantRelations,
         where: { variant: { deletedAt: IsNull(), isActive: true } },
         order: { position: 'ASC' },
+        select: this.authContextService.isAdmin ? undefined : featuredVariantSelect,
       });
     });
   }

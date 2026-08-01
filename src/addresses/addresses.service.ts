@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, FindOneOptions, Repository } from 'typeorm';
 
-import { AuthContextService } from 'src/auth/auth-context.service';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 
@@ -19,7 +18,6 @@ export class AddressesService {
     @InjectRepository(Address)
     private addressesRepo: Repository<Address>,
     private readonly bostaService: BostaService,
-    private readonly authContextService: AuthContextService,
   ) {}
 
   getAll(userId: number) {

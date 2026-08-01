@@ -1,10 +1,63 @@
 import { Expose, Type } from 'class-transformer';
+import { FindOptionsSelect } from 'typeorm';
 
+import { FeaturedVariant } from 'src/featured-variants/entities/featured-variant.entity';
 import { Localize } from 'src/i18n/decorators/localize.decorator';
-import { ProductDTO } from 'src/products/dtos/user/product.dto';
-import { VariantDTO } from 'src/products/dtos/user/variant.dto';
+import { MediaDTO } from 'src/media/dtos/user/media.dto';
 
-class VariantWithProductDTO extends VariantDTO {
+class BrandDTO {
+  @Expose()
+  id: number;
+
+  @Expose()
+  @Localize()
+  name: string;
+}
+
+class CategoryDTO {
+  @Expose()
+  id: number;
+
+  @Expose()
+  @Localize()
+  name: string;
+}
+
+class ProductDTO {
+  @Expose()
+  id: number;
+
+  @Expose()
+  @Localize()
+  name: string;
+
+  @Expose()
+  @Type(() => BrandDTO)
+  brand: BrandDTO;
+
+  @Expose()
+  @Type(() => CategoryDTO)
+  category: CategoryDTO;
+}
+
+class VariantDTO {
+  @Expose()
+  externalId: string;
+
+  @Expose()
+  @Localize()
+  name: string;
+
+  @Expose()
+  price: number;
+
+  @Expose()
+  compareAt: number;
+
+  @Expose()
+  @Type(() => MediaDTO)
+  image: MediaDTO | null;
+
   @Expose()
   @Type(() => ProductDTO)
   product: ProductDTO;
@@ -16,6 +69,23 @@ export class FeaturedVariantDTO {
   title: string;
 
   @Expose()
-  @Type(() => VariantWithProductDTO)
-  variant: VariantWithProductDTO;
+  @Type(() => VariantDTO)
+  variant: VariantDTO;
 }
+
+export const featuredVariantSelect: FindOptionsSelect<FeaturedVariant> = {
+  title: true,
+  variant: {
+    externalId: true,
+    name: true,
+    price: true,
+    compareAt: true,
+    image: true,
+    product: {
+      id: true,
+      name: true,
+      brand: { id: true, name: true },
+      category: { id: true, name: true },
+    },
+  },
+};
