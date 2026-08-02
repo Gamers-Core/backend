@@ -1,4 +1,4 @@
-import { IsBoolean, IsDateString, IsIn, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsIn, IsNumber, IsOptional, IsString } from 'class-validator';
 
 import { deliveryTypes } from 'src/addresses/bosta/const';
 import type { DeliveryType } from 'src/addresses/bosta/types';
@@ -30,7 +30,7 @@ export class OrdersBostaWebhookDTO {
   @IsBoolean()
   isConfirmedDelivery: boolean;
 
-  @IsDateString()
+  @IsString()
   deliveryPromiseDate: string;
 
   @IsNumber()

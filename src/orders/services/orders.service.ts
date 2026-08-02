@@ -189,6 +189,8 @@ export class OrdersService {
         await this.updateOrder(
           options,
           async (order, manager) => {
+            if (order.status === status) return;
+
             assertValidOrderTransition(order.status, status);
             assertStatusGuards(order, status);
 
