@@ -15,6 +15,7 @@ import { CreateProductDTO } from '../dtos/admin/create-product.dto';
 import { UpdateProductDTO } from '../dtos/admin/update-product.dto';
 import { productRecommendationSelect } from '../dtos/user/product-recommendation.dto';
 import { SearchProductsDTO } from '../dtos/user/search-products.dto';
+import { simpleProductSelect } from '../dtos/user/simple-product.dto';
 import { Product } from '../entities/product.entity';
 import { Variant } from '../entities/variant.entity';
 
@@ -556,16 +557,31 @@ export class ProductsService {
     if (!ids.length) return Promise.resolve([]);
 
     return withOptionalManager(manager, this.productsRepository.manager, async (manager) => {
-      const qb = this.buildProductQuery(manager, isAdmin).where('product.id IN (:...ids)', { ids });
+      const repository = manager.getRepository(Product);
 
-      if (filterActive && !isAdmin) qb.andWhere('product.status = :status', { status: 'active' });
+      if (isAdmin)
+        return this.buildProductQuery(manager, true)
+          .where('product.id IN (:...ids)', { ids })
+          .orderBy(preserveOrder ? `array_position(ARRAY[${ids.join(',')}], product.id)` : 'product.id', 'ASC')
+          .addOrderBy('productMedia.order', 'ASC')
+          .addOrderBy('variant.position', 'ASC')
+          .addOrderBy('variant.id', 'ASC')
+          .getMany();
 
-      qb.orderBy(preserveOrder ? `array_position(ARRAY[${ids.join(',')}], product.id)` : 'product.id', 'ASC')
-        .addOrderBy('productMedia.order', 'ASC')
-        .addOrderBy('variant.position', 'ASC')
-        .addOrderBy('variant.id', 'ASC');
+      const products = await repository.find({
+        where: { id: In(ids), ...(filterActive ? { status: 'active' } : {}) },
+        select: simpleProductSelect,
+        relations: { variants: { image: true } },
+        order: { variants: { position: 'ASC', id: 'ASC' } },
+      });
 
-      return qb.getMany();
+      if (!preserveOrder) return products.sort((a, b) => a.id - b.id);
+
+      const order = new Map(ids.map((id, index) => [id, index]));
+
+      return products.sort(
+        (a, b) => (order.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (order.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+      );
     });
   }
 

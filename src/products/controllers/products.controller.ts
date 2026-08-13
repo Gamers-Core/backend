@@ -7,6 +7,7 @@ import { ProductRecommendationDTO } from '../dtos/user/product-recommendation.dt
 import { ProductDTO } from '../dtos/user/product.dto';
 import { SearchProductsDTO } from '../dtos/user/search-products.dto';
 import { SearchDTO } from '../dtos/user/search.dto';
+import { SimpleProductDTO } from '../dtos/user/simple-product.dto';
 import { ProductsService } from '../services/products.service';
 
 @Controller('products')
@@ -15,7 +16,7 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get('many')
-  @Serialize(ProductDTO)
+  @Serialize(SimpleProductDTO)
   getMany(@Query('ids') ids: string) {
     return this.productsService.getMany(ids);
   }
