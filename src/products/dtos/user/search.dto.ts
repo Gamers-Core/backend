@@ -1,41 +1,61 @@
-import { Exclude, Expose, Transform, Type } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 
+import { Localize } from 'src/i18n/decorators/localize.decorator';
 import { MediaDTO } from 'src/media/dtos/user/media.dto';
-import { ProductMediaDTO } from 'src/media/dtos/user/product-media.dto';
-import { Variant } from 'src/products/entities/variant.entity';
 
-import { ProductDTO } from './product.dto';
-import { VariantDTO } from './variant.dto';
-
-export class SearchDTO extends ProductDTO {
-  @Exclude()
-  declare variants: VariantDTO[];
-
-  @Exclude()
-  declare description: string;
-
-  @Exclude()
-  declare media: ProductMediaDTO[];
+class SearchBrandDTO {
+  @Expose()
+  id: number;
 
   @Expose()
-  @Transform(({ obj }) => obj.variants[0].image)
+  @Localize()
+  name: string;
+}
+
+class SearchCategoryDTO {
+  @Expose()
+  id: number;
+
+  @Expose()
+  @Localize()
+  name: string;
+}
+
+class SearchPriceDTO {
+  @Expose()
+  min: number;
+
+  @Expose()
+  max: number;
+
+  @Expose()
+  sale: boolean;
+}
+
+export class SearchDTO {
+  @Expose()
+  id: number;
+
+  @Expose()
+  @Localize()
+  name: string;
+
+  @Expose()
   @Type(() => MediaDTO)
-  image: MediaDTO;
+  image: MediaDTO | null;
 
   @Expose()
-  @Transform(({ obj }) => {
-    const variants = obj.variants as Variant[];
+  @Type(() => SearchPriceDTO)
+  price: SearchPriceDTO;
 
-    return variants.some(({ stock }) => stock > 0);
-  })
+  @Expose()
+  @Type(() => SearchBrandDTO)
+  brand: SearchBrandDTO;
+
+  @Expose()
+  @Type(() => SearchCategoryDTO)
+  category: SearchCategoryDTO;
+
+  @Expose()
   hasStock: boolean;
-
-  @Expose()
-  @Transform(({ obj }) => {
-    const variants = obj.variants as Variant[];
-
-    const prices = variants.map(({ price }) => price);
-    return { min: Math.min(...prices), max: Math.max(...prices), sale: variants.some(({ compareAt }) => !!compareAt) };
-  })
-  price: { min: number; max: number; sale: boolean };
 }
