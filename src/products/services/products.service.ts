@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, EntityManager, Repository } from 'typeorm';
+import { Brackets, EntityManager, In, Repository } from 'typeorm';
 
 import { Brand } from 'src/brands/entities/brand.entity';
 import { Category } from 'src/categories/entities/category.entity';
@@ -13,10 +13,10 @@ import { ProductMediaService } from 'src/media/services/product-media.service';
 import { AdminSearchProductsDTO } from '../dtos/admin/admin-search-products.dto';
 import { CreateProductDTO } from '../dtos/admin/create-product.dto';
 import { UpdateProductDTO } from '../dtos/admin/update-product.dto';
+import { productRecommendationSelect } from '../dtos/user/product-recommendation.dto';
 import { SearchProductsDTO } from '../dtos/user/search-products.dto';
 import { Product } from '../entities/product.entity';
 import { Variant } from '../entities/variant.entity';
-import { productWithFullRelations } from '../relations';
 
 import { VariantsService } from './variants.service';
 
@@ -263,68 +263,80 @@ export class ProductsService {
     });
   }
 
-  getRecommendations(productId: number) {
-    return this.productsRepository.manager.transaction(async (manager) => {
-      const repo = manager.getRepository(Product);
-
-      const product = await this.getOneForRecommendationsOrFail(productId, manager);
-
-      const recommendationRows = await repo
-        .createQueryBuilder('product')
-        .select('product.id', 'id')
-        .leftJoin('product.brand', 'brand')
-        .leftJoin('product.category', 'category')
-        .where('product.id != :productId', { productId })
-        .andWhere('product.status = :status', { status: 'active' })
-        .andWhere(
-          new Brackets((qb) => {
-            qb.where('brand.id = :brandId', { brandId: product.brand.id }).orWhere('category.id = :categoryId', {
-              categoryId: product.category.id,
-            });
-          }),
-        )
-        .andWhere((qb) => {
-          const sub = qb
-            .subQuery()
-            .select('1')
-            .from(Variant, 'v')
-            .where('v.product = product.id')
-            .andWhere('v.isActive = :active', { active: true })
-            .andWhere('v.stock > 0')
-            .andWhere('v.deletedAt IS NULL')
-            .getQuery();
-          return `EXISTS ${sub}`;
-        })
-        .orderBy(
-          `
-      CASE
-        WHEN brand.id = :brandId AND category.id = :categoryId THEN 0
-        WHEN brand.id = :brandId OR category.id = :categoryId THEN 1
-        ELSE 2
-      END
-    `,
-          'ASC',
-        )
-        .addOrderBy('product.updatedAt', 'DESC')
-        .limit(10)
-        .getRawMany<{ id: string }>();
-
-      const recommendationIds = this.pickRandom(
-        recommendationRows.map(({ id }) => Number(id)),
-        4,
-      );
-
-      if (!recommendationIds.length) return [];
-
-      const recommendations = await this.getManyByIds(recommendationIds, false, { preserveOrder: true }, manager);
-
-      const recommendationsById = new Map(recommendations.map((item) => [item.id, item]));
-      const orderedRecommendations = recommendationIds
-        .map((id) => recommendationsById.get(id))
-        .filter((item): item is Product => !!item);
-
-      return orderedRecommendations;
+  async getRecommendations(productId: number) {
+    const product = await this.productsRepository.findOne({
+      where: { id: productId },
+      relations: { brand: true, category: true },
+      select: { id: true, brand: { id: true }, category: { id: true } },
     });
+    if (!product) throw NotFoundException('products.productNotFound');
+
+    const recommendationRows = await this.productsRepository
+      .createQueryBuilder('product')
+      .select('product.id', 'id')
+      .leftJoin('product.brand', 'brand')
+      .leftJoin('product.category', 'category')
+      .where('product.id != :productId', { productId })
+      .andWhere('product.status = :status', { status: 'active' })
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('brand.id = :brandId', { brandId: product.brand.id }).orWhere('category.id = :categoryId', {
+            categoryId: product.category.id,
+          });
+        }),
+      )
+      .andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('1')
+          .from(Variant, 'variant')
+          .where('variant.product = product.id')
+          .andWhere('variant.isActive = :active', { active: true })
+          .andWhere('variant.stock > 0')
+          .andWhere('variant.deletedAt IS NULL')
+          .getQuery();
+        return `EXISTS ${subQuery}`;
+      })
+      .orderBy(
+        `CASE
+          WHEN brand.id = :brandId AND category.id = :categoryId THEN 0
+          WHEN brand.id = :brandId OR category.id = :categoryId THEN 1
+          ELSE 2
+        END`,
+        'ASC',
+      )
+      .addOrderBy('product.updatedAt', 'DESC')
+      .setParameters({ brandId: product.brand.id, categoryId: product.category.id })
+      .limit(10)
+      .getRawMany<{ id: string }>();
+
+    const recommendationIds = this.pickRandom(
+      recommendationRows.map(({ id }) => Number(id)),
+      4,
+    );
+
+    if (!recommendationIds.length) return [];
+
+    const recommendations = await this.productsRepository.find({
+      where: { id: In(recommendationIds) },
+      relations: { variants: { image: true }, brand: true, category: true },
+      select: productRecommendationSelect,
+      order: { variants: { position: 'ASC' } },
+    });
+
+    for (const product of recommendations) {
+      const validVariants = product.variants.filter((variant) => variant.isActive && !variant.deletedAt);
+
+      const inStock = validVariants.filter((variant) => variant.stock > 0);
+
+      product.variants = inStock.length ? inStock : validVariants;
+    }
+
+    const recommendationsById = new Map(recommendations.map((product) => [product.id, product]));
+
+    return recommendationIds
+      .map((id) => recommendationsById.get(id))
+      .filter((product): product is Product => !!product);
   }
 
   private pickRandom<T>(items: T[], count: number): T[] {
@@ -393,24 +405,5 @@ export class ProductsService {
       .leftJoinAndSelect('productMedia.media', 'productMediaFile')
       .leftJoinAndSelect('product.variants', 'variant', variantJoinCondition)
       .leftJoinAndSelect('variant.image', 'variantImage');
-  }
-
-  private getOneForRecommendationsOrFail(id: number, manager?: EntityManager): Promise<Product> {
-    return withOptionalManager(manager, this.productsRepository.manager, async (manager) => {
-      const repo = manager.getRepository(Product);
-
-      const product = await repo.findOne({
-        where: { id },
-        relations: productWithFullRelations,
-        order: {
-          media: { order: 'ASC' },
-          variants: { position: 'ASC' },
-        },
-      });
-
-      if (!product) throw NotFoundException('products.productNotFound');
-
-      return product;
-    });
   }
 }

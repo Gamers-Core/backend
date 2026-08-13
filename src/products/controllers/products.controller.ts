@@ -3,6 +3,7 @@ import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { Public } from 'src/auth/decorators/public.decorator';
 import { Serialize } from 'src/common/interceptors/serialize.interceptor';
 
+import { ProductRecommendationDTO } from '../dtos/user/product-recommendation.dto';
 import { ProductDTO } from '../dtos/user/product.dto';
 import { SearchProductsDTO } from '../dtos/user/search-products.dto';
 import { SearchDTO } from '../dtos/user/search.dto';
@@ -32,7 +33,7 @@ export class ProductsController {
   }
 
   @Get(':id/recommendations')
-  @Serialize(ProductDTO)
+  @Serialize(ProductRecommendationDTO)
   getRecommendations(@Param('id', ParseIntPipe) id: number) {
     return this.productsService.getRecommendations(id);
   }
