@@ -1,9 +1,9 @@
 import { Expose, Type } from 'class-transformer';
+import { FindOptionsSelect } from 'typeorm';
 
 import { Localize } from 'src/i18n/decorators/localize.decorator';
 import { MediaDTO } from 'src/media/dtos/user/media.dto';
 import { Product } from 'src/products/entities/product.entity';
-import { FindOptionsSelect } from 'typeorm';
 
 class SimpleVariantDTO {
   @Expose()

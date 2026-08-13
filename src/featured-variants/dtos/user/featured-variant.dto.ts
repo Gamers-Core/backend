@@ -52,7 +52,7 @@ class VariantDTO {
   price: number;
 
   @Expose()
-  compareAt: number;
+  compareAt: number | null;
 
   @Expose()
   @Type(() => MediaDTO)
