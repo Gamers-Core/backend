@@ -8,6 +8,7 @@ import { withOptionalManager } from 'src/common/with-optional-manager';
 import { cartRelations } from 'src/products/relations';
 import { InventoryService } from 'src/products/services/inventory.service';
 
+import { cartSelect } from './dtos/cart.dto';
 import { SyncCartItemDTO } from './dtos/sync-cart-item.dto';
 import { CartItem } from './entities/cart-item.entity';
 import { Cart } from './entities/cart.entity';
@@ -57,6 +58,7 @@ export class CartService {
       const existing = await cartRepo.findOne({
         where: { user: { id: userId } },
         relations: cartRelations,
+        select: cartSelect,
       });
       if (existing) return this.stripInactiveItems(existing, manager);
 
@@ -70,13 +72,15 @@ export class CartService {
   }
 
   private async stripInactiveItems(cart: Cart, manager: EntityManager): Promise<Cart> {
-    const inactiveItems = cart.items.filter((item) => !item.variant?.isActive);
+    const inactiveItems = cart.items.filter(
+      (item) => !item.variant?.isActive || item.variant.product?.status !== 'active',
+    );
     if (!inactiveItems.length) return cart;
 
     const cartItemRepo = manager.getRepository(CartItem);
     await cartItemRepo.delete(inactiveItems.map(({ id }) => id));
 
-    cart.items = cart.items.filter(({ variant }) => variant?.isActive);
+    cart.items = cart.items.filter(({ variant }) => variant?.isActive && variant.product?.status === 'active');
 
     return cart;
   }

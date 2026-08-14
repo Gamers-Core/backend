@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, EntityManager, In, Repository } from 'typeorm';
+import { Brackets, EntityManager, In, IsNull, Repository } from 'typeorm';
 
 import { Brand } from 'src/brands/entities/brand.entity';
 import { Category } from 'src/categories/entities/category.entity';
@@ -569,7 +569,11 @@ export class ProductsService {
           .getMany();
 
       const products = await repository.find({
-        where: { id: In(ids), ...(filterActive ? { status: 'active' } : {}) },
+        where: {
+          id: In(ids),
+          ...(filterActive ? { status: 'active' } : {}),
+          variants: { isActive: true, deletedAt: IsNull() },
+        },
         select: simpleProductSelect,
         relations: { variants: { image: true } },
         order: { variants: { position: 'ASC', id: 'ASC' } },
