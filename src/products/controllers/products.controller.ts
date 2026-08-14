@@ -1,4 +1,5 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
+import { Controller, Get, Param, ParseIntPipe, Query, UseInterceptors } from '@nestjs/common';
 
 import { Public } from 'src/auth/decorators/public.decorator';
 import { Serialize } from 'src/common/interceptors/serialize.interceptor';
@@ -27,12 +28,16 @@ export class ProductsController {
     return this.productsService.getOne(id);
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(1000 * 60)
   @Get()
   @Serialize(SearchDTO)
   search(@Query() dto: SearchProductsDTO) {
     return this.productsService.search(dto, false);
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(1000 * 30)
   @Get(':id/recommendations')
   @Serialize(ProductRecommendationDTO)
   getRecommendations(@Param('id', ParseIntPipe) id: number) {
