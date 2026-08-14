@@ -23,10 +23,12 @@ export class FeaturedVariantsService {
     private readonly authContextService: AuthContextService,
   ) {}
 
-  private readonly CACHE_KEY = 'featuredVariants:all';
+  private readonly getCacheKey = () => `featuredVariants:all:${this.authContextService.isAdmin ? 'admin' : 'user'}`;
 
   getAll() {
-    return this.cacheService.getOrSet(this.CACHE_KEY, () => this.getAllOrdered(), { ttlMs: 1000 * 60 * 60 * 12 });
+    console.log(this.getCacheKey());
+
+    return this.cacheService.getOrSet(this.getCacheKey(), () => this.getAllOrdered(), { ttlMs: 1000 * 60 * 60 * 12 });
   }
 
   add({ variantId, ...dto }: AddFeaturedVariantDTO) {
@@ -51,7 +53,7 @@ export class FeaturedVariantsService {
         }),
       );
 
-      await this.cacheService.delete(this.CACHE_KEY);
+      await this.cacheService.delete(this.getCacheKey());
 
       return this.getOneOrFail(saved.id, manager);
     });
@@ -76,7 +78,7 @@ export class FeaturedVariantsService {
 
       const saved = await repo.save(featured);
 
-      await this.cacheService.delete(this.CACHE_KEY);
+      await this.cacheService.delete(this.getCacheKey());
 
       return this.getOneOrFail(saved.id, manager);
     });
@@ -92,7 +94,7 @@ export class FeaturedVariantsService {
       const remaining = await this.getAllOrdered(manager);
       await this.reorderInternal(remaining, manager);
 
-      await this.cacheService.delete(this.CACHE_KEY);
+      await this.cacheService.delete(this.getCacheKey());
 
       return this.getAllOrdered(manager);
     });
@@ -110,7 +112,7 @@ export class FeaturedVariantsService {
 
       await this.reorderInternal(ordered, manager);
 
-      await this.cacheService.delete(this.CACHE_KEY);
+      await this.cacheService.delete(this.getCacheKey());
 
       return this.getAllOrdered(manager);
     });
@@ -160,7 +162,7 @@ export class FeaturedVariantsService {
     });
     if (!variant) throw NotFoundException('products.variantNotFound');
 
-    await this.cacheService.delete(this.CACHE_KEY);
+    await this.cacheService.delete(this.getCacheKey());
 
     return variant;
   }
