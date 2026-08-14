@@ -26,8 +26,6 @@ export class FeaturedVariantsService {
   private readonly getCacheKey = () => `featuredVariants:all:${this.authContextService.isAdmin ? 'admin' : 'user'}`;
 
   getAll() {
-    console.log(this.getCacheKey());
-
     return this.cacheService.getOrSet(this.getCacheKey(), () => this.getAllOrdered(), { ttlMs: 1000 * 60 * 60 * 12 });
   }
 
