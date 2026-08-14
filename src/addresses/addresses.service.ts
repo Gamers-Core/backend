@@ -8,7 +8,7 @@ import { withOptionalManager } from 'src/common/with-optional-manager';
 import { BostaService } from './bosta/bosta.service';
 import { CreateAddressDTO } from './dtos/admin/create-address.dto';
 import { UpdateAddressDTO } from './dtos/admin/update-address.dto';
-import { AddressSelect } from './dtos/user/address.dto';
+import { addressSelect } from './dtos/user/address.dto';
 import { Address } from './entities/address.entity';
 import { BostaLocation } from './types';
 
@@ -24,7 +24,7 @@ export class AddressesService {
     return this.addressesRepo.find({
       where: { user: { id: userId } },
       order: { isDefault: 'DESC', createdAt: 'DESC' },
-      select: AddressSelect,
+      select: addressSelect,
     });
   }
 
@@ -39,7 +39,7 @@ export class AddressesService {
 
       await this.setDefault(createdAddress.id, userId, manager);
 
-      return this.getOneOrFail(createdAddress.id, userId, { select: AddressSelect }, manager);
+      return this.getOneOrFail(createdAddress.id, userId, { select: addressSelect }, manager);
     });
   }
 
@@ -47,7 +47,7 @@ export class AddressesService {
     return this.addressesRepo.manager.transaction(async (manager) => {
       const addressRepo = manager.getRepository(Address);
 
-      const address = await this.getOneOrFail(id, userId, { select: AddressSelect }, manager);
+      const address = await this.getOneOrFail(id, userId, { select: addressSelect }, manager);
 
       if (dto.cityId || dto.districtId) {
         const locationData = await this.resolveLocationUpdate(dto, address);
@@ -67,7 +67,7 @@ export class AddressesService {
     await this.addressesRepo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(Address);
 
-      const address = await this.getOneOrFail(id, userId, { select: AddressSelect }, manager);
+      const address = await this.getOneOrFail(id, userId, { select: addressSelect }, manager);
 
       await repo.delete(address.id);
       if (!address.isDefault) return;

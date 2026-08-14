@@ -29,7 +29,7 @@ export class AddressDTO {
   isDefault: boolean;
 }
 
-export const AddressSelect: FindOptionsSelect<Address> = {
+export const addressSelect: FindOptionsSelect<Address> = {
   id: true,
   phoneNumber: true,
   detailedAddress: true,
