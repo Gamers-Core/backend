@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, IsNull, Repository } from 'typeorm';
 
+import { AuthContextService } from 'src/auth/auth-context.service';
 import { BadRequestException, ConflictException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 import { Variant } from 'src/products/entities/variant.entity';
@@ -10,6 +11,7 @@ import { CacheService } from 'src/redis/cache.service';
 
 import { AddFeaturedVariantDTO } from './dtos/admin/add-featured-variant.dto';
 import { UpdateFeaturedVariantDTO } from './dtos/admin/update-featured-variant.dto';
+import { featuredVariantSelect } from './dtos/user/featured-variant.dto';
 import { FeaturedVariant } from './entities/featured-variant.entity';
 
 @Injectable()
@@ -18,12 +20,13 @@ export class FeaturedVariantsService {
     @InjectRepository(FeaturedVariant)
     private readonly repo: Repository<FeaturedVariant>,
     private readonly cacheService: CacheService,
+    private readonly authContextService: AuthContextService,
   ) {}
 
-  private readonly CACHE_KEY = 'featuredVariants:all';
+  private readonly getCacheKey = () => `featuredVariants:all:${this.authContextService.isAdmin ? 'admin' : 'user'}`;
 
   getAll() {
-    return this.cacheService.getOrSet(this.CACHE_KEY, () => this.getAllOrdered(), { ttlMs: 1000 * 60 * 60 });
+    return this.cacheService.getOrSet(this.getCacheKey(), () => this.getAllOrdered(), { ttlMs: 1000 * 60 * 60 * 12 });
   }
 
   add({ variantId, ...dto }: AddFeaturedVariantDTO) {
@@ -48,7 +51,7 @@ export class FeaturedVariantsService {
         }),
       );
 
-      await this.cacheService.delete(this.CACHE_KEY);
+      await this.cacheService.delete(this.getCacheKey());
 
       return this.getOneOrFail(saved.id, manager);
     });
@@ -73,7 +76,7 @@ export class FeaturedVariantsService {
 
       const saved = await repo.save(featured);
 
-      await this.cacheService.delete(this.CACHE_KEY);
+      await this.cacheService.delete(this.getCacheKey());
 
       return this.getOneOrFail(saved.id, manager);
     });
@@ -89,7 +92,7 @@ export class FeaturedVariantsService {
       const remaining = await this.getAllOrdered(manager);
       await this.reorderInternal(remaining, manager);
 
-      await this.cacheService.delete(this.CACHE_KEY);
+      await this.cacheService.delete(this.getCacheKey());
 
       return this.getAllOrdered(manager);
     });
@@ -107,7 +110,7 @@ export class FeaturedVariantsService {
 
       await this.reorderInternal(ordered, manager);
 
-      await this.cacheService.delete(this.CACHE_KEY);
+      await this.cacheService.delete(this.getCacheKey());
 
       return this.getAllOrdered(manager);
     });
@@ -130,6 +133,7 @@ export class FeaturedVariantsService {
         relations: featuredVariantRelations,
         where: { variant: { deletedAt: IsNull(), isActive: true } },
         order: { position: 'ASC' },
+        select: this.authContextService.isAdmin ? undefined : featuredVariantSelect,
       });
     });
   }
@@ -156,7 +160,7 @@ export class FeaturedVariantsService {
     });
     if (!variant) throw NotFoundException('products.variantNotFound');
 
-    await this.cacheService.delete(this.CACHE_KEY);
+    await this.cacheService.delete(this.getCacheKey());
 
     return variant;
   }

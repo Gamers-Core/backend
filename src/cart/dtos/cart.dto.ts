@@ -1,9 +1,12 @@
 import { Expose, Transform, Type } from 'class-transformer';
+import { FindOptionsSelect } from 'typeorm';
 
 import { BrandDTO } from 'src/brands/dtos/user/brand.dto';
 import { CategoryDTO } from 'src/categories/dtos/user/category.dto';
 import { Localize } from 'src/i18n/decorators/localize.decorator';
 import { MediaDTO } from 'src/media/dtos/user/media.dto';
+
+import { Cart } from '../entities/cart.entity';
 
 class CartProductDTO {
   @Expose()
@@ -91,3 +94,29 @@ export class CartDTO {
   @Transform(({ obj }) => obj.items.reduce((sum, item) => sum + item.variant.price * item.quantity, 0))
   total: number;
 }
+
+export const cartSelect: FindOptionsSelect<Cart> = {
+  id: true,
+  items: {
+    id: true,
+    quantity: true,
+    variant: {
+      id: true,
+      externalId: true,
+      name: true,
+      price: true,
+      compareAt: true,
+      stock: true,
+      isActive: true,
+      image: true,
+      product: {
+        id: true,
+        name: true,
+        title: true,
+        status: true,
+        brand: { id: true, name: true },
+        category: { id: true, name: true },
+      },
+    },
+  },
+};

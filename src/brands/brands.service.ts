@@ -27,13 +27,13 @@ export class BrandsService {
     return this.cacheService.getOrSet(
       this.CACHE_KEY,
       () => this.repo.find({ order: { id: 'ASC' }, relations: { image: true } }),
-      { ttlMs: 1000 * 60 * 60 },
+      { ttlMs: 1000 * 60 * 60 * 12 },
     );
   }
 
   getOne(id: number) {
     return this.cacheService.getOrSet(this.getBrandCacheKey(id), () => this.getOneOrFail(id), {
-      ttlMs: 1000 * 60 * 60,
+      ttlMs: 1000 * 60 * 60 * 12,
     });
   }
 

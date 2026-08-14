@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, EntityManager, Repository } from 'typeorm';
+import { Brackets, EntityManager, In, IsNull, Repository } from 'typeorm';
 
 import { Brand } from 'src/brands/entities/brand.entity';
 import { Category } from 'src/categories/entities/category.entity';
@@ -13,10 +13,11 @@ import { ProductMediaService } from 'src/media/services/product-media.service';
 import { AdminSearchProductsDTO } from '../dtos/admin/admin-search-products.dto';
 import { CreateProductDTO } from '../dtos/admin/create-product.dto';
 import { UpdateProductDTO } from '../dtos/admin/update-product.dto';
+import { productRecommendationSelect } from '../dtos/user/product-recommendation.dto';
 import { SearchProductsDTO } from '../dtos/user/search-products.dto';
+import { simpleProductSelect } from '../dtos/user/simple-product.dto';
 import { Product } from '../entities/product.entity';
 import { Variant } from '../entities/variant.entity';
-import { productWithFullRelations } from '../relations';
 
 import { VariantsService } from './variants.service';
 
@@ -73,7 +74,7 @@ export class ProductsService {
     return this.getOneOrFail(id, undefined, isAdmin);
   }
 
-  search(
+  async search(
     {
       q,
       brandId,
@@ -84,80 +85,235 @@ export class ProductsService {
       sort = 'created-descending',
       ...rest
     }: AdminSearchProductsDTO | SearchProductsDTO = {},
-    isAdmin = false,
+    isAdmin: boolean = false,
   ) {
     const locale = this.localeContextService.locale;
     const trimmedQ = q?.trim();
     const effectiveSort = sort === 'most-relevant' && !trimmedQ ? 'created-descending' : sort;
-    const variantCondition = isAdmin ? `v."deleted_at" IS NULL` : `v."deleted_at" IS NULL AND v."is_active" = true`;
+
+    if (isAdmin) {
+      const variantCondition = `v."deleted_at" IS NULL`;
+
+      const qb = this.productsRepository
+        .createQueryBuilder('product')
+        .leftJoinAndSelect('product.brand', 'brand')
+        .leftJoinAndSelect('brand.image', 'brandImage')
+        .leftJoinAndSelect('product.category', 'category')
+        .leftJoinAndSelect('product.media', 'productMedia')
+        .leftJoinAndSelect('productMedia.media', 'productMediaFile')
+        .leftJoinAndSelect('product.variants', 'variant', 'variant.deletedAt IS NULL')
+        .leftJoinAndSelect('variant.image', 'variantImage');
+
+      const status = 'status' in rest ? rest.status : undefined;
+      if (status) qb.andWhere('product.status = :status', { status });
+
+      if (brandId) qb.andWhere('brand.id = :brandId', { brandId });
+      if (categoryId) qb.andWhere('category.id = :categoryId', { categoryId });
+
+      if (trimmedQ)
+        qb.andWhere('(product.name::text ILIKE :q OR product.title::text ILIKE :q OR variant.name::text ILIKE :q)', {
+          q: `%${trimmedQ}%`,
+        });
+
+      if (minPrice !== undefined)
+        qb.andWhere(
+          `EXISTS (
+          SELECT 1 FROM product_variant_entity v
+          WHERE v."product_id" = product.id
+            AND ${variantCondition}
+            AND v.price >= :minPrice
+        )`,
+          { minPrice },
+        );
+
+      if (maxPrice !== undefined)
+        qb.andWhere(
+          `EXISTS (
+          SELECT 1 FROM product_variant_entity v
+          WHERE v."product_id" = product.id
+            AND ${variantCondition}
+            AND v.price <= :maxPrice
+        )`,
+          { maxPrice },
+        );
+
+      if (stock === 'in-stock')
+        qb.andWhere(
+          `EXISTS (
+          SELECT 1 FROM product_variant_entity v
+          WHERE v."product_id" = product.id
+            AND ${variantCondition}
+            AND v.stock > 0
+        )`,
+        );
+      else if (stock === 'out-of-stock')
+        qb.andWhere(
+          `NOT EXISTS (
+          SELECT 1 FROM product_variant_entity v
+          WHERE v."product_id" = product.id
+            AND ${variantCondition}
+            AND v.stock > 0
+        )`,
+        );
+
+      switch (effectiveSort) {
+        case 'most-relevant':
+          qb.orderBy(
+            `CASE
+            WHEN product.name->>:locale ILIKE :exactQ THEN 0
+            WHEN product.title->>:locale ILIKE :exactQ THEN 1
+            ELSE 2
+          END`,
+            'ASC',
+          )
+            .addOrderBy('product.updatedAt', 'DESC')
+            .setParameter('exactQ', trimmedQ)
+            .setParameter('locale', locale);
+          break;
+
+        case 'title-ascending':
+          qb.orderBy('product.title->>:locale', 'ASC').setParameter('locale', locale);
+          break;
+
+        case 'title-descending':
+          qb.orderBy('product.title->>:locale', 'DESC').setParameter('locale', locale);
+          break;
+
+        case 'price-ascending':
+          qb.orderBy(
+            `(SELECT MIN(v.price) FROM product_variant_entity v
+          WHERE v."product_id" = product.id AND ${variantCondition})`,
+            'ASC',
+            'NULLS LAST',
+          );
+          break;
+
+        case 'price-descending':
+          qb.orderBy(
+            `(SELECT MAX(v.price) FROM product_variant_entity v
+          WHERE v."product_id" = product.id AND ${variantCondition})`,
+            'DESC',
+            'NULLS LAST',
+          );
+          break;
+
+        case 'created-ascending':
+          qb.orderBy('product.createdAt', 'ASC');
+          break;
+
+        case 'created-descending':
+        default:
+          qb.orderBy('product.createdAt', 'DESC');
+          break;
+      }
+
+      qb.addOrderBy('product.id', 'ASC').addOrderBy('variant.position', 'ASC').addOrderBy('variant.id', 'ASC');
+
+      return qb.getMany();
+    }
+
+    const variantCondition = `
+    v."product_id" = product.id
+    AND v."deleted_at" IS NULL
+    AND v."is_active" = true
+  `;
 
     const qb = this.productsRepository
       .createQueryBuilder('product')
-      .leftJoinAndSelect('product.brand', 'brand')
-      .leftJoinAndSelect('brand.image', 'brandImage')
-      .leftJoinAndSelect('product.category', 'category')
-      .leftJoinAndSelect('product.media', 'productMedia')
-      .leftJoinAndSelect('productMedia.media', 'productMediaFile')
-      .leftJoinAndSelect(
-        'product.variants',
-        'variant',
-        isAdmin ? 'variant.deletedAt IS NULL' : 'variant.deletedAt IS NULL AND variant.isActive = true',
+      .leftJoin('product.brand', 'brand')
+      .leftJoin('product.category', 'category')
+      .where('product.status = :status', { status: 'active' })
+      .leftJoin(
+        (sub) =>
+          sub
+            .subQuery()
+            .select('v.product_id', 'product_id')
+            .addSelect('MIN(v.price)', 'price_min')
+            .addSelect('MAX(v.price)', 'price_max')
+            .addSelect('bool_or(v.stock > 0)', 'has_stock')
+            .addSelect('bool_or(v.compare_at IS NOT NULL AND v.compare_at > v.price)', 'has_sale')
+            .from('product_variant_entity', 'v')
+            .where('v.deleted_at IS NULL')
+            .andWhere('v.is_active = true')
+            .groupBy('v.product_id'),
+        'variant_agg',
+        'variant_agg.product_id = product.id',
       )
-      .leftJoinAndSelect('variant.image', 'variantImage');
+      .select([
+        'product.id AS id',
+        'product.name AS name',
 
-    if (isAdmin) {
-      const status = 'status' in rest ? rest.status : undefined;
-      if (status) qb.andWhere('product.status = :status', { status });
-    } else qb.andWhere('product.status = :status', { status: 'active' });
+        'brand.id AS brand_id',
+        'brand.name AS brand_name',
+
+        'category.id AS category_id',
+        'category.name AS category_name',
+
+        'variant_agg.price_min AS price_min',
+        'variant_agg.price_max AS price_max',
+        'COALESCE(variant_agg.has_stock, false) AS has_stock',
+        'COALESCE(variant_agg.has_sale, false) AS has_sale',
+
+        `(
+        SELECT json_build_object(
+          'src', m.src,
+          'blurDataURL', m."blur_data_url",
+          'type', m.type,
+          'width', m.width,
+          'height', m.height,
+          'format', m.format,
+          'bytes', m.bytes
+        )
+        FROM product_variant_entity v
+        INNER JOIN media m
+          ON m.id = v."image_id"
+        WHERE
+          v."product_id" = product.id
+          AND v."deleted_at" IS NULL
+          AND v."is_active" = true
+          AND v."image_id" IS NOT NULL
+          AND m."is_deleted" = false
+        ORDER BY v.position ASC, v.id ASC
+        LIMIT 1
+      ) AS image`,
+      ]);
 
     if (brandId) qb.andWhere('brand.id = :brandId', { brandId });
     if (categoryId) qb.andWhere('category.id = :categoryId', { categoryId });
 
     if (trimmedQ)
-      qb.andWhere('(product.name::text ILIKE :q OR product.title::text ILIKE :q OR variant.name::text ILIKE :q)', {
-        q: `%${trimmedQ}%`,
-      });
+      qb.andWhere(
+        `(
+        product.name::text ILIKE :q
+        OR product.title::text ILIKE :q
+        OR EXISTS (
+          SELECT 1
+          FROM product_variant_entity search_variant
+          WHERE search_variant."product_id" = product.id
+            AND search_variant."deleted_at" IS NULL
+            AND search_variant."is_active" = true
+            AND search_variant.name::text ILIKE :q
+        )
+      )`,
+        { q: `%${trimmedQ}%` },
+      );
 
     if (minPrice !== undefined)
       qb.andWhere(
-        `EXISTS (
-        SELECT 1 FROM product_variant_entity v
-        WHERE v."product_id" = product.id
-          AND ${variantCondition}
-          AND v.price >= :minPrice
-      )`,
+        `EXISTS (SELECT 1 FROM product_variant_entity v WHERE ${variantCondition} AND v.price >= :minPrice)`,
         { minPrice },
       );
 
     if (maxPrice !== undefined)
       qb.andWhere(
-        `EXISTS (
-        SELECT 1 FROM product_variant_entity v
-        WHERE v."product_id" = product.id
-          AND ${variantCondition}
-          AND v.price <= :maxPrice
-      )`,
+        `EXISTS (SELECT 1 FROM product_variant_entity v WHERE ${variantCondition} AND v.price <= :maxPrice)`,
         { maxPrice },
       );
 
     if (stock === 'in-stock')
-      qb.andWhere(
-        `EXISTS (
-        SELECT 1 FROM product_variant_entity v
-        WHERE v."product_id" = product.id
-          AND ${variantCondition}
-          AND v.stock > 0
-      )`,
-      );
+      qb.andWhere(`EXISTS (SELECT 1 FROM product_variant_entity v WHERE ${variantCondition} AND v.stock > 0)`);
     else if (stock === 'out-of-stock')
-      qb.andWhere(
-        `NOT EXISTS (
-        SELECT 1 FROM product_variant_entity v
-        WHERE v."product_id" = product.id
-          AND ${variantCondition}
-          AND v.stock > 0
-      )`,
-      );
+      qb.andWhere(`NOT EXISTS (SELECT 1 FROM product_variant_entity v WHERE ${variantCondition} AND v.stock > 0)`);
 
     switch (effectiveSort) {
       case 'most-relevant':
@@ -170,8 +326,8 @@ export class ProductsService {
           'ASC',
         )
           .addOrderBy('product.updatedAt', 'DESC')
-          .setParameter('exactQ', trimmedQ)
-          .setParameter('locale', locale);
+          .setParameter('locale', locale)
+          .setParameter('exactQ', trimmedQ);
         break;
 
       case 'title-ascending':
@@ -183,21 +339,11 @@ export class ProductsService {
         break;
 
       case 'price-ascending':
-        qb.orderBy(
-          `(SELECT MIN(v.price) FROM product_variant_entity v
-          WHERE v."product_id" = product.id AND ${variantCondition})`,
-          'ASC',
-          'NULLS LAST',
-        );
+        qb.orderBy('variant_agg.price_min', 'ASC', 'NULLS LAST');
         break;
 
       case 'price-descending':
-        qb.orderBy(
-          `(SELECT MAX(v.price) FROM product_variant_entity v
-          WHERE v."product_id" = product.id AND ${variantCondition})`,
-          'DESC',
-          'NULLS LAST',
-        );
+        qb.orderBy('variant_agg.price_max', 'DESC', 'NULLS LAST');
         break;
 
       case 'created-ascending':
@@ -210,9 +356,43 @@ export class ProductsService {
         break;
     }
 
-    qb.addOrderBy('product.id', 'ASC').addOrderBy('variant.position', 'ASC').addOrderBy('variant.id', 'ASC');
+    qb.addOrderBy('product.id', 'ASC');
 
-    return qb.getMany();
+    const rows = await qb.getRawMany<{
+      id: string;
+      name: Product['name'];
+      brand_id: string;
+      brand_name: string;
+      category_id: string;
+      category_name: string;
+      price_min: string | null;
+      price_max: string | null;
+      has_stock: boolean;
+      has_sale: boolean;
+      image: {
+        src: string;
+        blurDataURL: string | null;
+        type: string;
+        width: number;
+        height: number;
+        format: string;
+        bytes: number;
+      } | null;
+    }>();
+
+    return rows.map((row) => ({
+      id: Number(row.id),
+      name: row.name,
+      image: row.image,
+      price: {
+        min: Number(row.price_min ?? 0),
+        max: Number(row.price_max ?? 0),
+        sale: row.has_sale,
+      },
+      brand: { id: Number(row.brand_id), name: row.brand_name },
+      category: { id: Number(row.category_id), name: row.category_name },
+      hasStock: row.has_stock,
+    }));
   }
 
   update(id: number, { mediaIds, brandId, categoryId, variants, ...dto }: UpdateProductDTO) {
@@ -263,68 +443,80 @@ export class ProductsService {
     });
   }
 
-  getRecommendations(productId: number) {
-    return this.productsRepository.manager.transaction(async (manager) => {
-      const repo = manager.getRepository(Product);
-
-      const product = await this.getOneForRecommendationsOrFail(productId, manager);
-
-      const recommendationRows = await repo
-        .createQueryBuilder('product')
-        .select('product.id', 'id')
-        .leftJoin('product.brand', 'brand')
-        .leftJoin('product.category', 'category')
-        .where('product.id != :productId', { productId })
-        .andWhere('product.status = :status', { status: 'active' })
-        .andWhere(
-          new Brackets((qb) => {
-            qb.where('brand.id = :brandId', { brandId: product.brand.id }).orWhere('category.id = :categoryId', {
-              categoryId: product.category.id,
-            });
-          }),
-        )
-        .andWhere((qb) => {
-          const sub = qb
-            .subQuery()
-            .select('1')
-            .from(Variant, 'v')
-            .where('v.product = product.id')
-            .andWhere('v.isActive = :active', { active: true })
-            .andWhere('v.stock > 0')
-            .andWhere('v.deletedAt IS NULL')
-            .getQuery();
-          return `EXISTS ${sub}`;
-        })
-        .orderBy(
-          `
-      CASE
-        WHEN brand.id = :brandId AND category.id = :categoryId THEN 0
-        WHEN brand.id = :brandId OR category.id = :categoryId THEN 1
-        ELSE 2
-      END
-    `,
-          'ASC',
-        )
-        .addOrderBy('product.updatedAt', 'DESC')
-        .limit(10)
-        .getRawMany<{ id: string }>();
-
-      const recommendationIds = this.pickRandom(
-        recommendationRows.map(({ id }) => Number(id)),
-        4,
-      );
-
-      if (!recommendationIds.length) return [];
-
-      const recommendations = await this.getManyByIds(recommendationIds, false, { preserveOrder: true }, manager);
-
-      const recommendationsById = new Map(recommendations.map((item) => [item.id, item]));
-      const orderedRecommendations = recommendationIds
-        .map((id) => recommendationsById.get(id))
-        .filter((item): item is Product => !!item);
-
-      return orderedRecommendations;
+  async getRecommendations(productId: number) {
+    const product = await this.productsRepository.findOne({
+      where: { id: productId },
+      relations: { brand: true, category: true },
+      select: { id: true, brand: { id: true }, category: { id: true } },
     });
+    if (!product) throw NotFoundException('products.productNotFound');
+
+    const recommendationRows = await this.productsRepository
+      .createQueryBuilder('product')
+      .select('product.id', 'id')
+      .leftJoin('product.brand', 'brand')
+      .leftJoin('product.category', 'category')
+      .where('product.id != :productId', { productId })
+      .andWhere('product.status = :status', { status: 'active' })
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('brand.id = :brandId', { brandId: product.brand.id }).orWhere('category.id = :categoryId', {
+            categoryId: product.category.id,
+          });
+        }),
+      )
+      .andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('1')
+          .from(Variant, 'variant')
+          .where('variant.product = product.id')
+          .andWhere('variant.isActive = :active', { active: true })
+          .andWhere('variant.stock > 0')
+          .andWhere('variant.deletedAt IS NULL')
+          .getQuery();
+        return `EXISTS ${subQuery}`;
+      })
+      .orderBy(
+        `CASE
+          WHEN brand.id = :brandId AND category.id = :categoryId THEN 0
+          WHEN brand.id = :brandId OR category.id = :categoryId THEN 1
+          ELSE 2
+        END`,
+        'ASC',
+      )
+      .addOrderBy('product.updatedAt', 'DESC')
+      .setParameters({ brandId: product.brand.id, categoryId: product.category.id })
+      .limit(10)
+      .getRawMany<{ id: string }>();
+
+    const recommendationIds = this.pickRandom(
+      recommendationRows.map(({ id }) => Number(id)),
+      4,
+    );
+
+    if (!recommendationIds.length) return [];
+
+    const recommendations = await this.productsRepository.find({
+      where: { id: In(recommendationIds) },
+      relations: { variants: { image: true }, brand: true, category: true },
+      select: productRecommendationSelect,
+      order: { variants: { position: 'ASC' } },
+    });
+
+    for (const product of recommendations) {
+      const validVariants = product.variants.filter((variant) => variant.isActive && !variant.deletedAt);
+
+      const inStock = validVariants.filter((variant) => variant.stock > 0);
+
+      product.variants = inStock.length ? inStock : validVariants;
+    }
+
+    const recommendationsById = new Map(recommendations.map((product) => [product.id, product]));
+
+    return recommendationIds
+      .map((id) => recommendationsById.get(id))
+      .filter((product): product is Product => !!product);
   }
 
   private pickRandom<T>(items: T[], count: number): T[] {
@@ -365,16 +557,35 @@ export class ProductsService {
     if (!ids.length) return Promise.resolve([]);
 
     return withOptionalManager(manager, this.productsRepository.manager, async (manager) => {
-      const qb = this.buildProductQuery(manager, isAdmin).where('product.id IN (:...ids)', { ids });
+      const repository = manager.getRepository(Product);
 
-      if (filterActive && !isAdmin) qb.andWhere('product.status = :status', { status: 'active' });
+      if (isAdmin)
+        return this.buildProductQuery(manager, true)
+          .where('product.id IN (:...ids)', { ids })
+          .orderBy(preserveOrder ? `array_position(ARRAY[${ids.join(',')}], product.id)` : 'product.id', 'ASC')
+          .addOrderBy('productMedia.order', 'ASC')
+          .addOrderBy('variant.position', 'ASC')
+          .addOrderBy('variant.id', 'ASC')
+          .getMany();
 
-      qb.orderBy(preserveOrder ? `array_position(ARRAY[${ids.join(',')}], product.id)` : 'product.id', 'ASC')
-        .addOrderBy('productMedia.order', 'ASC')
-        .addOrderBy('variant.position', 'ASC')
-        .addOrderBy('variant.id', 'ASC');
+      const products = await repository.find({
+        where: {
+          id: In(ids),
+          ...(filterActive ? { status: 'active' } : {}),
+          variants: { isActive: true, deletedAt: IsNull() },
+        },
+        select: simpleProductSelect,
+        relations: { variants: { image: true } },
+        order: { variants: { position: 'ASC', id: 'ASC' } },
+      });
 
-      return qb.getMany();
+      if (!preserveOrder) return products.sort((a, b) => a.id - b.id);
+
+      const order = new Map(ids.map((id, index) => [id, index]));
+
+      return products.sort(
+        (a, b) => (order.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (order.get(b.id) ?? Number.MAX_SAFE_INTEGER),
+      );
     });
   }
 
@@ -393,24 +604,5 @@ export class ProductsService {
       .leftJoinAndSelect('productMedia.media', 'productMediaFile')
       .leftJoinAndSelect('product.variants', 'variant', variantJoinCondition)
       .leftJoinAndSelect('variant.image', 'variantImage');
-  }
-
-  private getOneForRecommendationsOrFail(id: number, manager?: EntityManager): Promise<Product> {
-    return withOptionalManager(manager, this.productsRepository.manager, async (manager) => {
-      const repo = manager.getRepository(Product);
-
-      const product = await repo.findOne({
-        where: { id },
-        relations: productWithFullRelations,
-        order: {
-          media: { order: 'ASC' },
-          variants: { position: 'ASC' },
-        },
-      });
-
-      if (!product) throw NotFoundException('products.productNotFound');
-
-      return product;
-    });
   }
 }

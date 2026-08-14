@@ -1,9 +1,9 @@
 import { Expose, Type } from 'class-transformer';
 import { FindOptionsSelect } from 'typeorm';
 
-import { FeaturedVariant } from 'src/featured-variants/entities/featured-variant.entity';
 import { Localize } from 'src/i18n/decorators/localize.decorator';
 import { MediaDTO } from 'src/media/dtos/user/media.dto';
+import { Product } from 'src/products/entities/product.entity';
 
 class BrandDTO {
   @Expose()
@@ -23,23 +23,6 @@ class CategoryDTO {
   name: string;
 }
 
-class ProductDTO {
-  @Expose()
-  id: number;
-
-  @Expose()
-  @Localize()
-  name: string;
-
-  @Expose()
-  @Type(() => BrandDTO)
-  brand: BrandDTO;
-
-  @Expose()
-  @Type(() => CategoryDTO)
-  category: CategoryDTO;
-}
-
 class VariantDTO {
   @Expose()
   externalId: string;
@@ -57,35 +40,45 @@ class VariantDTO {
   @Expose()
   @Type(() => MediaDTO)
   image: MediaDTO | null;
-
-  @Expose()
-  @Type(() => ProductDTO)
-  product: ProductDTO;
 }
 
-export class FeaturedVariantDTO {
+export class ProductRecommendationDTO {
+  @Expose()
+  id: number;
+
   @Expose()
   @Localize()
-  title: string;
+  name: string;
 
   @Expose()
   @Type(() => VariantDTO)
-  variant: VariantDTO;
+  variants: VariantDTO[];
+
+  @Expose()
+  @Type(() => BrandDTO)
+  brand: BrandDTO;
+
+  @Expose()
+  @Type(() => CategoryDTO)
+  category: CategoryDTO;
 }
 
-export const featuredVariantSelect: FindOptionsSelect<FeaturedVariant> = {
-  title: true,
-  variant: {
+export const productRecommendationSelect: FindOptionsSelect<Product> = {
+  id: true,
+  name: true,
+  variants: {
+    id: true,
     externalId: true,
     name: true,
     price: true,
     compareAt: true,
     image: true,
-    product: {
-      id: true,
-      name: true,
-      brand: { id: true, name: true },
-      category: { id: true, name: true },
-    },
+
+    position: true,
+    stock: true,
+    isActive: true,
+    deletedAt: true,
   },
+  brand: { id: true, name: true },
+  category: { id: true, name: true },
 };

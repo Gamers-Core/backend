@@ -21,7 +21,7 @@ export class FAQsService {
   private readonly CACHE_KEY = 'faqs:all';
 
   getAll() {
-    return this.cacheService.getOrSet(this.CACHE_KEY, () => this.getAllOrdered(), { ttlMs: 1000 * 60 * 60 });
+    return this.cacheService.getOrSet(this.CACHE_KEY, () => this.getAllOrdered(), { ttlMs: 1000 * 60 * 60 * 12 });
   }
 
   add(dto: AddFAQDTO) {

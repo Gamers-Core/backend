@@ -104,7 +104,7 @@ export class MediaService {
     return expiresAt;
   }
 
-  @Cron(CronExpression.EVERY_HOUR, { waitForCompletion: true })
+  @Cron(CronExpression.EVERY_12_HOURS, { waitForCompletion: true })
   async cleanupExpiredDraftMedia() {
     const now = new Date();
 

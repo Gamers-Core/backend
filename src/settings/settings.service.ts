@@ -30,7 +30,7 @@ export class SettingsService {
           return acc;
         }, defaults);
       },
-      { ttlMs: 1000 * 60 * 60 },
+      { ttlMs: 1000 * 60 * 60 * 12 },
     );
   }
 
@@ -45,7 +45,7 @@ export class SettingsService {
 
         return (setting?.value as InstanceType<typeof DTOClass>) ?? defaults;
       },
-      { ttlMs: 1000 * 60 * 60 },
+      { ttlMs: 1000 * 60 * 60 * 12 },
     );
   }
 

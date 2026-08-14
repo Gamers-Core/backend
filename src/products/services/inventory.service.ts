@@ -22,7 +22,7 @@ export class InventoryService {
       const uniqueIds = [...new Set(externalIds)];
 
       const variants = await variantRepo.find({
-        where: { externalId: In(uniqueIds), isActive: true },
+        where: { externalId: In(uniqueIds), isActive: true, product: { status: 'active' } },
         relations: variantWithProductBrandCategoryRelations,
       });
 
