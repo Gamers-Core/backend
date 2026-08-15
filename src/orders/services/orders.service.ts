@@ -527,6 +527,7 @@ export class OrdersService {
             return await this.bostaService.createDelivery({
               ...order.shippingAddress,
               ...order,
+              secondaryPhoneNumber: order.shippingAddress.secondaryPhoneNumber ?? undefined,
               unitPrice,
               cod: isBostaPayment ? this.toNumber(order.total) : 0,
               note: order.note ?? undefined,

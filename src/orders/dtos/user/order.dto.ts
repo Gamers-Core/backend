@@ -17,6 +17,10 @@ class OrderAddressDTO {
   phoneNumber: string;
 
   @Expose()
+  @Transform(({ value }) => value || null)
+  secondaryPhoneNumber: string | null;
+
+  @Expose()
   detailedAddress: string;
 
   @Expose()
@@ -24,6 +28,10 @@ class OrderAddressDTO {
 
   @Expose()
   cityName: string;
+
+  @Expose()
+  @Transform(({ value }) => !!value)
+  isWorkAddress: boolean;
 }
 
 class OrderStatusHistoryDTO {

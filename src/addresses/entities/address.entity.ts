@@ -14,6 +14,9 @@ export class Address {
   @Column()
   phoneNumber: string;
 
+  @Column('text', { nullable: true })
+  secondaryPhoneNumber: string | null;
+
   @Column('text')
   detailedAddress: string;
 
@@ -34,6 +37,9 @@ export class Address {
 
   @Column()
   nameAr: string;
+
+  @Column({ default: false })
+  isWorkAddress: boolean;
 
   @Column({ name: 'is_default', default: false })
   isDefault: boolean;

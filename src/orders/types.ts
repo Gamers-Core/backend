@@ -39,12 +39,14 @@ export interface OrderAddressSnapshot {
   id: number;
   nameAr: string;
   phoneNumber: string;
+  secondaryPhoneNumber: string | null;
   detailedAddress: string;
   districtId: string;
   districtName: string;
   cityId: string;
   cityName: string;
   cityDropOff: string;
+  isWorkAddress?: boolean;
 }
 
 export type OrderSortOption = (typeof sortOptions)[number];

@@ -150,12 +150,17 @@ export class BostaService extends AxiosService<BostaResponse<unknown>, BostaErro
         cityId: props.cityId,
         districtId: props.districtId ?? '',
         firstLine: props.detailedAddress ?? '',
+        isWorkAddress: props.isWorkAddress,
       };
 
     if (props.unitPrice !== undefined) data.goodsInfo = { amount: props.unitPrice };
 
-    if (props.phoneNumber || props.nameAr)
-      data.receiver = { phone: props.phoneNumber ?? '', fullName: props.nameAr ?? '' };
+    if (props.phoneNumber || props.nameAr || props.secondaryPhoneNumber)
+      data.receiver = {
+        phone: props.phoneNumber ?? '',
+        fullName: props.nameAr ?? '',
+        secondPhone: props.secondaryPhoneNumber,
+      };
 
     if (props.canOpenPackage !== undefined) data.allowToOpenPackage = props.canOpenPackage;
     if (props.orderNumber !== undefined) data.businessReference = props.orderNumber;

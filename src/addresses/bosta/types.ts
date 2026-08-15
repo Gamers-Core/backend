@@ -163,6 +163,7 @@ export interface DeliveryData {
     firstLine: string;
     city?: string;
     districtName?: string;
+    isWorkAddress?: boolean;
   };
   businessLocationId: string;
 
@@ -173,6 +174,7 @@ export interface DeliveryData {
     lastName?: string;
     fullName?: string;
     phone: string;
+    secondPhone?: string;
     email?: string;
   };
   webhookUrl?: string;
@@ -194,6 +196,8 @@ export interface CreateDelivery {
   unitPrice: number;
   nameAr: string;
   phoneNumber: string;
+  secondaryPhoneNumber?: string;
+  isWorkAddress?: boolean;
   orderNumber: string;
   note?: string;
 }
