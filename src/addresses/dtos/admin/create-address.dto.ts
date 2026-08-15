@@ -22,6 +22,7 @@ export class CreateAddressDTO {
   @IsString()
   nameAr: string;
 
+  @IsOptional()
   @IsBoolean()
-  isWorkAddress: boolean;
+  isWorkAddress?: boolean;
 }

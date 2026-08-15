@@ -46,7 +46,7 @@ export interface OrderAddressSnapshot {
   cityId: string;
   cityName: string;
   cityDropOff: string;
-  isWorkAddress: boolean;
+  isWorkAddress?: boolean;
 }
 
 export type OrderSortOption = (typeof sortOptions)[number];
