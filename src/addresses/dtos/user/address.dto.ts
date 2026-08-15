@@ -17,7 +17,13 @@ export class AddressDTO {
   districtName: string;
 
   @Expose()
+  districtId: string;
+
+  @Expose()
   cityName: string;
+
+  @Expose()
+  cityId: string;
 
   @Expose()
   cityDropOff: string;
