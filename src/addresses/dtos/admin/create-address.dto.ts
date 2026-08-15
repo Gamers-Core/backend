@@ -1,9 +1,14 @@
-import { IsPhoneNumber, IsString } from 'class-validator';
+import { IsBoolean, IsOptional, IsPhoneNumber, IsString } from 'class-validator';
 
 export class CreateAddressDTO {
   @IsString()
   @IsPhoneNumber('EG')
   phoneNumber: string;
+
+  @IsOptional()
+  @IsString()
+  @IsPhoneNumber('EG')
+  secondaryPhoneNumber: string | null;
 
   @IsString()
   detailedAddress: string;
@@ -16,4 +21,7 @@ export class CreateAddressDTO {
 
   @IsString()
   nameAr: string;
+
+  @IsBoolean()
+  isWorkAddress: boolean;
 }

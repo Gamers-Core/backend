@@ -11,6 +11,9 @@ export class AddressDTO {
   phoneNumber: string;
 
   @Expose()
+  secondaryPhoneNumber: string | null;
+
+  @Expose()
   detailedAddress: string;
 
   @Expose()
@@ -33,11 +36,15 @@ export class AddressDTO {
 
   @Expose()
   isDefault: boolean;
+
+  @Expose()
+  isWorkAddress: boolean;
 }
 
 export const addressSelect: FindOptionsSelect<Address> = {
   id: true,
   phoneNumber: true,
+  secondaryPhoneNumber: true,
   detailedAddress: true,
   districtId: true,
   districtName: true,
@@ -46,4 +53,5 @@ export const addressSelect: FindOptionsSelect<Address> = {
   cityDropOff: true,
   nameAr: true,
   isDefault: true,
+  isWorkAddress: true,
 };
