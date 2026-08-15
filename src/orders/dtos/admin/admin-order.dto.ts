@@ -1,4 +1,4 @@
-import { Expose, Type } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
 
 import { BasicUserDTO } from 'src/users/dtos/basic-user.dto';
@@ -19,6 +19,10 @@ class OrderAddressDTO {
   phoneNumber: string;
 
   @Expose()
+  @Transform(({ value }) => value || null)
+  secondaryPhoneNumber: string | null;
+
+  @Expose()
   detailedAddress: string;
 
   @Expose()
@@ -26,6 +30,10 @@ class OrderAddressDTO {
 
   @Expose()
   cityName: string;
+
+  @Expose()
+  @Transform(({ value }) => !!value)
+  isWorkAddress: boolean;
 }
 
 class OrderStatusHistoryDTO {
