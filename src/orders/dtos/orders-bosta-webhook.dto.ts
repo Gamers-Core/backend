@@ -17,6 +17,7 @@ export class OrdersBostaWebhookDTO {
   @IsIn(deliveryTypes)
   type: DeliveryType;
 
+  @IsOptional()
   @IsNumber()
   cod: number;
 
@@ -27,6 +28,7 @@ export class OrdersBostaWebhookDTO {
   @IsNumber()
   timeStamp: number;
 
+  @IsOptional()
   @IsBoolean()
   isConfirmedDelivery: boolean;
 
