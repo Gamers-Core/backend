@@ -14,7 +14,11 @@ export const whatsappTemplates: WhatsAppTemplatesMap = {
       { type: 'text', text: `${total} ${currency}` },
       {
         type: 'text',
-        text: `${shippingAddress.cityName}, ${shippingAddress.districtName} - ${shippingAddress.detailedAddress}`,
+        text: `${shippingAddress.cityName}, ${shippingAddress.districtName} - ${shippingAddress.detailedAddress
+          .split('\n')
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .join(', ')}`,
       },
     ],
   },
