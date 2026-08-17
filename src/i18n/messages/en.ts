@@ -150,7 +150,7 @@ export default {
   'mail.orderAutoCancellation.header': 'Order Cancelled Automatically',
   'mail.orderAutoCancellation.intro': 'Your order was canceled automatically. Here are the details:',
   'mail.orderAutoCancellation.reasonLabel': 'Reason:',
-  'mail.orderAutoCancellation.reason.stalePending': 'This order was not confirmed within 48 hours.',
+  'mail.orderAutoCancellation.reason.stalePending': 'This order was not confirmed within 24 hours.',
   'mail.orderStatusUpdate.subject': 'Order Update - {orderNumber} is now {status}',
   'mail.orderStatusUpdate.header': 'Order Status Update',
   'mail.orderStatusUpdate.intro':

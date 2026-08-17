@@ -150,7 +150,7 @@ export default {
   'mail.orderAutoCancellation.header': 'تم إلغاء الطلب تلقائيا',
   'mail.orderAutoCancellation.intro': 'تم إلغاء طلبك تلقائيا. إليك التفاصيل:',
   'mail.orderAutoCancellation.reasonLabel': 'السبب:',
-  'mail.orderAutoCancellation.reason.stalePending': 'لم يتم تأكيد هذا الطلب خلال 48 ساعة.',
+  'mail.orderAutoCancellation.reason.stalePending': 'لم يتم تأكيد هذا الطلب خلال 24 ساعة.',
   'mail.orderStatusUpdate.subject': 'تحديث حالة الطلب - {orderNumber}',
   'mail.orderStatusUpdate.header': 'تحديث حالة الطلب',
   'mail.orderStatusUpdate.intro': 'أردنا أن نعلمك أن حالة طلبك قد تم تحديثها. إليك التفاصيل:',
