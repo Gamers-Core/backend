@@ -191,6 +191,7 @@ export default {
   'service.unavailable': 'الخدمة غير متاحة مؤقتًا',
 
   'settings.maintenanceMode.message': 'الموقع تحت الصيانة حالياً. يرجى العودة لاحقاً.',
+  'settings.settingNotFound': 'الإعداد غير موجود',
 
   'discounts.alreadyExists': 'يوجد خصم بهذا الكود بالفعل',
   'discounts.invalidCode': 'كود الخصم غير صالح',

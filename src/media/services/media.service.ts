@@ -160,6 +160,7 @@ export class MediaService {
   private notReferencedCondition(idRef = 'm.id') {
     return `
       NOT EXISTS (SELECT 1 FROM product_media pm WHERE pm.media_id = ${idRef})
+      AND NOT EXISTS (SELECT 1 FROM setting_media sm WHERE sm.media_id = ${idRef})
       AND NOT EXISTS (SELECT 1 FROM brand b WHERE b.image_id = ${idRef})
       AND NOT EXISTS (SELECT 1 FROM product_variant_entity v WHERE v.image_id = ${idRef})
       AND NOT EXISTS (SELECT 1 FROM user_review r WHERE r.image_id = ${idRef})

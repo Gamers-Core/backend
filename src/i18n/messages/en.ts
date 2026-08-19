@@ -193,6 +193,7 @@ export default {
   'service.unavailable': 'Service is temporarily unavailable',
 
   'settings.maintenanceMode.message': 'The site is currently under maintenance. Please check back later.',
+  'settings.settingNotFound': 'Setting not found',
 
   'discounts.alreadyExists': 'A discount with this code already exists',
   'discounts.invalidCode': 'Invalid discount code',
