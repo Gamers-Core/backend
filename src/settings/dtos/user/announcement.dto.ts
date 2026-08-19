@@ -9,6 +9,10 @@ import { AnnouncementSettingDTO } from '../announcement.setting.dto';
 export class AnnouncementDTO extends AnnouncementSettingDTO {
   @Expose()
   @Transform(({ obj, value }) => (obj.enabled ? value : undefined))
+  intervalHours?: number = 6;
+
+  @Expose()
+  @Transform(({ obj, value }) => (obj.enabled ? value : undefined))
   @Type(() => MediaDTO)
   declare media?: MediaDTO[];
 

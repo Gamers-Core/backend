@@ -30,6 +30,13 @@ export class AnnouncementSettingDTO {
   @Expose()
   @ValidateIf((o) => o.enabled === true)
   @IsOptional()
+  @IsInt()
+  @Min(0)
+  intervalHours?: number = 6;
+
+  @Expose()
+  @ValidateIf((o) => o.enabled === true)
+  @IsOptional()
   @IsArray()
   @IsInt({ each: true })
   @Min(1, { each: true })
