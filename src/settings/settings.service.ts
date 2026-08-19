@@ -74,9 +74,14 @@ export class SettingsService {
     await this.repo.manager.transaction(async (manager) => {
       const repo = manager.getRepository(Setting);
 
-      await repo.upsert({ key, value }, ['key']);
-
       const settingValue = value as InstanceType<(typeof SETTINGS_MAP)[K]>;
+
+      const valueToPersist = { ...settingValue } as SettingsMap[K];
+
+      if ('mediaIds' in valueToPersist && 'media' in valueToPersist) delete valueToPersist.media;
+
+      await repo.upsert({ key, value: valueToPersist }, ['key']);
+
       if ('mediaIds' in settingValue) await this.attachMediaToSetting(key, settingValue.mediaIds, manager);
     });
 
