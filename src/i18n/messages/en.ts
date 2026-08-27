@@ -203,6 +203,7 @@ export default {
   'discounts.minOrderAmountNotMet': 'This discount requires a minimum order of {amount}',
   'discounts.usageLimitReached': 'This discount has reached its usage limit',
   'discounts.userUsageLimitReached': 'You have already used this discount the maximum number of times',
+  'discounts.paymentMethodNotEligible': 'This discount is not applicable for the selected payment method',
   'discounts.notFound': 'Discount not found',
   'discounts.notEligible': 'You are not eligible to use this discount',
 

@@ -12,6 +12,8 @@ import {
 
 import { Brand } from 'src/brands/entities/brand.entity';
 import { Category } from 'src/categories/entities/category.entity';
+import { paymentMethods } from 'src/orders/statuses';
+import { PaymentMethod } from 'src/orders/types';
 import { Variant } from 'src/products/entities/variant.entity';
 import { User } from 'src/users/entities/user.entity';
 
@@ -34,6 +36,9 @@ export class Discount {
 
   @Column({ type: 'enum', enum: discountTargets })
   target: DiscountTarget;
+
+  @Column({ type: 'enum', enum: paymentMethods, array: true, nullable: true })
+  paymentMethods: PaymentMethod[] | null;
 
   @Column({ type: 'enum', enum: discountValueTypes, nullable: true })
   valueType: DiscountValueType | null;

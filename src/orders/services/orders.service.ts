@@ -313,6 +313,7 @@ export class OrdersService {
       userId,
       discountableItems,
       this.toNumber(order.subtotal),
+      body.paymentMethod,
       manager,
     );
 
