@@ -13,7 +13,7 @@ import {
 import { Brand } from 'src/brands/entities/brand.entity';
 import { Category } from 'src/categories/entities/category.entity';
 import { paymentMethods } from 'src/orders/statuses';
-import { PaymentMethod } from 'src/orders/types';
+import type { PaymentMethod } from 'src/orders/types';
 import { Variant } from 'src/products/entities/variant.entity';
 import { User } from 'src/users/entities/user.entity';
 

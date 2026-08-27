@@ -1,7 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 
 import { Serialize } from 'src/common/interceptors/serialize.interceptor';
-import { PaymentMethod } from 'src/orders/types';
+import type { PaymentMethod } from 'src/orders/types';
 import { CurrentUser } from 'src/users/decorators/current-user.decorator';
 import { User } from 'src/users/entities/user.entity';
 

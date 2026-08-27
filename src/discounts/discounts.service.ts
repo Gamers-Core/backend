@@ -8,7 +8,7 @@ import { Category } from 'src/categories/entities/category.entity';
 import { BadRequestException, ConflictException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 import { Order } from 'src/orders/entities/order.entity';
-import { PaymentMethod } from 'src/orders/types';
+import type { PaymentMethod } from 'src/orders/types';
 import { Variant } from 'src/products/entities/variant.entity';
 import { CacheService } from 'src/redis/cache.service';
 import { User } from 'src/users/entities/user.entity';

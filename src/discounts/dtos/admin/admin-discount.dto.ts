@@ -2,7 +2,7 @@ import { Expose, Transform, Type } from 'class-transformer';
 
 import { AdminBrandDTO } from 'src/brands/dtos/admin/admin-brand.dto';
 import { AdminCategoryDTO } from 'src/categories/dtos/admin/admin-category.dto';
-import { PaymentMethod } from 'src/orders/types';
+import type { PaymentMethod } from 'src/orders/types';
 import { AdminProductDTO } from 'src/products/dtos/admin/admin-product.dto';
 import { AdminVariantDTO } from 'src/products/dtos/admin/admin-variant.dto';
 import { BasicUserDTO } from 'src/users/dtos/basic-user.dto';
