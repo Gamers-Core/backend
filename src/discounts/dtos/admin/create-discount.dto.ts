@@ -6,6 +6,8 @@ import { RequiredIfCodeMethod } from 'src/discounts/validators/required-if-code-
 import { RequiredIfCustomEligibility } from 'src/discounts/validators/required-if-custom-eligibility.validator';
 import { RequiredIfTarget } from 'src/discounts/validators/required-if-target.validator';
 import { RequiredUnlessFreeShipping } from 'src/discounts/validators/required-unless-free-shipping.validator';
+import { paymentMethods } from 'src/orders/statuses';
+import type { PaymentMethod } from 'src/orders/types';
 
 import { discountEligibilities, discountMethods, discountTargets, discountValueTypes } from '../../const';
 import type { DiscountEligibility, DiscountMethod, DiscountTarget, DiscountValueType } from '../../types';
@@ -25,6 +27,11 @@ export class CreateDiscountDTO {
   @ValidateIf((dto: CreateDiscountDTO) => dto.target !== 'free_shipping')
   @IsIn(discountValueTypes)
   valueType?: DiscountValueType;
+
+  @IsArray()
+  @IsIn(paymentMethods, { each: true })
+  @IsOptional()
+  paymentMethods?: PaymentMethod[];
 
   @RequiredUnlessFreeShipping()
   @ValidateIf((dto: CreateDiscountDTO) => dto.target !== 'free_shipping')

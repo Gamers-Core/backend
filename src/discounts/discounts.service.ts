@@ -8,6 +8,7 @@ import { Category } from 'src/categories/entities/category.entity';
 import { BadRequestException, ConflictException, NotFoundException } from 'src/common/exceptions';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 import { Order } from 'src/orders/entities/order.entity';
+import type { PaymentMethod } from 'src/orders/types';
 import { Variant } from 'src/products/entities/variant.entity';
 import { CacheService } from 'src/redis/cache.service';
 import { User } from 'src/users/entities/user.entity';
@@ -177,24 +178,29 @@ export class DiscountsService {
     userId: number | null,
     cartItems: DiscountableItem[],
     orderTotal: number,
+    paymentMethod: PaymentMethod | null,
     manager?: EntityManager,
   ): Promise<DiscountResult | null> {
     return withOptionalManager(manager, this.discountRepo.manager, async (manager) => {
-      if (code) return this.validateAndCalculateFromItems(code, userId, cartItems, orderTotal, manager);
+      if (code) return this.validateAndCalculateFromItems(code, userId, cartItems, orderTotal, paymentMethod, manager);
 
-      return this.getBestAutomaticDiscount(userId, cartItems, orderTotal, manager);
+      return this.getBestAutomaticDiscount(userId, cartItems, orderTotal, paymentMethod, manager);
     });
   }
 
-  async validateAndCalculate(userId: number, code: string | undefined): Promise<DiscountResult | null> {
+  async validateAndCalculate(
+    userId: number,
+    code: string | undefined,
+    paymentMethod: PaymentMethod | null = null,
+  ): Promise<DiscountResult | null> {
     return this.discountRepo.manager.transaction(async (manager) => {
       const cart = await this.cartService.getOrCreateCart(userId, manager);
 
       const orderTotal = cart.items.reduce((sum, item) => sum + item.variant.price * item.quantity, 0);
 
-      if (code) return this.validateAndCalculateFromItems(code, userId, cart.items, orderTotal, manager);
+      if (code) return this.validateAndCalculateFromItems(code, userId, cart.items, orderTotal, paymentMethod, manager);
 
-      return this.getBestAutomaticDiscount(userId, cart.items, orderTotal, manager);
+      return this.getBestAutomaticDiscount(userId, cart.items, orderTotal, paymentMethod, manager);
     });
   }
 
@@ -203,6 +209,7 @@ export class DiscountsService {
     userId: number | null,
     cartItems: DiscountableItem[],
     orderTotal: number,
+    paymentMethod: PaymentMethod | null,
     manager: EntityManager,
   ): Promise<DiscountResult> {
     const discount = await this.cacheService.getOrSet(this.cacheKey(code), () => this.getActiveByCode(code, manager), {
@@ -216,6 +223,7 @@ export class DiscountsService {
 
     this.checkValidityWindow(discount);
     this.checkEligibility(discount, userId);
+    this.checkPaymentMethod(discount, paymentMethod);
     await this.checkUsageLimits(discount, userId, manager);
     this.checkMinOrderAmount(discount, orderTotal);
 
@@ -227,7 +235,10 @@ export class DiscountsService {
     return result;
   }
 
-  async getAutomaticDiscount(userId: number): Promise<DiscountResult | null> {
+  async getAutomaticDiscount(
+    userId: number,
+    paymentMethod: PaymentMethod | null = null,
+  ): Promise<DiscountResult | null> {
     return withOptionalManager(undefined, this.discountRepo.manager, async (manager) => {
       const cart = await this.cartService.getOrCreateCart(userId, manager);
 
@@ -235,7 +246,7 @@ export class DiscountsService {
 
       const orderTotal = cart.items.reduce((sum, item) => sum + item.variant.price * item.quantity, 0);
 
-      return this.getBestAutomaticDiscount(userId, cart.items, orderTotal, manager);
+      return this.getBestAutomaticDiscount(userId, cart.items, orderTotal, paymentMethod, manager);
     });
   }
 
@@ -243,6 +254,7 @@ export class DiscountsService {
     userId: number | null,
     cartItems: DiscountableItem[],
     orderTotal: number,
+    paymentMethod: PaymentMethod | null,
     manager?: EntityManager,
   ): Promise<DiscountResult | null> {
     return withOptionalManager(manager, this.discountRepo.manager, async (manager) => {
@@ -262,6 +274,7 @@ export class DiscountsService {
           this.checkValidityWindow(discount);
           this.checkMinOrderAmount(discount, orderTotal);
           this.checkEligibility(discount, userId);
+          this.checkPaymentMethod(discount, paymentMethod);
           await this.checkUsageLimits(discount, userId, manager);
         } catch {
           continue;
@@ -335,6 +348,13 @@ export class DiscountsService {
 
     if (userId == null) throw BadRequestException('discounts.notEligible');
     if (!discount.eligibleUsers.some((user) => user.id === userId)) throw BadRequestException('discounts.notEligible');
+  }
+
+  private checkPaymentMethod(discount: Discount, paymentMethod: PaymentMethod | null) {
+    if (!discount.paymentMethods?.length) return;
+
+    if (!paymentMethod || !discount.paymentMethods.includes(paymentMethod))
+      throw BadRequestException('discounts.paymentMethodNotEligible');
   }
 
   private async checkUsageLimits(discount: Discount, userId: number | null, manager: EntityManager) {

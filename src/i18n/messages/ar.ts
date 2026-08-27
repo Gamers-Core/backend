@@ -201,6 +201,7 @@ export default {
   'discounts.minOrderAmountNotMet': 'هذا الخصم يتطلب حد أدنى للطلب بقيمة {amount}',
   'discounts.usageLimitReached': 'تم الوصول للحد الأقصى لاستخدام هذا الخصم',
   'discounts.userUsageLimitReached': 'لقد استخدمت هذا الكود الحد الأقصى من المرات المسموح بها',
+  'discounts.paymentMethodNotEligible': 'هذا الخصم غير متاح لطريقة الدفع المحددة',
   'discounts.notFound': 'الخصم غير موجود',
   'discounts.notEligible': 'أنت غير مؤهل لاستخدام هذا الخصم',
 
