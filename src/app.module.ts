@@ -16,7 +16,7 @@ import { CartModule } from './cart/cart.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ValidationException } from './common/exceptions';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
-import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
+import { RequestContextMiddleware } from './common/middlewares/request-context.middleware';
 import { ConfigModule } from './config/config.module';
 import { ConfigService } from './config/config.service';
 import { getEnvironment } from './config/helpers';
