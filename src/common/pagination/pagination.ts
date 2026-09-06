@@ -14,8 +14,13 @@ export const paginate = async <T extends ObjectLiteral>(
   const qb = source instanceof SelectQueryBuilder ? source : source.createQueryBuilder();
   const alias = qb.alias;
 
-  const belongsToRoot = (key: string) =>
-    key.replace(/"/g, '') === alias || key.replace(/"/g, '').startsWith(`${alias}.`);
+  const belongsToRoot = (key: string) => {
+    const cleaned = key.replace(/"/g, '');
+
+    const aliasPattern = new RegExp(`\\b${alias}\\.`);
+
+    return cleaned === alias || aliasPattern.test(cleaned);
+  };
 
   const idQb = qb.clone().select(`${alias}.id`, 'id');
 
@@ -37,8 +42,8 @@ export const paginate = async <T extends ObjectLiteral>(
 
   const data = ids.length ? await qb.clone().andWhereInIds(ids).getMany() : [];
 
-  const byId = new Map(data.map((entity) => [(entity as any).id, entity]));
-  const orderedData = ids.map((id) => byId.get(id)).filter((e): e is T => !!e);
+  const byId = new Map(data.map((entity) => [String((entity as any).id), entity]));
+  const orderedData = ids.map((id) => byId.get(String(id))).filter((e): e is T => !!e);
 
   return {
     data: orderedData,
