@@ -1,10 +1,12 @@
 import { Type } from 'class-transformer';
 import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
 
+import { PaginatedDTO } from 'src/common/pagination/pagination.dto';
+
 import { sortOption, stockFilters } from '../../const';
 import type { SortOption, StockFilter } from '../../types';
 
-export class SearchProductsDTO {
+export class SearchProductsDTO extends PaginatedDTO {
   @IsOptional()
   @IsString()
   q?: string;

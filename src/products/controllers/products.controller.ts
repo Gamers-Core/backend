@@ -3,6 +3,7 @@ import { Controller, Get, Param, ParseIntPipe, Query, UseInterceptors } from '@n
 
 import { Public } from 'src/auth/decorators/public.decorator';
 import { Serialize } from 'src/common/interceptors/serialize.interceptor';
+import { Paginated } from 'src/common/pagination/pagination.dto';
 
 import { ProductRecommendationDTO } from '../dtos/user/product-recommendation.dto';
 import { ProductDTO } from '../dtos/user/product.dto';
@@ -31,7 +32,7 @@ export class ProductsController {
   @UseInterceptors(CacheInterceptor)
   @CacheTTL(1000 * 60)
   @Get()
-  @Serialize(SearchDTO)
+  @Serialize(Paginated(SearchDTO))
   search(@Query() dto: SearchProductsDTO) {
     return this.productsService.search(dto, false);
   }

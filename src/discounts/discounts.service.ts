@@ -6,6 +6,7 @@ import { Brand } from 'src/brands/entities/brand.entity';
 import { CartService } from 'src/cart/cart.service';
 import { Category } from 'src/categories/entities/category.entity';
 import { BadRequestException, ConflictException, NotFoundException } from 'src/common/exceptions';
+import { paginate } from 'src/common/pagination/pagination';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 import { Order } from 'src/orders/entities/order.entity';
 import type { PaymentMethod } from 'src/orders/types';
@@ -47,7 +48,7 @@ export class DiscountsService {
 
   private readonly AUTOMATIC_CACHE_KEY = 'discounts:automatic';
 
-  search({ q, method, target, eligibility, sort = 'created-descending' }: AdminSearchDiscountsDTO = {}) {
+  search({ q, method, target, eligibility, sort = 'created-descending', ...params }: AdminSearchDiscountsDTO = {}) {
     const trimmedQ = q?.trim();
 
     const qb = this.discountRepo
@@ -91,7 +92,7 @@ export class DiscountsService {
 
     qb.addOrderBy('discount.id', 'DESC');
 
-    return qb.getMany();
+    return paginate(qb, params);
   }
 
   getOne(id: number) {

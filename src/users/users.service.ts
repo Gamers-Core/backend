@@ -4,6 +4,7 @@ import { DeepPartial, IsNull, Not, Repository } from 'typeorm';
 
 import { ConflictException, NotFoundException } from 'src/common/exceptions';
 import { isUniqueViolation } from 'src/common/helpers/db.helpers';
+import { paginate } from 'src/common/pagination/pagination';
 import { Locale } from 'src/i18n/types';
 
 import { AdminCreateUserDTO } from './dtos/admin/admin-create-user.dto';
@@ -67,7 +68,7 @@ export class UsersService {
     return this.repo.find({ select: { email: true, locale: true }, where: { isAdmin: includeAdmins } });
   }
 
-  getAllForAdmin({ q, sort }: AdminSearchUsersDTO = {}) {
+  getAllForAdmin({ q, sort, ...params }: AdminSearchUsersDTO = {}) {
     const trimmedQ = q?.trim();
 
     const qb = this.repo
@@ -133,7 +134,7 @@ export class UsersService {
 
     qb.addOrderBy('address.isDefault', 'DESC').addOrderBy('address.id', 'DESC');
 
-    return qb.getMany();
+    return paginate(qb, params);
   }
 
   updateLocale(id: number, locale: Locale) {

@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query,
 
 import { IsAdminAuthGuard } from 'src/auth/guards/is-admin-auth.guard';
 import { Serialize } from 'src/common/interceptors/serialize.interceptor';
+import { Paginated } from 'src/common/pagination/pagination.dto';
 
 import { AdminProductDTO } from '../dtos/admin/admin-product.dto';
 import { AdminSearchProductsDTO } from '../dtos/admin/admin-search-products.dto';
@@ -21,7 +22,7 @@ export class AdminProductsController {
   }
 
   @Get()
-  @Serialize(AdminProductDTO)
+  @Serialize(Paginated(AdminProductDTO))
   search(@Query() dto: AdminSearchProductsDTO) {
     return this.productsService.search(dto, true);
   }

@@ -5,6 +5,7 @@ import { Brackets, EntityManager, In, IsNull, Repository } from 'typeorm';
 import { Brand } from 'src/brands/entities/brand.entity';
 import { Category } from 'src/categories/entities/category.entity';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { paginate } from 'src/common/pagination/pagination';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 import { LocaleContextService } from 'src/i18n/locale-context.service';
 import { MediaService } from 'src/media/services/media.service';
@@ -209,8 +210,10 @@ export class ProductsService {
 
       qb.addOrderBy('product.id', 'ASC').addOrderBy('variant.position', 'ASC').addOrderBy('variant.id', 'ASC');
 
-      return qb.getMany();
+      return paginate(qb, rest);
     }
+
+    const { page = 1, limit = 8 } = rest;
 
     const variantCondition = `
     v."product_id" = product.id
@@ -358,6 +361,10 @@ export class ProductsService {
 
     qb.addOrderBy('product.id', 'ASC');
 
+    const totalItems = await qb.clone().getCount();
+
+    qb.offset((page - 1) * limit).limit(limit);
+
     const rows = await qb.getRawMany<{
       id: string;
       name: Product['name'];
@@ -380,7 +387,7 @@ export class ProductsService {
       } | null;
     }>();
 
-    return rows.map((row) => ({
+    const data = rows.map((row) => ({
       id: Number(row.id),
       name: row.name,
       image: row.image,
@@ -393,6 +400,16 @@ export class ProductsService {
       category: { id: Number(row.category_id), name: row.category_name },
       hasStock: row.has_stock,
     }));
+
+    return {
+      data,
+      meta: {
+        itemsPerPage: limit,
+        totalItems,
+        currentPage: page,
+        totalPages: Math.max(Math.ceil(totalItems / limit), 1),
+      },
+    };
   }
 
   update(id: number, { mediaIds, brandId, categoryId, variants, ...dto }: UpdateProductDTO) {

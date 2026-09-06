@@ -1,9 +1,10 @@
 import { IsIn, IsOptional, IsString } from 'class-validator';
 
+import { PaginatedDTO } from 'src/common/pagination/pagination.dto';
 import { discountEligibilities, discountMethods, discountSorts, discountTargets } from 'src/discounts/const';
 import type { DiscountMethod, DiscountTarget, DiscountEligibility, DiscountSort } from 'src/discounts/types';
 
-export class AdminSearchDiscountsDTO {
+export class AdminSearchDiscountsDTO extends PaginatedDTO {
   @IsString()
   @IsOptional()
   q?: string;
