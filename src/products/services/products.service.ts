@@ -213,6 +213,8 @@ export class ProductsService {
       return paginate(qb, rest);
     }
 
+    const { page = 1, limit = 8 } = rest;
+
     const variantCondition = `
     v."product_id" = product.id
     AND v."deleted_at" IS NULL
@@ -359,6 +361,10 @@ export class ProductsService {
 
     qb.addOrderBy('product.id', 'ASC');
 
+    const totalItems = await qb.clone().getCount();
+
+    qb.offset((page - 1) * limit).limit(limit);
+
     const rows = await qb.getRawMany<{
       id: string;
       name: Product['name'];
@@ -381,7 +387,7 @@ export class ProductsService {
       } | null;
     }>();
 
-    return rows.map((row) => ({
+    const data = rows.map((row) => ({
       id: Number(row.id),
       name: row.name,
       image: row.image,
@@ -394,6 +400,16 @@ export class ProductsService {
       category: { id: Number(row.category_id), name: row.category_name },
       hasStock: row.has_stock,
     }));
+
+    return {
+      data,
+      meta: {
+        itemsPerPage: limit,
+        totalItems,
+        currentPage: page,
+        totalPages: Math.max(Math.ceil(totalItems / limit), 1),
+      },
+    };
   }
 
   update(id: number, { mediaIds, brandId, categoryId, variants, ...dto }: UpdateProductDTO) {
