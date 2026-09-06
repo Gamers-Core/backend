@@ -10,6 +10,7 @@ import { bostaPaymentMethods } from 'src/addresses/bosta/const';
 import { BostaPaymentMethod } from 'src/addresses/bosta/types';
 import { CartService } from 'src/cart/cart.service';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { paginate } from 'src/common/pagination/pagination';
 import { withEnvironment } from 'src/common/with-environment';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 import { DiscountsService } from 'src/discounts/discounts.service';
@@ -65,7 +66,7 @@ export class OrdersService {
     private readonly metaService: MetaService,
   ) {}
 
-  search(params: AdminSearchOrdersDTO = {}, userId?: number) {
+  search({ limit, page, ...params }: AdminSearchOrdersDTO = {}, userId?: number) {
     const { q, status, paymentStatus, paymentMethod, sort = 'created-descending' } = params;
     const trimmedQ = q?.trim();
 
@@ -109,7 +110,7 @@ export class OrdersService {
 
     qb.addOrderBy('order.id', 'DESC').addOrderBy('history.createdAt', 'ASC');
 
-    return qb.getMany();
+    return paginate(qb, { page, limit });
   }
 
   async getOne(orderNumber: string, userId?: number) {
