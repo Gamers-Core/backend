@@ -5,6 +5,7 @@ import { Brackets, EntityManager, In, IsNull, Repository } from 'typeorm';
 import { Brand } from 'src/brands/entities/brand.entity';
 import { Category } from 'src/categories/entities/category.entity';
 import { BadRequestException, NotFoundException } from 'src/common/exceptions';
+import { paginate } from 'src/common/pagination/pagination';
 import { withOptionalManager } from 'src/common/with-optional-manager';
 import { LocaleContextService } from 'src/i18n/locale-context.service';
 import { MediaService } from 'src/media/services/media.service';
@@ -209,7 +210,7 @@ export class ProductsService {
 
       qb.addOrderBy('product.id', 'ASC').addOrderBy('variant.position', 'ASC').addOrderBy('variant.id', 'ASC');
 
-      return qb.getMany();
+      return paginate(qb, rest);
     }
 
     const variantCondition = `
