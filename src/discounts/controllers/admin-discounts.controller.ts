@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query,
 
 import { IsAdminAuthGuard } from 'src/auth/guards/is-admin-auth.guard';
 import { Serialize } from 'src/common/interceptors/serialize.interceptor';
+import { Paginated } from 'src/common/pagination/pagination.dto';
 
 import { DiscountsService } from '../discounts.service';
 import { AdminDiscountDTO } from '../dtos/admin/admin-discount.dto';
@@ -16,7 +17,7 @@ export class AdminDiscountsController {
   constructor(private readonly discountsService: DiscountsService) {}
 
   @Get()
-  @Serialize(AdminDiscountDTO)
+  @Serialize(Paginated(AdminDiscountDTO))
   search(@Query() query: AdminSearchDiscountsDTO) {
     return this.discountsService.search(query);
   }
