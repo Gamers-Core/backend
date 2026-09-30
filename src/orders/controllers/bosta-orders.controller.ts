@@ -2,6 +2,7 @@ import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 
 import { deliveryStates } from 'src/addresses/bosta/const';
 import { Public } from 'src/auth/decorators/public.decorator';
+import { SkipMaintenance } from 'src/settings/decorators/skip-maintenance.decorator';
 
 import { OrdersBostaWebhookDTO } from '../dtos/orders-bosta-webhook.dto';
 import { BostaWebhookAuthGuard } from '../guards/bosta-webhook.guard';
@@ -11,6 +12,7 @@ import { OrdersService } from '../services/orders.service';
 export class BostaOrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
+  @SkipMaintenance()
   @Public()
   @UseGuards(BostaWebhookAuthGuard)
   @Post('webhook')
